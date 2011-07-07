@@ -7,10 +7,10 @@ echo 'rcK: shutdown'
 /etc/init.d/lgmod shutdown
 
 sync
-umount /mnt/lg/user
-umount /mnt/lg/cmn_data
+umount -r /mnt/lg/user
+umount -r /mnt/lg/cmn_data
 
-umount /mnt/lg/ciplus/authcxt
+umount -r /mnt/lg/ciplus/authcxt
 
 # LG inittab
 #/bin/umount -a -r

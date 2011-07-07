@@ -20,10 +20,12 @@ mount -t proc  proc  /proc
 mount -t sysfs sysfs /sys
 
 mount -t tmpfs tmpfs /dev/shm
+
 mount -o bind /bin/busybox /bin/udhcpc; # TODO: Temp?
 
 
-RCS_MNT=/mnt/lgmod/init
+RCS_MNT=/dev/shm/init
+mkdir "$RCS_MNT"
 RCS_DIR="$RCS_MNT/lgmod/init"
 
 # config: 'reset'=LG; 'default'=lgmod
@@ -49,7 +51,6 @@ if [ -n "$RCS_LGDEV" ]; then
 	cd /
 	tar xvzpf /mnt/lgmod/dev.tar.bgz
 	tar xvzpf /mnt/lgmod/dev-lgmod.tar.bgz
-	[ "$RCS_LGDEV" = 2 ] && tar xvzpf /mnt/lgmod/dev-olt.tar.gz
 fi
 
 if [ -n "$RCS_LGSH" ]; then

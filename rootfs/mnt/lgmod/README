@@ -1,10 +1,12 @@
 
 Notes:
-	By default, lgmod is disabled. To enable it:
-		cp -a /mnt/lgmod/lgmod.example /mnt/lg/user/lgmod/init/lgmod
-	This is very first version
+	This is very first version.
 	It should work but it is tested only on LG 32LD465-ZA
-	That is EU firmware! Be carefult!
+	It is EU firmware! Be carefult!
+
+	By default, lgmod is disabled. To enable it:
+		cd /mnt/lg/user && mkdir -p lgmod/init && touch lgmod/init/lgmod
+	To disable it: rm /mnt/lg/user/lgmod/init/lgmod
 
 
 Steps:
@@ -27,11 +29,11 @@ Steps:
 		Enter debug mode
 		Press F10 for debug prompt
 		Start 'sh'
-			$ call 0x004d76bc+0xb0
+			$ call debug_os_shell+0xb0
 		Erase rootfs
 			# flash_eraseall /dev/mtd3
 		Write rootfs
-			# cat /mnt/usb1/Drive1/lgmod_S7_10001.sqfs > /dev/mtd3
+			# cat /mnt/usb1/Drive1/lgmod_S7_#####.sqfs > /dev/mtd3
 		Erase lginit
 			# flash_eraseall /dev/mtd4
 		Write lginit
@@ -40,28 +42,26 @@ Steps:
 
 Features:
 	lgmod for S7 - as it is (all features)
-		upload dir is /dev/shm/upload, limit 22M (tools.cgi is modified)
+		upload dir is /dev/shm/upload, limit 22M
 		you can do /etc/init.d/lgmod start|stop
-		rc.sysinit and rc.local are in "/etc/init.d/lgmod boot"
-		"rcS shutdown" is in: /etc/init.d/rcS and "/etc/init.d/lgmod shutdown"
-		modules are inside /lib/modules (changes in lgmod.sh and /etc/init.d/lgmod)
 
-	startup options: /mnt/lgmod/lgmod.example
+	/dev/shm is tmpfs (33MB)
+		directory skeleton from: /mnt/lg/user/lgmod/init/devshm/
+
+
+
+Advanced (just skip and ignore everything below):
+	startup/config options: check /etc/init.d/rcS
 		mount /dev/ as tmpfs
 		use lginit or "lginit as sh script"
-		do not start RELEASE (like it is in lgmod)
+		do not start RELEASE (lgmod)
 		do not start lgmod
-
-	custom init scripts: /mnt/lgmod/lginit.example
-
-	/dev/shm is tmpfs (33MB), skeleton from /mnt/lg/user/lgmod/init/devshm/
-		(the same as /mnt/lgmod/init/lgmod/init/devshm/)
-
+	custom early init scripts: /mnt/lgmod/lginit.example
 
 Changes:
-	dev.tar.gz - from LG as is
-	dev-lgmod.tar.gz - added
-	just in case: chmod -R g+w,o+w /dev
+	dev.tar.gz - from LG as is (mtd55 was missing there)
+	dev-lgmod.tar.gz - pty.ko (lgmod telnetd), /dev/shm and more
+		(just in case: chmod -R g+w,o+w /dev)
 
 	/etc/init.d/*
 	/etc/fstab - LG fstab content is also there
@@ -76,13 +76,12 @@ Changes:
 
 	/mnt/lgmod/
 
-
 More notes:
-	LG files in /etc/rc.d are not used
+	LG files in /etc/rc.d are not used (rc.sysinit and rc.local)
 	LG binaries and links are not touched, not removed
 		example: /bin/kill (14K) /bin/ps (81K), /bin/watch (144K)
 			All LG binaries instead of busybox links
 		example: /bin/udhcpc (50K), /bin/top (200K), and more...
 			busybox links are in /sbin, /usr/bin/, /usr/sbin
 	Mostly, all files are preserved - as it is in LG firmware
-		(without file permissions)
+		(files ownership is not preserved, anyway LG passwd file is invalid)
