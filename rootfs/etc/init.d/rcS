@@ -1,0 +1,93 @@
+#!/bin/sh
+#
+# /etc/init.d/rcS - run once at boot time
+#
+#
+
+# LG rcS
+#. /etc/rc.d/rc.sysinit
+#. /etc/rc.d/rc.local
+
+
+# LG rc.sysinit
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+# LG lginit
+export PATH=$PATH:/usr/local/bin
+export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+
+mount -t proc  proc  /proc
+mount -t sysfs sysfs /sys
+
+mount -t tmpfs tmpfs /dev/shm
+mount -o bind /bin/busybox /bin/udhcpc; # TODO: Temp?
+
+
+RCS_MNT=/mnt/lgmod/init
+RCS_DIR="$RCS_MNT/lgmod/init"
+
+# config: 'reset'=LG; 'default'=lgmod
+RCS_RST() { RCS_LGDEV=''; RCS_LGSH=''; RCS_LGREL=''; RCS_LGMOD=''; }
+RCS_DEF() { RCS_LGDEV=''; RCS_LGSH=1;  RCS_LGREL=''; RCS_LGMOD=1;  }
+RCS_GET() {
+	RCS_RST
+	if [ -f "$RCS_CFG/lgmod" ]; then
+		RCS_DEF
+		. "$RCS_CFG/lgmod" "$@" || RCS_RST
+	fi
+}
+
+
+mount -t jffs2 /dev/mtdblock11 "$RCS_MNT"
+RCS_GET
+
+[ -d "$RCS_DIR/devshm" ] && cp -at /dev/shm/ "$RCS_DIR"/devshm/*
+[ -d /dev/shm/upload ] || mkdir /dev/shm/upload
+
+if [ -n "$RCS_LGDEV" ]; then
+	mount -t tmpfs tmpfs /dev -o size=64K
+	cd /
+	tar xvzpf /mnt/lgmod/dev.tar.bgz
+	tar xvzpf /mnt/lgmod/dev-lgmod.tar.bgz
+	[ "$RCS_LGDEV" = 2 ] && tar xvzpf /mnt/lgmod/dev-olt.tar.gz
+fi
+
+if [ -n "$RCS_LGSH" ]; then
+	echo 'rcS: lginit as sh script'
+	cd /mnt/lg/lginit
+	. /etc/init.d/rcS-lginit
+fi
+
+if [ -f "$RCS_DIR/lginit" ]; then
+	"$RCS_DIR/lginit" "$RCS_LGSH" && RCS_GET 'lginit'
+fi
+
+if [ -n "$RCS_LGMOD" ]; then
+	echo 'rcS: LG with lgmod'
+	/etc/init.d/lgmod boot || RCS_LGREL=1
+else
+	echo 'rcS: LG as it is (no lgmod)'
+fi
+
+sync
+umount -f "$RCS_MNT"; # TODO: Using '-f'? What if...?
+
+
+[ -n "$RCS_LGMOD" ] && /etc/init.d/lgmod start &
+
+if [ -n "$RCS_LGSH" ]; then
+	if [ -n "$RCS_LGREL" ]; then
+		echo 'rcS: Skipping RELEASE (debug)'
+		exit 0
+	else
+		echo 'rcS: Starting RELEASE'
+		cd /mnt/lg/lginit; # TODO: root have to be /
+		exec /mnt/lg/lgapp/RELEASE 0
+	fi
+fi
+
+echo 'rcS: lginit (lg-init)'
+cd /mnt/lg/lginit
+exec /mnt/lg/lginit/lg-init
+
+exit 0

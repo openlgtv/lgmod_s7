@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# Set the path
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+mount -a

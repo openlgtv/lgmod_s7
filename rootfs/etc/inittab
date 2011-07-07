@@ -1,0 +1,10 @@
+::sysinit:/etc/init.d/rcS
+#ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt102
+#::respawn:/bin/login
+#ttyS0::askfirst:-/bin/sh
+console::once:-/bin/sh
+# LG
+#::shutdown:/bin/umount -a -r
+# lgmod
+::shutdown:/etc/init.d/rcK
+::restart:/sbin/init

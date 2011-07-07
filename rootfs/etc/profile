@@ -1,0 +1,15 @@
+# /etc/profile: system-wide .profile file for the Bourne shells
+
+echo -ne "\nProcessing /etc/profile...\n"
+export PATH=$PATH:/home
+
+alias dir="ls -al"
+alias ll="ls -al"
+alias c.="cd .."
+alias c..="cd ../.."
+alias c...="cd ../../.."
+
+cp /etc/*.sh /lgsw/
+cd /lgsw
+
+echo -ne "\nDone\n\n"

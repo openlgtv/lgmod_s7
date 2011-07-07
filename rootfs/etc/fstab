@@ -1,0 +1,44 @@
+# LG lginit
+#<device>         <mount pt>             <file system> <options>  <dump>  <pass>
+proc              /proc                  proc          defaults   0       0
+lgsw              /lgsw                  ramfs         rw         0       0
+tmp               /tmp                   ramfs         rw         0       0
+sysfs             /sys                   sysfs         defaults   0       0
+usbfs             /proc/bus/usb          usbfs         defaults   0       0
+/dev/mtdblock7    /mnt/lg/model          squashfs      defaults   0       0
+/dev/mtdblock12   /mnt/lg/res/ezcal      squashfs      defaults   0       0
+/dev/mtdblock13   /mnt/lg/res/estreamer  squashfs      defaults   0       0
+/dev/mtdblock14   /usr/local             squashfs      defaults   0       0
+tmpfs             /usr/local/etc         tmpfs         size=1M    0       0
+/dev/mtdblock17   /mnt/lg/res/lgres      squashfs      defaults   0       0
+/dev/mtdblock19   /mnt/addon             squashfs      defaults   0       0
+/dev/mtdblock23   /mnt/lg/ciplus/cert    squashfs      defaults   0       0
+/dev/mtdblock24   /mnt/lg/ciplus/authcxt jffs2         defaults   0       0
+
+# flash_eraseall
+/dev/mtdblock9    /mnt/lg/cmn_data       jffs2         defaults   0       0
+/dev/mtdblock11   /mnt/lg/user           jffs2         defaults   0       0
+
+# physaddr=; /dev/mtdblock21
+#lgapp_xip        /mnt/lg/lgapp          cramfs        defaults   0       0
+# physaddr=0xf100000; lgfont_xip
+#/dev/mtdblock18  /mnt/lg/res/lgfont     squashfs      defaults   0       0
+
+
+# LG fstab
+#<device>         <mount pt>            <file system>  <options>  <dump>  <pass>
+#proc             /proc                 proc           defaults   0       0
+#ramfs            /lgsw                 ramfs          rw         0       0
+#ramfs            /tmp                  ramfs          rw         0       0
+##devpts          /dev/pts              devpts         rw         0       0
+#sysfs            /sys                  sysfs          defaults   0       0
+#usbfs            /proc/bus/usb         usbfs          defaults   0       0
+#/dev/mtdblock6   /mnt/lg/model         squashfs       defaults   0       0
+#/dev/mtdblock9   /mnt/lg/cmn_data      jffs2          defaults   0       0
+#/dev/mtdblock10  /mnt/lg/user          jffs2          defaults   0       0
+#/dev/mtdblock11  /mnt/lg/res/ezcal     squashfs       defaults   0       0
+#/dev/mtdblock12  /mnt/lg/res/estreamer squashfs       defaults   0       0
+#/dev/mtdblock13  /usr/local            squashfs       defaults   0       0
+#tmpfs            /usr/local/etc        tmpfs          size=1M    0       0
+#/dev/mtdblock16  /mnt/lg/res/lgres     squashfs       defaults   0       0
+#/dev/mtdblock18  /mnt/addon            squashfs       defaults   0       0

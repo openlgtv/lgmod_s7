@@ -1,0 +1,16 @@
+# /etc/securetty: list of terminals on which root is allowed to login.
+# See securetty(5) and login(1).
+#
+# Include ttyp0, ttyp1, etc to allow telnet access. *NOT RECOMMENDED*
+ttyS02
+tty1
+tty2
+pts/0
+pts/1
+pts/2
+pts/3
+pts/4
+pts/5
+console
+ttyP0
+ttyP1

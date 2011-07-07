@@ -1,0 +1,11 @@
+prefix=/vol/share/jjab/out-glibc
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: OpenSSL-libcrypto
+Description: OpenSSL cryptography library
+Version: 0.9.8c
+Requires: 
+Libs: -L${libdir} -lcrypto -ldl
+Cflags: -I${includedir} 

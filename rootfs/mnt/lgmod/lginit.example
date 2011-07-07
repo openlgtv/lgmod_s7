@@ -1,0 +1,38 @@
+#!/bin/sh
+echo "rcS: lginit: START"
+
+
+# Init not done ('mount -a' not executed, lginit will be started)
+if [ -z "$1" ]; then
+	exit 0
+fi
+
+
+# Run once
+mv "$0" "$0.done"
+
+
+# F11: enter "debug" and press F11 for 'sh'
+lginit_top="${0%/*}/top.sh"
+if [ ! -f "$lginit_top" ]; then
+	echo '#!/bin/sh
+		exec sh' > "$lginit_top"
+	chmod +x "$lginit_top"
+fi
+echo "rcS: lginit: mount -o bind $lginit_top /bin/top"
+mount -o bind "$lginit_top" /bin/top
+
+
+# LG rc.local
+# Initialize user_initcalls
+echo 1 > /proc/usercalls
+sleep 2
+
+# If device is (not) attached
+if lsusb | grep '####:####'; then
+	echo "RCS_LGDEV=1;  RCS_LGSH=1;  RCS_LGREL=''; RCS_LGMOD=1" > "${0%/*}/lgmod"
+fi
+
+
+echo "rcS: lginit: DONE"
+exit 0

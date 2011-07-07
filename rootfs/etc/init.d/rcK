@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# /etc/init.d/rcK - run once at shutdown
+
+echo 'rcK: shutdown'
+
+/etc/init.d/lgmod shutdown
+
+sync
+umount /mnt/lg/user
+umount /mnt/lg/cmn_data
+
+umount /mnt/lg/ciplus/authcxt
+
+# LG inittab
+#/bin/umount -a -r
+
+exit 0

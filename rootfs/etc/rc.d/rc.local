@@ -1,0 +1,106 @@
+#!/bin/sh
+#
+# /etc/rc.d/rc.local - run once at boot time
+#
+#
+#echo "Processing $0..."
+
+# Run Telnet Deamon
+telnetd &
+
+# Check application auto-run...
+AUTORUN=`cat /proc/cmdline | grep autorun`
+
+# Check host name
+HOST_NAME=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS="="; } /host=/ { print $2 } END {}'`
+
+# Check corresponding IPs
+LSERVER_IP=`cat /proc/cmdline | awk 'BEGIN { RS="[ :]"; FS="="; } /ip=/ { print $2 } END {}'`
+TSERVER_IP=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS=":"; } /ip=/ { print $2 } END {}'`
+TARGET_IP=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS=":"; } /ip=/ { print $3 } END {}'`
+GATEWAY_IP=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS=":"; } /ip=/ { print $4 } END {}'`
+NETMASK=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS=":"; } /ip=/ { print $5 } END {}'`
+
+# Initialize user_initcalls
+echo 1 > /proc/usercalls
+
+# Set Host Name
+hostname $HOST_NAME
+
+# Change priority of telnet server
+TPID=`ps | grep tel | grep netd | awk '{ print $1 }'`
+chrt -rp 99 $TPID >/dev/null
+
+if [ "$AUTORUN" != "" ]; then
+	echo 'Execute Normal Mode Booting..'
+
+	# Check XIPFS
+	APP_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
+	if [ "${APP_XIP}" != "" ] && [ "${APP_XIP}" != "0x0" ]; then
+		mount -t cramfs -o physaddr=${APP_XIP} lgapp /mnt/lg/lgapp
+	fi
+
+	FONT_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`
+	if [ "${FONT_XIP}" != "" ] && [ "${FONT_XIP}" != "0x0" ]; then
+		mount -t cramfs -o physaddr=${FONT_XIP} lgfont /mnt/lg/res/lgfont
+	else
+		mount -t squashfs /dev/mtdblock17 /mnt/lg/res/lgfont
+	fi
+
+	# Check bluetooth inclusion
+	BT=`cat /proc/devices | grep bt_usb`
+	if [ "$BT" != "" ]; then
+		mount -t tmpfs tmpfs /mnt/lg/bt -o size=10M
+	fi
+
+	BEQUIET=`cat /proc/cmdline | grep quiet_app`
+	if [ "$BEQUIET" != "" ]; then
+	    export PRINTLOG=0
+	else
+	    export PRINTLOG=1
+	fi
+
+	# DirectFB environment
+	export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+	export LD_LIBRARY_PATH=/lib:/usr/local/lib
+
+	# Yahoo environment
+	export PATH=$PATH:/mnt/addon/ywe/prodgsync
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/addon/ywe/lib
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/addon/ywe/prodgsync
+	export KF_APP_PATH=/mnt/addon/ywe
+	export KF_EXTRACT_PATH=/mnt/addon/ywe/extract
+	export KF_DATA_DIR=/mnt/ywe_data
+	export KF_THREAD_POLICY_OTHER=1
+	export KF_RUN=yes
+
+	# Neflix environment
+	export NETFLIX_SIAB=TRUE
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/addon/netflix/lib
+
+	# Common environment
+	export LOG_CALLER=YES
+	export OSAMEM_SIZE=0x200000
+	export LOAD_SYM=1
+	export HOOK_SEGV=YES
+	export IS_NFS=NO
+
+	cd /mnt/lg/lgapp
+	./insdrv
+	./RELEASE
+#else
+#	sleep 2
+
+	# NFS Mount /share/global_platform -> /home
+#	echo "Mounting /share/global_platform as /home"
+#	mount -t nfs $LSERVER_IP:/share/global_platform /home -o nolock,rsize=32768,wsize=32768,tcp
+
+#	USER_LIST=$(ls /home)
+#	cp /etc/passwd.org /lgsw/passwd
+#	for SERVER_USER in $USER_LIST
+#	do
+#		if [ -d /home/$SERVER_USER ] && [ $SERVER_USER != root ]; then
+#			echo "$SERVER_USER::0:0:$SERVER_USER:/home/$SERVER_USER:/bin/sh" >> /lgsw/passwd
+#		fi
+#	done
+fi
