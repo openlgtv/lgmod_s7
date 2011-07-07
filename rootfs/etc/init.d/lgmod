@@ -21,7 +21,7 @@ do_boot() {
 	# lgmod: . /etc/rc.d/rc.sysinit
 	# Copy script for modules loading if not exist (first boot)
 	if [ ! -e $MODULES_SH ]; then
-		cp -a $SRC_DIR/default-modules.sh $MODULES_SH
+		cp -a $SRC_DIR/default-module.sh $MODULES_SH
 	fi
 	# Load modules with modules script
 	(cd $MODULES_DIR; $MODULES_SH)
