@@ -6,6 +6,7 @@
 # Copyright 2010 Arno1
 #
 CFG_DIR="/mnt/lg/user/lgmod"
+MODULES_DIR=/lib/modules
 NETCONFIG="$CFG_DIR/network"
 FS_MNT="$CFG_DIR/ndrvtab"
 HTTPD_CONF="$CFG_DIR/httpd.conf"
@@ -143,7 +144,7 @@ done
 
 # Launch telnet server
 if [ -e $CFG_DIR/telnet ]; then
-  insmod /modules/pty.ko
+  insmod "$MODULES_DIR/pty.ko"
   /usr/sbin/telnetd -l /etc/auth.sh
 fi
 
@@ -152,7 +153,7 @@ fi
 
 # Launch UPnP client
 if [ -e $CFG_DIR/upnp ]; then
- insmod /modules/fuse.ko
+ insmod "$MODULES_DIR/fuse.ko"
  /usr/bin/djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
 fi
 

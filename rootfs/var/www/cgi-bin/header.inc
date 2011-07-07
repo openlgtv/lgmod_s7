@@ -1,5 +1,5 @@
 <head>
-<title>LGMOD 1.6.10</title>
+<title>LGMOD ver=</title>
 <meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
 <style type="text/css">
 body { background: #EEEEEF; width: 80%; margin:0 auto; }

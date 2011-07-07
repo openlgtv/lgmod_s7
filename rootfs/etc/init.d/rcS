@@ -31,9 +31,9 @@ RCS_RST() { RCS_LGDEV=''; RCS_LGSH=''; RCS_LGREL=''; RCS_LGMOD=''; }
 RCS_DEF() { RCS_LGDEV=''; RCS_LGSH=1;  RCS_LGREL=''; RCS_LGMOD=1;  }
 RCS_GET() {
 	RCS_RST
-	if [ -f "$RCS_CFG/lgmod" ]; then
+	if [ -f "$RCS_DIR/lgmod" ]; then
 		RCS_DEF
-		. "$RCS_CFG/lgmod" "$@" || RCS_RST
+		. "$RCS_DIR/lgmod" "$@" || RCS_RST
 	fi
 }
 
