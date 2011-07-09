@@ -18,10 +18,7 @@ export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/st
 
 mount -t proc  proc  /proc
 mount -t sysfs sysfs /sys
-
 mount -t tmpfs tmpfs /dev/shm
-
-mount -o bind /bin/busybox /bin/udhcpc; # TODO: Temp?
 
 
 RCS_MNT=/dev/shm/init
@@ -29,8 +26,8 @@ mkdir "$RCS_MNT"
 RCS_DIR="$RCS_MNT/lgmod/init"
 
 # config: 'reset'=LG; 'default'=lgmod
-RCS_RST() { RCS_LGDEV=''; RCS_LGSH=''; RCS_LGREL=''; RCS_LGMOD=''; }
-RCS_DEF() { RCS_LGDEV=''; RCS_LGSH=1;  RCS_LGREL=''; RCS_LGMOD=1;  }
+RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; }
+RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; }
 RCS_GET() {
 	RCS_RST
 	if [ -f "$RCS_DIR/lgmod" ]; then
@@ -53,42 +50,27 @@ if [ -n "$RCS_LGDEV" ]; then
 	tar xvzpf /mnt/lgmod/dev-lgmod.tar.bgz
 fi
 
-if [ -n "$RCS_LGSH" ]; then
-	echo 'rcS: lginit as sh script'
-	cd /mnt/lg/lginit
-	. /etc/init.d/rcS-lginit
-fi
+echo 'rcS: lginit as sh script'
+cd /mnt/lg/lginit
+. /etc/init.d/rcS-lginit
 
-if [ -f "$RCS_DIR/lginit" ]; then
-	"$RCS_DIR/lginit" "$RCS_LGSH" && RCS_GET 'lginit'
-fi
+[ -f "$RCS_DIR/lginit" ] && { "$RCS_DIR/lginit" && RCS_GET 'lginit'; }
 
-if [ -n "$RCS_LGMOD" ]; then
-	echo 'rcS: LG with lgmod'
-	/etc/init.d/lgmod boot || RCS_LGREL=1
-else
-	echo 'rcS: LG as it is (no lgmod)'
-fi
+/etc/init.d/lgmod boot || RCS_LGREL=1
 
 sync
 umount -f "$RCS_MNT"; # TODO: Using '-f'? What if...?
 
 
-[ -n "$RCS_LGMOD" ] && /etc/init.d/lgmod start &
+/etc/init.d/lgmod start &
 
-if [ -n "$RCS_LGSH" ]; then
-	if [ -n "$RCS_LGREL" ]; then
-		echo 'rcS: Skipping RELEASE (debug)'
-		exit 0
-	else
-		echo 'rcS: Starting RELEASE'
-		cd /mnt/lg/lginit; # TODO: root have to be /
-		exec /mnt/lg/lgapp/RELEASE 0
-	fi
+if [ -n "$RCS_LGREL" ]; then
+	echo 'rcS: Skipping RELEASE (debug)'
+	exit 0
+else
+	echo 'rcS: Starting RELEASE'
+	cd /mnt/lg/lginit; # TODO: root have to be /
+	exec /mnt/lg/lgapp/RELEASE 0
 fi
-
-echo 'rcS: lginit (lg-init)'
-cd /mnt/lg/lginit
-exec /mnt/lg/lginit/lg-init
 
 exit 0
