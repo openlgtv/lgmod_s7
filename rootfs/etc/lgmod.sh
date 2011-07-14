@@ -16,14 +16,13 @@ P_SH="$CFG_DIR/patch.sh"
 
 # Init USB - only if needed
 for k in 0 1 2 3 4 5 6 7 8 9; do
-	[ `mount|grep Drive1` ] && break || sleep 2
+	mount | grep Drive1 > /dev/null && break || sleep 2
 done
 [ `mount|grep Drive1` ] || echo 1 > /proc/usercalls
 
 # Wait until USB drive is mounted
 k=0;
-while [ ! `mount|grep Drive1` ]; 
-do
+while ! mount | grep Drive1 > /dev/null; do
     sleep 1;
     k=$(($k+1))
     if [ $k -gt 30 ]; then break; fi
