@@ -38,7 +38,7 @@ do_boot() {
 	(cd $MODULES_DIR; $MODULES_SH)
 
 	# Launch patch script
-	echo "LGMOD: ${P_SH#*/} - patchwork time (hodgepodge)" > /dev/kmsg
+	echo "LGMOD: Starting ${P_SH#*/} - patchwork time" > /dev/kmsg
 	$P_SH
 
 	exit $DEBUG

@@ -11,7 +11,7 @@
 
 RCS_MNT=/tmp
 RCS_DIR="$RCS_MNT/lgmod/init"
-RCS_DIR2=/mnt/lg/user/lgmod/init
+RCS_USR=/mnt/lg/user/lgmod/init
 
 
 # LG rc.sysinit
@@ -26,8 +26,8 @@ mount -t sysfs sysfs /sys
 
 
 # config: 'reset'=LG; 'default'=lgmod
-RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=5; }
-RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=5; }
+RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=7; }
+RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=7; }
 RCS_GET() {
 	RCS_RST
 	if [ -f "$RCS_DIR/lgmod" ]; then
@@ -53,7 +53,6 @@ fi
 mount -t tmpfs tmpfs /dev/shm
 [ -d "$RCS_DIR/devshm" ] && cp -at /dev/shm/ "$RCS_DIR"/devshm/*
 
-[ -f "$RCS_DIR/lginit" ] && "$RCS_DIR/lginit" init
 umount -f "$RCS_MNT"
 
 
@@ -63,7 +62,7 @@ cd /mnt/lg/lginit
 
 echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
 echo 'rcS: help - user: # cd / && tar xvzpf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
-[ -f "$RCS_DIR2/lginit" ] && { "$RCS_DIR2/lginit" && RCS_GET 'init'; }
+[ -f "$RCS_USR/lginit" ] && { "$RCS_USR/lginit" && RCS_GET 'init'; }
 
 
 /etc/init.d/lgmod boot || RCS_LGREL=1
