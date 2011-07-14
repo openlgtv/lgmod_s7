@@ -9,6 +9,11 @@
 #. /etc/rc.d/rc.local
 
 
+RCS_MNT=/tmp
+RCS_DIR="$RCS_MNT/lgmod/init"
+RCS_DIR2=/mnt/lg/user/lgmod/init
+
+
 # LG rc.sysinit
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 
@@ -18,21 +23,18 @@ export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/st
 
 mount -t proc  proc  /proc
 mount -t sysfs sysfs /sys
-mount -t tmpfs tmpfs /dev/shm
 
-
-RCS_MNT=/dev/shm/init
-mkdir "$RCS_MNT"
-RCS_DIR="$RCS_MNT/lgmod/init"
 
 # config: 'reset'=LG; 'default'=lgmod
-RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; }
-RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; }
+RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=5; }
+RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=5; }
 RCS_GET() {
 	RCS_RST
 	if [ -f "$RCS_DIR/lgmod" ]; then
+		echo 'rcS: lgmod config' > /dev/kmsg
 		RCS_DEF
-		. "$RCS_DIR/lgmod" "$@" || RCS_RST
+		. "$RCS_DIR/lgmod" "$@" ||
+			{ RCS_RST; echo 'rcS: Error: lgmod config' > /dev/kmsg; }
 	fi
 }
 
@@ -40,36 +42,39 @@ RCS_GET() {
 mount -t jffs2 /dev/mtdblock11 "$RCS_MNT"
 RCS_GET
 
-[ -d "$RCS_DIR/devshm" ] && cp -at /dev/shm/ "$RCS_DIR"/devshm/*
-[ -d /dev/shm/upload ] || mkdir /dev/shm/upload
-
 if [ -n "$RCS_LGDEV" ]; then
+	echo 'rcS: /dev as tmpfs' > /dev/kmsg
 	mount -t tmpfs tmpfs /dev -o size=64K
 	cd /
-	tar xvzpf /mnt/lgmod/dev.tar.bgz
-	tar xvzpf /mnt/lgmod/dev-lgmod.tar.bgz
+	tar xzpf /mnt/lgmod/dev.tar.gz
+	tar xvzpf /mnt/lgmod/dev-lgmod.tar.gz
 fi
 
-echo 'rcS: lginit as sh script'
+mount -t tmpfs tmpfs /dev/shm
+[ -d "$RCS_DIR/devshm" ] && cp -at /dev/shm/ "$RCS_DIR"/devshm/*
+
+[ -f "$RCS_DIR/lginit" ] && "$RCS_DIR/lginit" init
+umount -f "$RCS_MNT"
+
+
+echo 'rcS: lginit as sh script' > /dev/kmsg
 cd /mnt/lg/lginit
 . /etc/init.d/rcS-lginit
 
-[ -f "$RCS_DIR/lginit" ] && { "$RCS_DIR/lginit" && RCS_GET 'lginit'; }
+echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
+echo 'rcS: help - user: # cd / && tar xvzpf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
+[ -f "$RCS_DIR2/lginit" ] && { "$RCS_DIR2/lginit" && RCS_GET 'init'; }
+
 
 /etc/init.d/lgmod boot || RCS_LGREL=1
-
-sync
-umount -f "$RCS_MNT"; # TODO: Using '-f'? What if...?
-
-
-(sleep 3 && /etc/init.d/lgmod start)&
+(sleep $RCS_LGSLP; /etc/init.d/lgmod start)&
 
 if [ -n "$RCS_LGREL" ]; then
-	echo 'rcS: Skipping RELEASE (debug)'
+	echo 'rcS: Skipping RELEASE (debug)' > /dev/kmsg
 	exit 0
 else
-	echo 'rcS: Starting RELEASE'
-	cd /mnt/lg/lginit; # TODO: root have to be /
+	echo 'rcS: Starting RELEASE' > /dev/kmsg
+	cd /; #cd /mnt/lg/lginit
 	exec /mnt/lg/lgapp/RELEASE 0
 fi
 

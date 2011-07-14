@@ -1,37 +1,44 @@
 #!/bin/sh
 
-BOOT_DIR="/dev/shm/init/lgmod"
-MODULES_SH="$BOOT_DIR/module.sh"
-MODULES_DIR=/lib/modules
-P_SH="$BOOT_DIR/patch.sh"
-SRC_DIR="/mnt/lgmod"
-
 CFG_DIR="/mnt/lg/user/lgmod"
+MODULES_SH="$CFG_DIR/module.sh"
+MODULES_DIR=/lib/modules
+P_SH="$CFG_DIR/patch.sh"
+SRC_DIR="/mnt/lgmod"
 S_SH="$CFG_DIR/auto_stop.sh"
 
 do_boot() {
-	# lgmod: . /etc/rc.d/rc.local
+	[ -d /dev/shm/upload ] || mkdir /dev/shm/upload
+
+	# lgmod: rc.sysinit rc.local
 	local DEBUG=0
-	if [ -e $BOOT_DIR/debug ]; then
+	if [ -e $CFG_DIR/debug ]; then
+		echo 'LGMOD: DEBUG!' > /dev/kmsg
 		DEBUG=1
-		rm $BOOT_DIR/debug
+		rm $CFG_DIR/debug
 		sync
 	fi
 
-	# lgmod: . /etc/rc.d/rc.sysinit
 	# Copy script for modules loading if not exist (first boot)
 	if [ ! -e $MODULES_SH ]; then
+		echo "LGMOD: Default ${MODULES_SH#*/}" > /dev/kmsg
 		cp -a $SRC_DIR/default-module.sh $MODULES_SH
+		sync
 	fi
-	# Load modules with modules script
-	(cd $MODULES_DIR; $MODULES_SH)
 
-	# lgmod: . /etc/rc.d/rc.local
 	# Copy default patch script
 	if [ ! -e $P_SH ]; then
+		echo "LGMOD: Default ${P_SH#*/}" > /dev/kmsg
 		cp -a $SRC_DIR/default-patch.sh $P_SH
+		sync
 	fi
+
+	# Load modules with modules script
+	echo "LGMOD: Starting ${MODULES_SH#*/}" > /dev/kmsg
+	(cd $MODULES_DIR; $MODULES_SH)
+
 	# Launch patch script
+	echo "LGMOD: ${P_SH#*/} - patchwork time (hodgepodge)" > /dev/kmsg
 	$P_SH
 
 	exit $DEBUG
@@ -39,6 +46,7 @@ do_boot() {
 
 do_shutdown() {
 	# lgmod: /etc/init.d/rcS
+	echo 'LGMOD: Starting auto_stop.sh' > /dev/kmsg
 	exec /bin/sh $S_SH
 }
 
