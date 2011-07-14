@@ -62,7 +62,7 @@ sync
 umount -f "$RCS_MNT"; # TODO: Using '-f'? What if...?
 
 
-/etc/init.d/lgmod start &
+(sleep 3 && /etc/init.d/lgmod start)&
 
 if [ -n "$RCS_LGREL" ]; then
 	echo 'rcS: Skipping RELEASE (debug)'
