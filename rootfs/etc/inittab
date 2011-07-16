@@ -7,4 +7,7 @@ console::once:-/bin/sh
 #::shutdown:/bin/umount -a -r
 # lgmod
 ::shutdown:/etc/init.d/rcK
-::restart:/sbin/init
+#::restart:/sbin/init
+# TEST
+::restart:/etc/init.d/rcK restart
+::ctrlaltdel:/etc/init.d/rcK reboot

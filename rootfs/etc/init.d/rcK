@@ -2,6 +2,17 @@
 #
 # /etc/init.d/rcK - run once at shutdown
 
+if [ "$1" = restart ]; then
+	echo 'rcK: RESTART'
+	echo 'rcK: RESTART' > /dev/kmsg
+	exec /sbin/init
+fi
+if [ "$1" = reboot ]; then
+	echo 'rcK: REBOOT'
+	echo 'rcK: REBOOT' > /dev/kmsg
+	exec /sbin/reboot
+fi
+
 echo 'rcK: shutdown START'
 echo 'rcK: shutdown START' > /dev/kmsg
 
