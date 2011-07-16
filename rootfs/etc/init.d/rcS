@@ -30,17 +30,17 @@ RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=15; }
 RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=20; }
 RCS_GET() {
 	RCS_RST
-	if [ -f "$RCS_DIR/lgmod" ]; then
+	if [ -f "$1/lgmod" ]; then
 		echo 'rcS: lgmod config' > /dev/kmsg
 		RCS_DEF
-		. "$RCS_DIR/lgmod" "$@" ||
+		. "$1/lgmod" "$@" ||
 			{ RCS_RST; echo 'rcS: Error: lgmod config' > /dev/kmsg; }
 	fi
 }
 
 
 mount -t jffs2 /dev/mtdblock11 "$RCS_MNT"
-RCS_GET
+RCS_GET "$RCS_DIR"
 
 if [ -n "$RCS_LGDEV" ]; then
 	echo 'rcS: /dev as tmpfs' > /dev/kmsg
@@ -62,7 +62,7 @@ cd /mnt/lg/lginit
 
 echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
 echo 'rcS: help - user: # cd / && tar xvzpf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
-[ -f "$RCS_USR/lginit" ] && { "$RCS_USR/lginit" && RCS_GET 'init'; }
+[ -f "$RCS_USR/lginit" ] && { "$RCS_USR/lginit" && RCS_GET "$RCS_USR" init; }
 
 
 /etc/init.d/lgmod boot $RCS_LGSLP || RCS_LGREL=1

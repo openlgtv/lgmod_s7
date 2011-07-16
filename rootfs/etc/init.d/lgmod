@@ -8,6 +8,7 @@ SRC_DIR="/mnt/lgmod"
 S_SH="$CFG_DIR/auto_stop.sh"
 
 do_boot() {
+	echo "LGMOD: $@" > /dev/kmsg
 	[ -d /dev/shm/upload ] || mkdir /dev/shm/upload
 
 	# lgmod: rc.sysinit rc.local
@@ -34,11 +35,11 @@ do_boot() {
 	fi
 
 	# Load modules with modules script
-	echo "LGMOD: Starting ${MODULES_SH#*/}" > /dev/kmsg
+	echo "LGMOD: Starting ${MODULES_SH#*/} ..." > /dev/kmsg
 	(cd $MODULES_DIR; $MODULES_SH)
 
 	# Launch patch script
-	echo "LGMOD: Starting ${P_SH#*/} - patchwork time" > /dev/kmsg
+	echo "LGMOD: Starting ${P_SH#*/} ... (patchwork time)" > /dev/kmsg
 	$P_SH
 
 	(
@@ -53,10 +54,14 @@ do_boot() {
 }
 
 do_shutdown() {
+	echo "LGMOD: $@"
+	echo "LGMOD: $@" > /dev/kmsg
+
 	# lgmod: /etc/init.d/rcS
-	echo 'LGMOD: Starting auto_stop.sh'
-	echo 'LGMOD: Starting auto_stop.sh' > /dev/kmsg
-	exec /bin/sh $S_SH
+	echo 'LGMOD: Starting auto_stop.sh ...' > /dev/kmsg
+	/bin/sh $S_SH
+
+	do_stop
 }
 
 do_start() {
@@ -66,7 +71,7 @@ do_start() {
 	fi
 
 	# lgmod: /etc/init.d/rcS
-	exec /etc/lgmod.sh
+	/etc/lgmod.sh
 }
 
 do_stop() {
@@ -80,10 +85,10 @@ do_stop() {
 
 case "$1" in
 	boot)
-		do_boot
+		do_boot "$@"
 		;;
 	shutdown)
-		do_shutdown
+		do_shutdown "$@"
 		;;
 	start)
 		do_start

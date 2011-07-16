@@ -6,7 +6,6 @@ echo 'rcK: shutdown START'
 echo 'rcK: shutdown START' > /dev/kmsg
 
 /etc/init.d/lgmod shutdown
-/etc/init.d/lgmod stop
 
 
 sync
