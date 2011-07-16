@@ -26,8 +26,8 @@ mount -t sysfs sysfs /sys
 
 
 # config: 'reset'=LG; 'default'=lgmod
-RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=7; }
-RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=7; }
+RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=15; }
+RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=20; }
 RCS_GET() {
 	RCS_RST
 	if [ -f "$RCS_DIR/lgmod" ]; then
@@ -65,8 +65,7 @@ echo 'rcS: help - user: # cd / && tar xvzpf /mnt/usb1/Drive1/backup-user.tar.gz'
 [ -f "$RCS_USR/lginit" ] && { "$RCS_USR/lginit" && RCS_GET 'init'; }
 
 
-/etc/init.d/lgmod boot || RCS_LGREL=1
-(sleep $RCS_LGSLP; /etc/init.d/lgmod start)&
+/etc/init.d/lgmod boot $RCS_LGSLP || RCS_LGREL=1
 
 if [ -n "$RCS_LGREL" ]; then
 	echo 'rcS: Skipping RELEASE (debug)' > /dev/kmsg

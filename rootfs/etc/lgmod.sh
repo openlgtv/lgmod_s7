@@ -15,10 +15,8 @@ S_SH="$CFG_DIR/auto_stop.sh"
 P_SH="$CFG_DIR/patch.sh"
 
 # Init USB - only if needed
-for k in 0 1 2 3 4 5 6 7 8 9; do
-	mount | grep Drive1 > /dev/null && break || sleep 2
-done
-mount | grep Drive1 > /dev/null || echo 1 > /proc/usercalls
+mount | grep Drive1 > /dev/null ||
+	echo 1 > /proc/usercalls
 
 # Wait until USB drive is mounted
 k=0;
