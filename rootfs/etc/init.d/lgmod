@@ -46,6 +46,7 @@ do_boot() {
 
 do_shutdown() {
 	# lgmod: /etc/init.d/rcS
+	echo 'LGMOD: Starting auto_stop.sh'
 	echo 'LGMOD: Starting auto_stop.sh' > /dev/kmsg
 	exec /bin/sh $S_SH
 }
