@@ -8,6 +8,6 @@ console::once:-/bin/sh
 # lgmod
 ::shutdown:/etc/init.d/rcK
 #::restart:/sbin/init
-# TEST
+# TODO - umount before poweroff (remote control)
 ::restart:/etc/init.d/rcK restart
 ::ctrlaltdel:/etc/init.d/rcK reboot

@@ -2,6 +2,7 @@
 #
 # /etc/init.d/rcK - run once at shutdown
 
+# TODO - umount before poweroff (remote control)
 if [ "$1" = restart ]; then
 	echo 'rcK: RESTART'
 	echo 'rcK: RESTART' > /dev/kmsg
@@ -12,6 +13,7 @@ if [ "$1" = reboot ]; then
 	echo 'rcK: REBOOT' > /dev/kmsg
 	exec /sbin/reboot
 fi
+
 
 echo 'rcK: shutdown START'
 echo 'rcK: shutdown START' > /dev/kmsg

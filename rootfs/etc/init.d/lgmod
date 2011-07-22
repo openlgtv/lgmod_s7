@@ -1,15 +1,23 @@
 #!/bin/sh
+#
+# LGMOD version ver=
+# http://openlgtv.org.ru
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 mmm4m5m
+#
 
 CFG_DIR="/mnt/lg/user/lgmod"
 MODULES_SH="$CFG_DIR/module.sh"
 MODULES_DIR=/lib/modules
 P_SH="$CFG_DIR/patch.sh"
-SRC_DIR="/mnt/lgmod"
+SRC_DIR="/home/lgmod"
 S_SH="$CFG_DIR/auto_stop.sh"
 
 do_boot() {
 	echo "LGMOD: $@" > /dev/kmsg
-	[ -d /dev/shm/upload ] || mkdir /dev/shm/upload
+	[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"
+	[ -d /dev/shm/upload ] || mkdir -p /dev/shm/upload
 
 	# lgmod: rc.sysinit rc.local
 	local DEBUG=0

@@ -9,10 +9,12 @@
 #. /etc/rc.d/rc.local
 
 
-RCS_MNT=/tmp
-RCS_DIR="$RCS_MNT/lgmod/init"
-RCS_USR=/mnt/lg/user/lgmod/init
-
+RCS_SRC=/home/lgmod
+RCS_MNT=$RCS_SRC/user
+RCS_DIR=$RCS_MNT/lgmod/init
+RCS_LGMOD_CFG=/mnt/lg/user/lgmod
+RCS_USR=$RCS_LGMOD_CFG/init
+RCS_CRAMING=/mnt/lg/cmn_data/lgmod-flag-file
 
 # LG rc.sysinit
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin
@@ -25,9 +27,9 @@ mount -t proc  proc  /proc
 mount -t sysfs sysfs /sys
 
 
-# config: 'reset'=LG; 'default'=lgmod
-RCS_RST() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=15; }
-RCS_DEF() { RCS_LGDEV=''; RCS_LGREL=''; RCS_LGSLP=20; }
+# config (default - lgmod file exists)
+RCS_RST() { RCS_LGREL=''; RCS_LGSLP=15; RCS_LG_DEV=''; RCS_LG_MNT=1;  RCS_LG_ADD=1;  RCS_LGCRAM=''; }
+RCS_DEF() { RCS_LGREL=''; RCS_LGSLP=20; RCS_LG_DEV=''; RCS_LG_MNT=''; RCS_LG_ADD=''; RCS_LGCRAM=''; }
 RCS_GET() {
 	RCS_RST
 	if [ -f "$1/lgmod" ]; then
@@ -42,38 +44,108 @@ RCS_GET() {
 mount -t jffs2 /dev/mtdblock11 "$RCS_MNT"
 RCS_GET "$RCS_DIR"
 
-if [ -n "$RCS_LGDEV" ]; then
-	echo 'rcS: /dev as tmpfs' > /dev/kmsg
-	mount -t tmpfs tmpfs /dev -o size=64K
-	cd /
-	tar xzpf /mnt/lgmod/dev.tar.gz
-	tar xvzpf /mnt/lgmod/dev-lgmod.tar.gz
+if [ -n "$RCS_LG_DEV$RCS_LG_MNT$RCS_LG_ADD" ]; then
+	mount -o bind / "$RCS_SRC/root"
 fi
 
-mount -t tmpfs tmpfs /dev/shm
-[ -d "$RCS_DIR/devshm" ] && cp -at /dev/shm/ "$RCS_DIR"/devshm/*
+if [ -n "$RCS_LG_DEV" ]; then
+	echo 'rcS: /dev as tmpfs' > /dev/kmsg
+	mount -t tmpfs tmpfsdev /dev -o size=64K
+	cp -a "$RCS_SRC"/root/dev/* /dev/
+fi
+
+mount -t tmpfs tmpfsshm /dev/shm
+[ -d "$RCS_DIR/devshm" ] && cp -a "$RCS_DIR"/devshm/* /dev/shm/
+
+if [ -n "$RCS_LG_MNT" ]; then
+	echo 'rcS: /mnt as tmpfs' > /dev/kmsg
+	mount -o bind /mnt/lg/lginit "$RCS_SRC/lginit"
+	mount -t tmpfs tmpfsmnt /mnt -o size=64K
+	cp -a "$RCS_SRC"/root/mnt/* /mnt/
+	mount -o bind "$RCS_SRC/lginit" /mnt/lg/lginit
+fi
 
 umount -f "$RCS_MNT"
 
 
 echo 'rcS: lginit as sh script' > /dev/kmsg
 cd /mnt/lg/lginit
-. /etc/init.d/rcS-lginit
+. /etc/init.d/rcS-lginit; # || RCS_LGREL=1
+
+if [ -n "$RCS_LG_ADD" ]; then
+	echo 'rcS: /mnt/addon as tmpfs' > /dev/kmsg
+	mount -o bind /mnt/addon "$RCS_SRC/addon"
+	if [ -n "$RCS_LG_MNT" ]; then umount /mnt/addon
+	else mount -t tmpfs tmpfsadd /mnt/addon -o size=64K; fi
+	cd "$RCS_SRC/addon"; I=$(echo [^c]* contents/emanual)
+	cd /mnt/addon; mkdir contents $I; i=contents/master.swf; touch $i
+	mount -o bind "$RCS_SRC/addon/$i" $i
+	for i in $I; do mount -o bind "$RCS_SRC/addon/$i" $i; done
+fi
 
 echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
 echo 'rcS: help - user: # cd / && tar xvzpf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
 [ -f "$RCS_USR/lginit" ] && { "$RCS_USR/lginit" && RCS_GET "$RCS_USR" init; }
 
-
+cd /mnt/lg/lginit
+[ -f "$RCS_LGMOD_CFG/TZ" ] && export TZ=`cat "$RCS_LGMOD_CFG/TZ"`
 /etc/init.d/lgmod boot $RCS_LGSLP || RCS_LGREL=1
 
+
 if [ -n "$RCS_LGREL" ]; then
-	echo 'rcS: Skipping RELEASE (debug)' > /dev/kmsg
-	exit 0
+	if [ -f $RCS_CRAMING.1 ]; then
+		echo "rcS: cramfs flag file removed: $RCS_CRAMING.1"
+		echo "rcS: cramfs flag file removed: $RCS_CRAMING.1" > /dev/kmsg
+		rm $RCS_CRAMING.1; sync
+	fi
+
+	echo 'rcS: LGMOD gives shell - (Skipping RELEASE)'
+	echo 'rcS: LGMOD gives shell - (Skipping RELEASE)' > /dev/kmsg
 else
+	# flag files -removed if RELEASE success (stop auto-reboot loop)
+	if [ -f $RCS_CRAMING ]; then
+		(
+		sleep 20; # it is hard but also possible - to manual trigger it
+		if pgrep -f RELEASE > /dev/null; then
+			if [ -f $RCS_CRAMING.1 ]; then
+				echo "rcS: cramfs flag files removed: $RCS_CRAMING.*" > /dev/kmsg
+				rm $RCS_CRAMING.*
+			else
+				echo "rcS: cramfs flag files OFF" > /dev/kmsg
+				rm $RCS_CRAMING*
+			fi
+			sync
+		else
+			echo 'rcS: cramfs FLAG FILES REMAINS!'
+			echo 'rcS: cramfs FLAG FILES REMAINS!' > /dev/kmsg
+		fi
+		) &
+	fi
+
+	F=mtd10_nvram_before_erase; # four backups - just in case
+	FF="/mnt/lg/cmn_data/${f}1-1 /mnt/lg/user/${f}1-2 /mnt/lg/cmn_data/${f}2-1 /mnt/lg/user/${f}2-2"
+	for f in $FF; do
+		f=$f.tar.gz; [ -f $f ] && continue; # TODO: force new backup if different
+		h=$(hexdump -n64 -e'"%_c"' /dev/mtd10)
+		[ "$h" = $'377*' ] &&
+			{ echo 'rcS: backup nvram: empty' > /dev/kmsg; break; }
+		h=$(hexdump -vs1330 -n13 -e'"%_p"' /dev/mtd10)
+		touch /mnt/lg/cmn_data/$h /mnt/lg/user/$h; # expose model name
+		echo "rcS: backup nvram: $f" > /dev/kmsg
+		cd /dev/shm; cat /dev/mtd10 > $F
+		tar czf $f $F; rm $F; sync; break
+	done
+
 	echo 'rcS: Starting RELEASE' > /dev/kmsg
 	cd /; #cd /mnt/lg/lginit
 	exec /mnt/lg/lgapp/RELEASE 0
 fi
 
+
+if [ ! -f $RCS_CRAMING ]; then
+	echo "rcS: cramfs flag files ON (sh)"
+	echo "rcS: cramfs flag files ON (sh)" > /dev/kmsg
+	touch $RCS_CRAMING; sync
+fi
+sh
 exit 0
