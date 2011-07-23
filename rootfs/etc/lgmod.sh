@@ -32,7 +32,7 @@ if [ -e /mnt/usb1/Drive1/lgmod_reset_config ]; then
     rm -rf $CFG_DIR
     mv /mnt/usb1/Drive1/lgmod_reset_config /mnt/usb1/Drive1/lgmod_reset_config_used
     sync
-    echo "LGMOD config folder is copied to the USB drive and deleted. Rebooting..."
+    echo "LGMOD: Config folder is copied to the USB drive and deleted. Rebooting..."
     reboot
 fi
 
@@ -46,7 +46,7 @@ if [ -e /mnt/usb1/Drive1/network ]; then
     cp /mnt/usb1/Drive1/network $NETCONFIG
     dos2unix $NETCONFIG
     mv /mnt/usb1/Drive1/network /mnt/usb1/Drive1/network_used
-    echo "Network config file is copied from the USB drive to the LGMOD config folder"
+    echo "LGMOD: Network config file is copied from the USB drive to the LGMOD config folder"
 fi
 
 # Copy Web UI configuration file from USB drive if exists to the LGMOD config folder
@@ -54,7 +54,7 @@ if [ -e /mnt/usb1/Drive1/httpd.conf ]; then
     cp /mnt/usb1/Drive1/httpd.conf $HTTPD_CONF
     dos2unix $HTTPD_CONF
     mv /mnt/usb1/Drive1/httpd.conf /mnt/usb1/Drive1/httpd.conf_used
-    echo "Web UI config is copied from USB drive to the LGMOD config folder"
+    echo "LGMOD: Web UI config is copied from USB drive to the LGMOD config folder"
 fi
 
 # Create default Web UI config file with default user and password
@@ -68,7 +68,7 @@ if [ -e /mnt/usb1/Drive1/auto_start.sh ]; then
     cp /mnt/usb1/Drive1/auto_start.sh $A_SH
     dos2unix $A_SH
     mv /mnt/usb1/Drive1/auto_start.sh /mnt/usb1/Drive1/auto_start.sh_used
-    echo "Autostart script is copied from USB drive to the LGMOD config folder"
+    echo "LGMOD: Autostart script is copied from USB drive to the LGMOD config folder"
 fi
 
 # Create default autostart script
@@ -96,20 +96,20 @@ if [ -e /mnt/usb1/Drive1/patch.sh ]; then
     dos2unix $P_SH
     mv /mnt/usb1/Drive1/patch.sh /mnt/usb1/Drive1/patch.sh_used
     sync
-    echo "Copied patch script from USB drive. Rebooting..."
+    echo "LGMOD: Copied patch script from USB drive. Rebooting..."
     reboot
 fi
 sync
 
 # Configuring network
-echo "Setting network loopback"
+echo "LGMOD: Setting network loopback"
 ifconfig lo 127.0.0.1
 
 if [ ! -e $NETCONFIG -o -e $CFG_DIR/dhcp ]; then
-    echo "Configuring network via DHCP..."
-    udhcpc
+    echo "LGMOD: Configuring network via DHCP..."
+    udhcpc -t3 -A5 -S
 else
-    echo "Configuring network via network config file"
+    echo "LGMOD: Configuring network via network config file"
     IP=`awk '{ print $1}' $NETCONFIG`
     MASK=`awk '{ print $2}' $NETCONFIG`
     GW=`awk '{ print $3}' $NETCONFIG`
@@ -121,23 +121,23 @@ else
 fi
 
 # After network is configured, network services can be started
-echo "Mounting shares..."
-cat $FS_MNT | while read ndrv; do
-automount=`echo $ndrv | awk -F# '{print $1}'`
-fs_type=`echo $ndrv | awk -F# '{print $2}'`
-src=`echo $ndrv | awk -F# '{print $3}'`
-dst=`echo $ndrv | awk -F# '{print $4}'`
-opt=`echo $ndrv | awk -F# '{print $5}'`
-uname=`echo $ndrv | awk -F# '{print $6}'`
-pass=`echo $ndrv | awk -F# '{print $7}'`
-
-if [ "$automount" = "1" ]; then
-    mnt_opt="-o noatime";
-    [ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
-    [ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
-    mount -t $fs_type $mnt_opt $src $dst &
-fi
-done
+echo "LGMOD: Mounting shares..."
+[ -f $FS_MNT ] && cat $FS_MNT |
+    while read ndrv; do
+        automount=`echo $ndrv | awk -F# '{print $1}'`
+        fs_type=`echo $ndrv | awk -F# '{print $2}'`
+        src=`echo $ndrv | awk -F# '{print $3}'`
+        dst=`echo $ndrv | awk -F# '{print $4}'`
+        opt=`echo $ndrv | awk -F# '{print $5}'`
+        uname=`echo $ndrv | awk -F# '{print $6}'`
+        pass=`echo $ndrv | awk -F# '{print $7}'`
+        if [ "$automount" = "1" ]; then
+            mnt_opt="-o noatime";
+            [ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
+            [ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
+            mount -t $fs_type $mnt_opt $src $dst &
+        fi
+    done
 
 # Launch NTP client
 [ -e $CFG_DIR/ntp ] && ntpd -q -p `cat $CFG_DIR/ntp`

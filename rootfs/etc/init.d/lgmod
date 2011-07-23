@@ -44,18 +44,18 @@ do_boot() {
 
 	# Load modules with modules script
 	echo "LGMOD: Starting ${MODULES_SH#*/} ..." > /dev/kmsg
-	(cd $MODULES_DIR; $MODULES_SH)
+	(cd $MODULES_DIR; $MODULES_SH 2>&1 > /dev/kmsg)
 
 	# Launch patch script
 	echo "LGMOD: Starting ${P_SH#*/} ... (patchwork time)" > /dev/kmsg
-	$P_SH
+	$P_SH 2>&1 > /dev/kmsg
 
 	(
 	sleep "${2:-10}"
 	for k in 0 1 2 3 4 5 6 7 8 9; do
 		mount | grep Drive1 > /dev/null && break || sleep 2
 	done
-	"$0" start
+	"$0" start 2>&1 > /dev/kmsg
 	) &
 
 	exit $DEBUG
@@ -67,9 +67,9 @@ do_shutdown() {
 
 	# lgmod: /etc/init.d/rcS
 	echo 'LGMOD: Starting auto_stop.sh ...' > /dev/kmsg
-	/bin/sh $S_SH
+	/bin/sh $S_SH 2>&1 > /dev/kmsg
 
-	do_stop
+	do_stop 2>&1 > /dev/kmsg
 }
 
 do_start() {
