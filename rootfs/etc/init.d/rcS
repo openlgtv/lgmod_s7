@@ -96,7 +96,7 @@ if [ -n "$RCS_LGREL" ]; then
 	if [ -f $RCS_CRAMING.1 ]; then
 		echo "rcS: cramfs flag file removed: $RCS_CRAMING.1"
 		echo "rcS: cramfs flag file removed: $RCS_CRAMING.1" > /dev/kmsg
-		rm $RCS_CRAMING.1; sync
+		rm -f $RCS_CRAMING.1; sync
 	fi
 
 	echo 'rcS: LGMOD gives shell - (Skipping RELEASE)'
@@ -109,10 +109,10 @@ else
 		if pgrep -f RELEASE > /dev/null; then
 			if [ -f $RCS_CRAMING.1 ]; then
 				echo "rcS: cramfs flag files removed: $RCS_CRAMING.*" > /dev/kmsg
-				rm $RCS_CRAMING.*
+				rm -f $RCS_CRAMING.*
 			else
 				echo "rcS: cramfs flag files OFF" > /dev/kmsg
-				rm $RCS_CRAMING*
+				rm -f $RCS_CRAMING*
 			fi
 			sync
 		else
@@ -133,7 +133,7 @@ else
 		touch /mnt/lg/cmn_data/$h /mnt/lg/user/$h; # expose model name
 		echo "rcS: backup nvram: $f" > /dev/kmsg
 		cd /dev/shm; cat /dev/mtd10 > $F
-		tar czf $f $F; rm $F; sync; break
+		tar czf $f $F; rm -f $F; sync; break
 	done
 
 	echo 'rcS: Starting RELEASE' > /dev/kmsg

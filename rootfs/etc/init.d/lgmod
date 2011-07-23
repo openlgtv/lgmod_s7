@@ -24,7 +24,7 @@ do_boot() {
 	if [ -e $CFG_DIR/debug ]; then
 		echo 'LGMOD: DEBUG!' > /dev/kmsg
 		DEBUG=1
-		rm $CFG_DIR/debug
+		rm -f $CFG_DIR/debug
 		sync
 	fi
 
@@ -74,7 +74,7 @@ do_shutdown() {
 
 do_start() {
 	if [ ! -h /mnt/lg/cmn_data/resolv.conf ]; then
-		rm /mnt/lg/cmn_data/resolv.conf
+		rm -f /mnt/lg/cmn_data/resolv.conf
 		ln -s /tmp/resolv.conf /mnt/lg/cmn_data/
 	fi
 
