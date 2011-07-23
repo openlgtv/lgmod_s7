@@ -123,7 +123,7 @@ else
 	fi
 
 	F=mtd10_nvram_before_erase; # four backups - just in case
-	FF="/mnt/lg/cmn_data/${f}1-1 /mnt/lg/user/${f}1-2 /mnt/lg/cmn_data/${f}2-1 /mnt/lg/user/${f}2-2"
+	FF="/mnt/lg/cmn_data/${F}1-1 /mnt/lg/user/${F}1-2 /mnt/lg/cmn_data/${F}2-1 /mnt/lg/user/${F}2-2"
 	for f in $FF; do
 		f=$f.tar.gz; [ -f $f ] && continue; # TODO: force new backup if different
 		h=$(hexdump -n64 -e'"%_c"' /dev/mtd10)
