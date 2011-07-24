@@ -78,6 +78,11 @@ do_start() {
 		ln -s /tmp/resolv.conf /mnt/lg/cmn_data/
 	fi
 
+	if [ ! -h /mnt/lg/cmn_data/hosts ]; then
+		rm -f /mnt/lg/cmn_data/hosts
+		ln -s /mnt/lg/user/lgmod/hosts /mnt/lg/cmn_data/
+	fi
+
 	# lgmod: /etc/init.d/rcS
 	/etc/lgmod.sh
 }

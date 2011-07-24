@@ -77,7 +77,7 @@ if [ -n "$RCS_LG_ADD" ]; then
 	mount -o bind /mnt/addon "$RCS_SRC/addon"
 	if [ -n "$RCS_LG_MNT" ]; then umount /mnt/addon
 	else mount -t tmpfs tmpfsadd /mnt/addon -o size=64K; fi
-	cd "$RCS_SRC/addon"; I=$(echo [^c]* contents/emanual)
+	I=$(cd "$RCS_SRC/addon"; echo [^c]* contents/emanual)
 	cd /mnt/addon; mkdir contents $I; i=contents/master.swf; touch $i
 	mount -o bind "$RCS_SRC/addon/$i" $i
 	for i in $I; do mount -o bind "$RCS_SRC/addon/$i" $i; done
@@ -88,7 +88,7 @@ echo 'rcS: help - user: # cd / && tar xvzpf /mnt/usb1/Drive1/backup-user.tar.gz'
 [ -f "$RCS_USR/lginit" ] && { "$RCS_USR/lginit" && RCS_GET "$RCS_USR" init; }
 
 cd /mnt/lg/lginit
-[ -f "$RCS_LGMOD_CFG/TZ" ] && export TZ=`cat "$RCS_LGMOD_CFG/TZ"`
+#[ -f "$RCS_LGMOD_CFG/TZ" ] && export TZ=`cat "$RCS_LGMOD_CFG/TZ"`
 /etc/init.d/lgmod boot $RCS_LGSLP || RCS_LGREL=1
 
 
