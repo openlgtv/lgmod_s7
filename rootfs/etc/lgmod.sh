@@ -8,7 +8,6 @@
 CFG_DIR="/mnt/lg/user/lgmod"
 MODULES_DIR=/lib/modules
 NETCONFIG="$CFG_DIR/network"
-FS_MNT="$CFG_DIR/ndrvtab"
 HTTPD_CONF="$CFG_DIR/httpd.conf"
 A_SH="$CFG_DIR/auto_start.sh"
 S_SH="$CFG_DIR/auto_stop.sh"
@@ -19,12 +18,9 @@ mount | grep Drive1 > /dev/null ||
 	echo 1 > /proc/usercalls
 
 # Wait until USB drive is mounted
-k=0;
-while ! mount | grep Drive1 > /dev/null; do
-    sleep 1;
-    k=$(($k+1))
-    if [ $k -gt 30 ]; then break; fi
-done;
+for k in 0 1 2 3 4; do
+	mount | grep Drive1 > /dev/null && break
+	sleep 1; done
 
 # Reset all LGMOD configs to default if special file is present on USB drive
 if [ -e /mnt/usb1/Drive1/lgmod_reset_config ]; then
@@ -67,6 +63,7 @@ fi
 if [ -e /mnt/usb1/Drive1/auto_start.sh ]; then
     cp /mnt/usb1/Drive1/auto_start.sh $A_SH
     dos2unix $A_SH
+    chmod +x $A_SH
     mv /mnt/usb1/Drive1/auto_start.sh /mnt/usb1/Drive1/auto_start.sh_used
     echo "LGMOD: Autostart script is copied from USB drive to the LGMOD config folder"
 fi
@@ -86,7 +83,7 @@ fi
 
 # Create default autostop script
 if [ ! -e $S_SH ]; then
-    echo "#!/bin/sh" >> $S_SH
+    echo "#!/bin/sh" > $S_SH
     chmod +x $S_SH
 fi    
 
@@ -94,6 +91,7 @@ fi
 if [ -e /mnt/usb1/Drive1/patch.sh ]; then
     cp /mnt/usb1/Drive1/patch.sh $P_SH
     dos2unix $P_SH
+    chmod +x $P_SH
     mv /mnt/usb1/Drive1/patch.sh /mnt/usb1/Drive1/patch.sh_used
     sync
     echo "LGMOD: Copied patch script from USB drive. Rebooting..."
@@ -115,50 +113,31 @@ else
     GW=`awk '{ print $3}' $NETCONFIG`
     ifconfig eth0 $IP netmask $MASK
     route add default gw $GW eth0
-    if [ -e $CFG_DIR/resolv.conf ]; then
-	cat $CFG_DIR/resolv.conf >/tmp/resolv.conf
-    fi
+    [ -e $CFG_DIR/resolv.conf ] &&
+        cat $CFG_DIR/resolv.conf >/tmp/resolv.conf
 fi
 
 # After network is configured, network services can be started
-echo "LGMOD: Mounting shares..."
-[ -f $FS_MNT ] && cat $FS_MNT |
-    while read ndrv; do
-        automount=`echo $ndrv | awk -F# '{print $1}'`
-        fs_type=`echo $ndrv | awk -F# '{print $2}'`
-        src=`echo $ndrv | awk -F# '{print $3}'`
-        dst=`echo $ndrv | awk -F# '{print $4}'`
-        opt=`echo $ndrv | awk -F# '{print $5}'`
-        uname=`echo $ndrv | awk -F# '{print $6}'`
-        pass=`echo $ndrv | awk -F# '{print $7}'`
-        if [ "$automount" = "1" ]; then
-            mnt_opt="-o noatime";
-            [ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
-            [ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
-            mount -t $fs_type $mnt_opt $src $dst &
-        fi
-    done
+# Launch telnet server
+if [ -e $CFG_DIR/telnet ] && ! pgrep telnetd > /dev/null; then
+    insmod "$MODULES_DIR/pty.ko"
+    /usr/sbin/telnetd -S -l /etc/auth.sh
+fi
+
+# Launch Web UI
+pgrep httpd > /dev/null ||
+	/usr/sbin/httpd -c $HTTPD_CONF -h /var/www
 
 # Launch NTP client
 [ -e $CFG_DIR/ntp ] && ntpd -q -p `cat $CFG_DIR/ntp`
 
-# Launch telnet server
-if [ -e $CFG_DIR/telnet ]; then
-  insmod "$MODULES_DIR/pty.ko"
-  /usr/sbin/telnetd -l /etc/auth.sh
-fi
+[ -z "$1" ] && /etc/init.d/lgmod mount
 
 # Launch FTP server
-[ -e $CFG_DIR/ftp ] && tcpsvd -E 0.0.0.0 21 ftpd -w `cat $CFG_DIR/ftp` &
+[ -e $CFG_DIR/ftp ] && tcpsvd -E 0.0.0.0 21 ftpd -S -w `cat $CFG_DIR/ftp` &
 
 # Launch UPnP client
 if [ -e $CFG_DIR/upnp ]; then
- insmod "$MODULES_DIR/fuse.ko"
- /usr/bin/djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
+    insmod "$MODULES_DIR/fuse.ko"
+    /usr/bin/djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
 fi
-
-# Launch Web UI
-/usr/sbin/httpd -c $HTTPD_CONF -h /var/www
-
-# Launch autostart script
-$A_SH

@@ -2,10 +2,11 @@
 #ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt102
 #::respawn:/bin/login
 #ttyS0::askfirst:-/bin/sh
-console::once:-/bin/sh
 # LG
+#console::once:-/bin/sh
 #::shutdown:/bin/umount -a -r
 # lgmod
+console::askfirst:-/bin/sh
 ::shutdown:/etc/init.d/rcK
 #::restart:/sbin/init
 # TODO - umount before poweroff (remote control)

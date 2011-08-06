@@ -6,37 +6,22 @@
 if [ "$1" = restart ]; then
 	echo 'rcK: RESTART'
 	echo 'rcK: RESTART' > /dev/kmsg
-	exec /sbin/init
+	exec /sbin/init; exit 0
 fi
 if [ "$1" = reboot ]; then
 	echo 'rcK: REBOOT'
 	echo 'rcK: REBOOT' > /dev/kmsg
-	exec /sbin/reboot
+	exec /sbin/reboot; exit 0
 fi
 
 
-echo 'rcK: shutdown START'
-echo 'rcK: shutdown START' > /dev/kmsg
-
 /etc/init.d/lgmod shutdown
 
-
 sync
-
-umount -r /mnt/lg/res/lgfont
-umount -r /mnt/lg/lgapp
-
-umount -r /mnt/lg/user
-#umount -r /mnt/lg/cmn_data
-
-#umount -r /mnt/lg/ciplus/authcxt
-
 
 # LG inittab
 /bin/umount -a -r
 
-
 echo 'rcK: shutdown DONE'
-echo 'rcK: shutdown DONE' > /dev/kmsg
 
 exit 0

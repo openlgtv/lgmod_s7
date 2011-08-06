@@ -1,4 +1,4 @@
-#!/usr/bin/haserl --upload-limit=22528 --upload-dir=/dev/shm/upload
+#!/usr/bin/haserl --upload-limit=16384 --upload-dir=/dev/shm/lgmod/upload
 content-type: text/html
 
 <html>
@@ -35,10 +35,11 @@ content-type: text/html
 <?
  if [ "$FORM_run" = "Run" ]; then
     echo -n "$FORM_shell" > /tmp/shell_command.sh
+    echo "$FORM_shell"; echo
     dos2unix /tmp/shell_command.sh
     chmod +x /tmp/shell_command.sh
     /tmp/shell_command.sh &> /tmp/shell_command.out
-    rm /tmp/shell_command.in
+    rm /tmp/shell_command.sh
     sync
     echo "<pre>"
     cat /tmp/shell_command.out
@@ -56,10 +57,11 @@ content-type: text/html
            mkdir /mnt/usb1/Drive1/LG_DTV
         fi
         if [ -e /mnt/usb1/Drive1/LG_DTV ]; then
+          echo 3 > /proc/sys/vm/drop_caches; sleep 1
           cp -f $HASERL_uploadfile_path /mnt/usb1/Drive1/LG_DTV/$FORM_uploadfile_name
           sync
           if [ -e /mnt/usb1/Drive1/LG_DTV/$FORM_uploadfile_name ]; then
-            echo "File <b>$FORM_uploadfile_name</b> is uploaded to LG_DTV folder to the USB drive."
+            echo "File /mnt/usb1/Drive1/LG_DTV/<b>$FORM_uploadfile_name</b> is uploaded."
           else
             echo "<b>Error! Cannot upload file. Probably USB drive is read only."
           fi

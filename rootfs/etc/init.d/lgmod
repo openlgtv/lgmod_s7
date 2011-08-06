@@ -8,71 +8,75 @@
 #
 
 CFG_DIR="/mnt/lg/user/lgmod"
-MODULES_SH="$CFG_DIR/module.sh"
 MODULES_DIR=/lib/modules
-P_SH="$CFG_DIR/patch.sh"
-SRC_DIR="/home/lgmod"
+SRC_DIR=/home/lgmod
+MODULES_SH="$CFG_DIR/module.sh"
+FS_MNT="$CFG_DIR/ndrvtab"
+A_SH="$CFG_DIR/auto_start.sh"
 S_SH="$CFG_DIR/auto_stop.sh"
+P_SH="$CFG_DIR/patch.sh"
 
 do_boot() {
-	echo "LGMOD: $@" > /dev/kmsg
+	{
+	echo "LGMOD: $@"
 	[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"
-	[ -d /dev/shm/upload ] || mkdir -p /dev/shm/upload
 
 	# lgmod: rc.sysinit rc.local
-	local DEBUG=0
 	if [ -e $CFG_DIR/debug ]; then
-		echo 'LGMOD: DEBUG!' > /dev/kmsg
-		DEBUG=1
-		rm -f $CFG_DIR/debug
-		sync
-	fi
+		DEBUG=1; echo 'LGMOD: DEBUG!'
+		rm -f $CFG_DIR/debug; sync
+	else DEBUG=0; fi
 
 	# Copy script for modules loading if not exist (first boot)
 	if [ ! -e $MODULES_SH ]; then
-		echo "LGMOD: Default ${MODULES_SH#*/}" > /dev/kmsg
-		cp -a $SRC_DIR/default-module.sh $MODULES_SH
-		sync
+		echo "LGMOD: Default ${MODULES_SH#*/}"
+		cp -a $SRC_DIR/default-module.sh $MODULES_SH; sync
 	fi
-
 	# Copy default patch script
 	if [ ! -e $P_SH ]; then
-		echo "LGMOD: Default ${P_SH#*/}" > /dev/kmsg
-		cp -a $SRC_DIR/default-patch.sh $P_SH
-		sync
+		echo "LGMOD: Default ${P_SH#*/}"
+		cp -a $SRC_DIR/default-patch.sh $P_SH; sync
 	fi
-
-	# Load modules with modules script
-	echo "LGMOD: Starting ${MODULES_SH#*/} ..." > /dev/kmsg
-	(cd $MODULES_DIR; $MODULES_SH 2>&1 > /dev/kmsg)
-
-	# Launch patch script
-	echo "LGMOD: Starting ${P_SH#*/} ... (patchwork time)" > /dev/kmsg
-	$P_SH 2>&1 > /dev/kmsg
+	} >/dev/kmsg 2>&1
 
 	(
-	sleep "${2:-10}"
+	sleep "${2:-15}"
+
+	# Load modules with modules script
+	echo "LGMOD: Starting ${MODULES_SH##*/} ..."
+	( cd $MODULES_DIR; $MODULES_SH; )
+
+	# Launch patch script
+	echo "LGMOD: Starting ${P_SH##*/} ... (patchwork time)"
+	$P_SH
+
 	for k in 0 1 2 3 4 5 6 7 8 9; do
-		mount | grep Drive1 > /dev/null && break || sleep 2
-	done
-	"$0" start 2>&1 > /dev/kmsg
-	) &
+		mount | grep Drive1 > /dev/null && break
+		sleep 2; done
+
+	"$0" start
+
+	# Launch autostart script
+	echo "LGMOD: Starting ${A_SH##*/} ..."
+	$A_SH
+	) >/dev/kmsg 2>&1 &
 
 	exit $DEBUG
 }
-
 do_shutdown() {
+	{
 	echo "LGMOD: $@"
-	echo "LGMOD: $@" > /dev/kmsg
 
 	# lgmod: /etc/init.d/rcS
-	echo 'LGMOD: Starting auto_stop.sh ...' > /dev/kmsg
-	/bin/sh $S_SH 2>&1 > /dev/kmsg
+	echo "LGMOD: Starting ${S_SH##*/} ..."
+	$S_SH
 
-	do_stop 2>&1 > /dev/kmsg
+	do_stop
+	} >/dev/kmsg 2>&1
 }
 
 do_start() {
+	echo "LGMOD: start $@"
 	if [ ! -h /mnt/lg/cmn_data/resolv.conf ]; then
 		rm -f /mnt/lg/cmn_data/resolv.conf
 		ln -s /tmp/resolv.conf /mnt/lg/cmn_data/
@@ -83,37 +87,92 @@ do_start() {
 		ln -s /mnt/lg/user/lgmod/hosts /mnt/lg/cmn_data/
 	fi
 
+	for i in telnetd httpd; do
+		pgrep $i > /dev/null || continue
+		echo "LGMOD: Already started. ($i)"; exit 1
+	done
+
 	# lgmod: /etc/init.d/rcS
 	/etc/lgmod.sh
 }
-
 do_stop() {
 	killall udhcpc
-	killall ntpd
 	killall telnetd
+	killall httpd
+	killall ntpd
 	killall tcpsvd
 	killall djmount
-	killall httpd
+	do_umount
+	echo "LGMOD: stop $@"
+}
+
+do_mount() {
+	if [ -f $FS_MNT ]; then
+		echo "LGMOD: Mounting shares..."
+		cat $FS_MNT | while read ndrv; do
+			automount="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			fs_type="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			src="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			dst="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			opt="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			uname="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			pass="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
+			[ "$automount" = "1" ] || continue
+			mnt_opt="noatime";
+			[ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
+			[ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
+			mount -t "$fs_type" -o "$mnt_opt" "$src" "$dst"
+		done
+	fi
+
+	for j in 1 2 3 4; do for i in 1 2; do
+		USB_DIR=/mnt/usb$i/Drive$j/LGMOD_S7
+		[ -d "$USB_DIR" ] || continue
+		if [ -d "$USB_DIR/contents" ]; then
+			echo "LGMOD: Using $USB_DIR/contents"
+			mount -o bind "$USB_DIR/contents" /mnt/addon/contents
+			rm -rf /mnt/cache/flash/*; cp -a /mnt/cache "$USB_DIR/"
+			mount -o bind "$USB_DIR/cache" /mnt/cache
+			killall stagecraft
+			break 2
+		fi
+	done; done
+}
+
+do_umount() {
+	sync
+	umount /mnt/addon/contents /mnt/cache/flash
+
+	if [ -f $FS_MNT ]; then
+		echo "LGMOD: Unmount shares..."
+		cat $FS_MNT | while read ndrv; do
+			automount="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			fs_type="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			src="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			dst="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
+			umount "$dst"
+		done
+	fi
+}
+
+do_restart() {
+	echo "LGMOD: $@"
+	killall udhcpc; killall ntpd
+	killall tcpsvd; killall djmount
+	if [ "$1" = all ]; then
+		killall httpd; killall telnetd
+	elif tty > /dev/null; then killall httpd
+	else killall telnetd; fi
+	/etc/lgmod.sh 0; # don't mount
 }
 
 case "$1" in
-	boot)
-		do_boot "$@"
-		;;
-	shutdown)
-		do_shutdown "$@"
-		;;
-	start)
-		do_start
-		;;
-	stop)
-		do_stop
-		;;
-	restart)
-		do_stop
-		do_start
-		;;
-	*)
-		echo "Usage: $0 {boot|start|stop|restart}"
-		exit 1
+	boot) 		do_boot "$@";;
+	shutdown)	do_shutdown "$@";;
+	start)		do_start;;
+	stop)		do_stop;;
+	mount)		do_mount;;
+	umount)		do_umount;;
+	restart)	do_restart "$@";;
+	*)			echo "Usage: $0 {start|stop|mount|umount|restart [all]}"; exit 1
 esac

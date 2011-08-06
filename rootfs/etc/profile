@@ -1,15 +1,64 @@
 # /etc/profile: system-wide .profile file for the Bourne shells
 
 echo -ne "\nProcessing /etc/profile...\n"
-export PATH=$PATH:/home
+#export PATH=$PATH:/home
 
 alias dir="ls -al"
 alias ll="ls -al"
-alias c.="cd .."
-alias c..="cd ../.."
-alias c...="cd ../../.."
+#alias c.="cd .."
+#alias c..="cd ../.."
+#alias c...="cd ../../.."
 
-cp /etc/*.sh /lgsw/
+#cp /etc/*.sh /lgsw/
 cd /lgsw
 
-echo -ne "\nDone\n\n"
+#echo -ne "\nDone\n\n"
+
+
+# LG rc.sysinit
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+
+# LG lginit
+export PATH=$PATH:/usr/local/bin
+export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+export LOG_CALLER=NO
+export OSAMEM_SIZE=0x200000
+export LOAD_SYM=1
+export HOOK_SEGV=YES
+export IS_NFS=NO
+export TERM=vt100
+export ADDON_SYS_PATH=/mnt/addon
+export ADDON_RES_PATH=/mnt/addon/res
+export ADDON_APP_CTRL=addon_mgr
+export ADDON_APP_BATCH_LIST=addon_mgr.bat
+export FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
+export FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
+
+# LG after lginit
+export OSAINIT=done
+
+
+# environment
+export TERMINFO_DIRS=/lib/terminfo:/usr/share/terminfo
+export TERMCAP=/etc/termcap
+export HOME=/mnt/lg/user/root
+
+after=/lg/user/RA; # symbolic link
+export PATH="$PATH:$after${PATH//:/:$after}"
+export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$after${LD_LIBRARY_PATH//:/:$after}"
+export TERMINFO_DIRS="$TERMINFO_DIRS:$after${TERMINFO_DIRS//:/:$after}"
+unset after
+
+
+#before=/lg/user/RB; # symbolic link
+#export PATH="$before${PATH//:/:$before}:$PATH"
+#export LD_LIBRARY_PATH="$before${LD_LIBRARY_PATH//:/:$before}:$LD_LIBRARY_PATH"
+#export TERMINFO_DIRS="$before${TERMINFO_DIRS//:/:$before}:$TERMINFO_DIRS"
+#unset before
+
+alias dropc='echo 3 > /proc/sys/vm/drop_caches; free'
+alias mcx='TERM=xterm mc -c'
+alias tml='TERM=linux tmux'
+alias tma='TERM=linux tmux attach-session'
+
+[ -f /mnt/cmn_data/profile ] && . /mnt/cmn_data/profile

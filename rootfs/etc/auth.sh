@@ -3,6 +3,6 @@
 HTTPD_CONF="/mnt/lg/user/lgmod/httpd.conf"
 PASSWD=`awk -F: '/cgi-bin/ {print $3}' $HTTPD_CONF`
 while [ "$pass" != "$PASSWD" ]; do
-echo -n "Password: "; read -s pass; echo ""
+	echo -n "Password: "; read -s pass; echo
 done
-/bin/sh
+exec /bin/sh -l
