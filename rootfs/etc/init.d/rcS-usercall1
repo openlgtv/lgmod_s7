@@ -1,0 +1,34 @@
+#!/bin/sh
+# Source code released under GPL License
+# lginit/rcS for Saturn7 by mmm4m5m
+
+# $1='force' call; $1='skip' call; $2=<SECONDS> wait (default 10)
+
+OUT=/dev/kmsg
+
+call="$1"; wait="$2"; lines=''; added=''; time="${2:-10}"
+[ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || call=skip
+
+if [ "$call" != force ] && [ "$call" != skip ]; then
+	dmesg=$(dmesg | grep -q ' calling user_initcall ') || { call=force; wait="$time"; }
+	if [ -z "$wait" ]; then
+		lines=$(echo "$dmesg" | wc -l)
+		added=$(dmesg | grep -q ' Adding user_initcall' | wc -l)
+		[ "$lines" -lt "$added" ] && wait="$time"
+	fi
+else wait="$time"; fi
+
+if [ "$call" = force ]; then
+	echo "rcS-usercall1: Calling($1)..." > $OUT
+	echo 1 > /proc/usercalls
+fi
+
+if [ -n "$wait" ]; then
+	last='(NONE)'; done=0
+	while [ "$done" -lt 2 ] && [ "$time" -gt 0 ]; do
+		line=$(dmesg | tail -n1); done=$(( done+1 ))
+		[ "$last" != "$line" ] && { last="$line"; done=0; }
+		time=$(( time-1 )); sleep 1
+	done
+	echo "rcS-usercall1: Done($1 $2 $lines $added $done $time)" > $OUT
+fi

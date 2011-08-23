@@ -2,26 +2,19 @@
 #
 # /etc/init.d/rcK - run once at shutdown
 
-# TODO - umount before poweroff (remote control)
-if [ "$1" = restart ]; then
-	echo 'rcK: RESTART'
-	echo 'rcK: RESTART' > /dev/kmsg
-	exec /sbin/init; exit 0
-fi
-if [ "$1" = reboot ]; then
-	echo 'rcK: REBOOT'
-	echo 'rcK: REBOOT' > /dev/kmsg
-	exec /sbin/reboot; exit 0
-fi
-
-
 /etc/init.d/lgmod shutdown
 
 sync
 
-# LG inittab
-/bin/umount -a -r
+if ! cat /proc/mounts | grep -q ' cramfs '; then
+	# LG inittab
+	/bin/umount -a -r
+elif pgrep -f '^/mnt/lg/lgapp/RELEASE'; then
+	# LG inittab
+	/bin/umount -a -r
+else
+	umount -r $(cat /proc/mounts|grep -nv ' cramfs '|sort -nr|cut -d' ' -f2)
+fi
 
 echo 'rcK: shutdown DONE'
-
 exit 0

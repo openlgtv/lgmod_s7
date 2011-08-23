@@ -1,0 +1,37 @@
+#!/bin/sh
+# Source code released under GPL License
+# lginit/rcS for Saturn7 by mmm4m5m
+
+RCS_OVERLAY="$1"
+STO=/tmp/lgmod/Chrsto; CHR=/tmp/lgmod/Overlay
+OVL=/mnt/lg/user/lgmod/Overlay
+
+DIR=/mnt/lg/lginit; MNT=/mnt/lg/user; OUT=/dev/kmsg
+CHRI=/tmp/lgmod/chroot; CHRO=/tmp/lgmod/overlay; # lginit
+CHRR=/tmp/lgmod/Chroot
+
+if [ -n "$RCS_OVERLAY" ]; then
+	. /etc/init.d/rcS-tmpfs
+	if mkdir -p "$CHR" "$STO" > $OUT 2>&1 &&
+		insmod /lib/modules/mini_fo.ko > $OUT 2>&1 &&
+		mount -t mini_fo -o base=/,sto="$STO" Overlay "$CHR" > $OUT 2>&1 &&
+		mount -o bind $DIR "$CHR$DIR" > $OUT 2>&1; then
+		{ echo "rcS: chroot Overlay..."; mount -o bind /tmp "$CHR/tmp"
+		mount -o bind $MNT "$CHR$MNT"
+		mount -o bind / "$CHR$CHR"; mount -o bind "$STO" "$CHR$STO"
+		[ -d "$CHRI" ] && mount -o bind "$CHRI" "$CHR$CHRI"
+		[ -d "$CHRO" ] && mount -o bind "$CHRO" "$CHR$CHRO"
+		[ -d "$CHRR" ] && mount -o bind "$CHRR" "$CHR$CHRR"
+		} > $OUT 2>&1
+		exec chroot "$CHR" sh /etc/init.d/rcS-exec Overlay
+		{ echo "rcS: Error $?"
+		[ -d "$CHRR" ] && umount "$CHR$CHRR"
+		[ -d "$CHRO" ] && umount "$CHR$CHRO"; [ -d "$CHRI" ] && umount "$CHR$CHRI"
+		umount "$CHR$STO" "$CHR$CHR" "$CHR$MNT" "$CHR/tmp"; } > $OUT 2>&1
+	fi; { umount "$CHR$DIR" "$CHR"; rm -rf "$CHR"; } > $OUT 2>&1
+fi
+
+. /etc/init.d/rcS-exec
+
+exec sh
+exit 1

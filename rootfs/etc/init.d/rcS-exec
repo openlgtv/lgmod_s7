@@ -1,0 +1,85 @@
+#!/bin/sh
+# Source code released under GPL License
+# OpenLGTV BCM - lginit as shell script by xeros
+# Modified for Saturn7 by mmm4m5m
+
+RCS_NOREL=''
+RCS_CRAMFS=1
+RCS_DELAY=15
+#RCS_RELEASE=OPENREL-TMUX-PIPE
+#RCS_RELEASE=OPENREL-TMUX
+#RCS_RELEASE=OPENRELEASE
+RCS_RELEASE=OPENREL-DAEMON; # in bg
+#RCS_RELEASE=TMUX-PIPE
+#RCS_RELEASE=TMUX; # insmod pty.ko; in bg
+#RCS_RELEASE=''; # LG
+RUN=/mnt/lg/user/lgmod/init/rcS
+
+
+. /etc/init.d/rcS-tmpfs
+
+{ mkdir -p /tmp/var/log /tmp/var/run/tmux
+f='/var/run/utmp /var/log/wtmp'
+touch $f /var/log/lastlog
+chgrp utmp $f; chmod 0664 $f
+} > /dev/kmsg 2>&1
+
+# environment - minimal
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
+export TERM=vt100
+export HOME=/mnt/lg/user/root
+
+[ -f "$RUN" ] && . "$RUN"
+
+
+[ -f "$RUN-init" ] && . "$RUN-init"
+
+#CHR=/tmp/lgmod/Overlay; CHRO=/tmp/lgmod/overlay; # lginit
+#OVERLAY=''; [ -d "$CHR" ] && [ $(stat -c%D / /tmp "$CHR"|sort|uniq|wc -l) = 3 ] && OVERLAY=yes
+#[ -z "$OVERLAY" ] && [ -d "$CHRO" ] && [ $(stat -c%D / /tmp "$CHRO"|sort|uniq|wc -l) = 3 ] && OVERLAY=yes
+touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
+
+. /etc/init.d/rcS-lginit-env; # LG: env
+. /etc/init.d/rcS-lginit "$OVERLAY"; # LG: mount
+[ -f "$RUN-mount" ] && . "$RUN-mount"
+
+
+/etc/init.d/lgmod DEBUG || RCS_NOREL=1
+
+if [ -z "$RCS_NOREL" ]; then
+	. /etc/init.d/rcS-nvram
+	Rbg=''; . /etc/init.d/rcS-release bg "$RCS_RELEASE" && Rbg=1; # Rtm
+	[ -z "$Rbg" ] && /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
+	. /etc/init.d/release force "$RCS_RELEASE" "$RCS_CRAMFS" skip '' "$Rtm"
+	[ -n "$Rbg" ] && . /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY"
+else
+	. /etc/init.d/rcS-services "$RCS_NOREL" 0 0
+fi
+
+exit 0
+
+
+#. /etc/init.d/rcS-crash mount
+. /etc/init.d/rcS-lginit-cramfs "$RCS_CRAMFS" "$RCS_CRAMFS"
+
+#echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
+#echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
+#[ -f "$RUN" ] && . "$RUN"
+
+/etc/init.d/lgmod boot $RCS_DELAY || RCS_LGREL=1
+
+
+if [ -n "$RCS_LGREL" ]; then
+	:;#. /etc/init.d/rcS-crash debug
+else
+	#. /etc/init.d/rcS-crash release
+	#. /etc/init.d/rcS-nvram
+	. /etc/init.d/rcS-release "$RCS_TMUXRELEASE" "$RCS_OPENRELEASE" "$RCS_NORELEASE"
+fi
+
+exec sh
+exit 1
+
+#. /etc/init.d/rcS-crash
+exit 0

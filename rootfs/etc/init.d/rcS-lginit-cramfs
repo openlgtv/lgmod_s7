@@ -1,0 +1,28 @@
+#!/bin/sh
+# Source code released under GPL License
+# rcS for Saturn7 by mmm4m5m
+
+CRAMFS="$1"
+
+{
+# LG rc.local
+if [ "$CRAMFS" != check ]; then
+	APP_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
+	FONT_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`
+fi
+
+if [ "${APP_XIP}" != "" ] && [ "${APP_XIP}" != "0x0" ]; then
+	mount -t cramfs lgapp_xip /mnt/lg/lgapp -o "physaddr=${APP_XIP}"
+else
+	echo 'rcS-lginit: squashfs /mnt/lg/lgapp'
+	mount -t squashfs /dev/mtdblock21 /mnt/lg/lgapp
+fi
+
+if [ "${FONT_XIP}" != "" ] && [ "${FONT_XIP}" != "0x0" ]; then
+	echo 'rcS-lginit: cramfs lgfont_xip'
+	#mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o physaddr=0xf100000
+	mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o "physaddr=${FONT_XIP}"
+else
+	mount -t squashfs /dev/mtdblock18 /mnt/lg/res/lgfont
+fi
+} > /dev/kmsg 2>&1

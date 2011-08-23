@@ -5,10 +5,8 @@
 # LG
 #console::once:-/bin/sh
 #::shutdown:/bin/umount -a -r
+::restart:/sbin/init
 # lgmod
 console::askfirst:-/bin/sh
 ::shutdown:/etc/init.d/rcK
-#::restart:/sbin/init
-# TODO - umount before poweroff (remote control)
-::restart:/etc/init.d/rcK restart
-::ctrlaltdel:/etc/init.d/rcK reboot
+::ctrlaltdel:/sbin/reboot

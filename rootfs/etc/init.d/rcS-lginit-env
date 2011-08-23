@@ -1,0 +1,60 @@
+#!/bin/sh
+# Source code released under GPL License
+# OpenLGTV BCM - lginit as shell script by xeros
+# Modified for Saturn7 by mmm4m5m
+
+# Description: used in rcS and profile
+
+# LG lginit
+#export TERM=vt100; # moved to rcS
+export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+export LOG_CALLER=NO
+export OSAMEM_SIZE=0x200000
+export LOAD_SYM=1
+export HOOK_SEGV=YES
+export IS_NFS=NO
+export ADDON_SYS_PATH=/mnt/addon
+export ADDON_RES_PATH=/mnt/addon/res
+export ADDON_APP_CTRL=addon_mgr
+export ADDON_APP_BATCH_LIST=addon_mgr.bat
+export FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
+export FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
+
+# environment kernel/init - before lginit
+#???export TERM=vt102
+#???export TERM=linux
+#export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+#export USER=root
+#export HOME=/
+#export host=saturn7
+#export ramdisk=0
+#export ip=165.186.175.92:192.168.0.1:192.168.0.10:192.168.0.1:255.255.255.0
+#export appxip_addr=0x6e00000
+#export fontxip_addr=0x0
+#export xipfs=18
+#export memsize=128
+#export boot1stver=3.00.01
+#export boot2ndver=0.01.16
+#export start_kernel=1453
+
+# kernel command line:
+#root=/dev/mtdblock3
+#lginit=/dev/mtdblock4
+#rootfstype=squashfs
+#host=saturn7
+#noinitrd
+#ramdisk=0
+#console=ttyS0,115200n8r
+#ip=165.186.175.92:192.168.0.1:192.168.0.10:192.168.0.1:255.255.255.0
+#appxip_addr=0x6e00000
+#fontxip_addr=0x0
+#xipfs=18
+#lock_time=40000
+#lcdmodels
+#memsize=128
+#boot1stver=3.00.01
+#boot2ndver=0.01.16
+#nosplash
+#lpj=167424
+#start_kernel=1454

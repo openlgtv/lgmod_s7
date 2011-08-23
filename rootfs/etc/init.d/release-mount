@@ -1,0 +1,15 @@
+#!/bin/sh
+# Source code released under GPL License
+# rcS for Saturn7 by mmm4m5m
+
+. /etc/init.d/rcS-usercall1 0 10
+
+for j in 1 2; do
+	[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
+	for i in 1 2 3 4; do
+		arg="noatime /dev/sd$J$i /mnt/usb$j/Drive$i"
+		mount -t vfat -o iocharset=utf8,shortname=mixed,$arg ||
+			mount -t ext3 -o $arg ||
+			mount -o $arg
+	done
+done

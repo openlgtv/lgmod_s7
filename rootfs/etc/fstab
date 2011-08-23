@@ -24,7 +24,7 @@ usbfs             /proc/bus/usb          usbfs         defaults   0       0
 /dev/mtdblock12   /mnt/lg/res/ezcal      squashfs      defaults   0       0
 /dev/mtdblock13   /mnt/lg/res/estreamer  squashfs      defaults   0       0
 /dev/mtdblock14   /usr/local             squashfs      defaults   0       0
-tmpfs             /usr/local/etc         tmpfs         size=1M    0       0
+#tmpfs            /usr/local/etc         tmpfs         size=1M    0       0
 /dev/mtdblock17   /mnt/lg/res/lgres      squashfs      defaults   0       0
 /dev/mtdblock19   /mnt/addon             squashfs      defaults   0       0
 

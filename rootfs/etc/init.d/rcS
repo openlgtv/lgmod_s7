@@ -1,180 +1,58 @@
 #!/bin/sh
-#
-# /etc/init.d/rcS - run once at boot time
-#
-#
-
-# LG rcS
+## /etc/init.d/rcS - run once at boot time
 #. /etc/rc.d/rc.sysinit
 #. /etc/rc.d/rc.local
 
+#!/bin/sh
+# Source code released under GPL License
+# lginit/rcS for Saturn7 by mmm4m5m
 
-RCS_SRC=/dev/shm/lgmod
-RCS_ROT=/home/lgmod/init/root
-RCS_MNT=/home/lgmod/init/user
-RCS_LGMOD_CFG=/mnt/lg/user/lgmod
-RCS_USR=$RCS_LGMOD_CFG/init
+RCS_CHROOT=''; #sdb1/lgmod_s7.sqf; # (if FAT - msdos 8.3 name, lower case)
+RCS_OVERLAY=''
+USB=/tmp/lgmod/Chrusb; CHR=/tmp/lgmod/Chroot
+RUN=/mnt/lg/user/lgmod/init/rcS
 
-RCS_CRAMING=/mnt/lg/cmn_data/lgmod-flag-file
-RCS_CHRUSB=/home/lgmod/init/chrusb
-RCS_CHRDIR=/home/lgmod/init/chroot
+DIR=/mnt/lg/lginit; MNT=/mnt/lg/user; OUT=/dev/kmsg
+CHRI=/tmp/lgmod/chroot; CHRO=/tmp/lgmod/overlay; # lginit
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
-# LG rc.sysinit
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin
-
-# LG lginit
-export PATH=$PATH:/usr/local/bin
-export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
-
-RCS_NOCHR=''; if [ "$1" = chroot ] || [ -f /proc/cpuinfo ] || [ -d /sys/kernel ]; then RCS_NOCHR=1; fi
-if [ -z "$RCS_NOCHR" ]; then
-	mount -t proc proc /proc
-	mount -t sysfs sysfs /sys
-fi; mount -t usbfs usbfs /proc/bus/usb
-
-# environment
-export TERMINFO_DIRS=/lib/terminfo:/usr/share/terminfo
-export TERMCAP=/etc/termcap
-export HOME=/mnt/lg/user/root
-
-after=/lg/user/RA; # symbolic link
-export PATH="$PATH:$after${PATH//:/:$after}"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$after${LD_LIBRARY_PATH//:/:$after}"
-export TERMINFO_DIRS="$TERMINFO_DIRS:$after${TERMINFO_DIRS//:/:$after}"
-unset after
+. /etc/init.d/rcS-tmpfs
 
 
-# config: If lgmod file exists - RCS_DEF is used; Values are empty or not
-# config: Example for RCS_CHROOT=sda1/usb_dir/rootfs.sqf (device and msdos name 8.3, lower case)
-RCS_RST() { RCS_CHROOT=''; RCS_TMUX=1;  RCS_LGREL=''; RCS_LGCRAM=''; RCS_DELAY=15; RCS_LGINIT_ERASE=''; RCS_LG_DEV=''; RCS_LG_USR=''; RCS_LG_ADD=''; }
-RCS_DEF() { RCS_CHROOT=''; RCS_TMUX=''; RCS_LGREL=''; RCS_LGCRAM=''; RCS_DELAY=20; RCS_LGINIT_ERASE=''; RCS_LG_DEV=''; RCS_LG_USR=''; RCS_LG_ADD=''; }
-RCS_GET() {
-	RCS_RST; [ ! -f "$1/lgmod" ] && return
-	RCS_DEF; echo "rcS: lgmod config: default ($2)" > /dev/kmsg
-	. "$1/lgmod" "$@" || { RCS_RST; echo "rcS: lgmod config: error ($2)" > /dev/kmsg; }
-}
-
-mount -t jffs2 /dev/mtdblock11 "$RCS_MNT"
-RCS_GET "$RCS_MNT/lgmod/init" init
-umount -f "$RCS_MNT"
-
-{
-# config: check, prepare chroot and run rcS from new root
-RCS_chrdev="/dev/${RCS_CHROOT%%/*}"; RCS_chrsqf="$RCS_CHRUSB/${RCS_CHROOT#*/}"
-if [ -z "$RCS_NOCHR" ] && [ -b "$RCS_chrdev" ]; then
-	echo 1 > /proc/usercalls; sleep 7
-	mount "$RCS_chrdev" "$RCS_CHRUSB"
-	if [ -f "$RCS_chrsqf" ]; then
-		echo "rcS: Trying $RCS_chrsqf ..."
-		mount -t squashfs "$RCS_chrsqf" "$RCS_CHRDIR" &&
-			mount -t proc  lgchrproc  "$RCS_CHRDIR/proc" &&
-			mount -t sysfs lgchrsysfs "$RCS_CHRDIR/sys" &&
-			{ exec chroot "$RCS_CHRDIR" /etc/init.d/rcS chroot; exit 0; }
-		umount "$RCS_CHRDIR/sys" "$RCS_CHRDIR/proc" "$RCS_CHRDIR"
-	fi; umount "$RCS_CHRUSB"
+D=$(stat -c%D / $MNT); D=$(echo $D); d="${D%% *}"; D="${D#* }"
+if [ "$d" = "$D" ]; then
+	mount -t jffs2 /dev/mtdblock11 $MNT -o noatime > $OUT 2>&1 ||
+		echo 'rcS: help: flash_eraseall -j /dev/mtd11' > $OUT; # rcS-lginit
 fi
-} >/dev/kmsg 2>&1
+[ -f "$RUN" ] && . "$RUN"
 
 
-{
-mount -o bind / "$RCS_ROT"
-
-shm=''; [ -z "$RCS_LG_DEV$RCS_TMUX" ] && shm=/shm
-echo "rcS: /dev$shm as tmpfs"
-mount -t tmpfs tmpfsdev /dev$shm -o size=24M
-cp -a "$RCS_ROT"/dev$shm/* /dev$shm/
-
-mount -o bind "$RCS_SRC/lgsw" /lgsw
-mount -o bind "$RCS_SRC/tmp" /tmp
-mount -o bind "$RCS_SRC/var" /var
-
-cp -a "$RCS_ROT/mnt" "$RCS_SRC/"; s=/mnt/lg/lginit
-mount -o bind $s "$RCS_SRC$s"; mount -o bind "$RCS_SRC/mnt" /mnt
-mount -o bind "$RCS_SRC$s" $s; umount "$RCS_SRC$s"
-
-if [ -n "$RCS_LG_USR" ]; then
-	echo 'rcS: /usr rw'
-	mkdir -p "$RCS_SRC/usr"; mount -o bind "$RCS_SRC/usr" /usr
-	mkdir /usr/lib /usr/local
-	for i in $(cd "$RCS_ROT"; echo usr/* usr/lib/*); do
-		[ ! -d /$i ] && ln -s "$RCS_ROT/$i" /$i; done
-fi
-} >/dev/kmsg 2>&1
-
-echo 'rcS: lginit as sh script' > /dev/kmsg
-cd /mnt/lg/lginit; . /etc/init.d/rcS-lginit; # || RCS_LGREL=1
-
-{
-if [ -n "$RCS_LG_ADD" ]; then
-	echo 'rcS: /mnt/addon rw'
-	s=/mnt/addon; I=$(cd $s; echo contents/emanual [^c]*)
-	mkdir -p "$RCS_SRC/addon"; mount -o bind $s "$RCS_SRC/addon"; umount $s
-	f=contents/master.swf; (cd $s; mkdir -p $I; touch $f)
-	for i in $I $f; do mount -o bind "$RCS_SRC/addon/$i" $s/$i; done
-fi
-
-[ -d "$RCS_LGMOD_CFG/devshm" ] && cp -a "$RCS_LGMOD_CFG"/devshm/* /dev/shm/
-} >/dev/kmsg 2>&1
+DEV="/dev/${RCS_CHROOT%%/*}"; SQF="$USB/${RCS_CHROOT#*/}"
+if [ -n "$RCS_CHROOT" ] && [ -b "$DEV" ]; then
+	#. /etc/init.d/rcS-tmpfs
+	if mkdir -p "$USB" > $OUT 2>&1; then
+		. /etc/init.d/rcS-usercall1 0 10
+		if mount "$DEV" "$USB" > $OUT 2>&1; then
+			if [ -f "$SQF" ]; then
+				if mkdir -p "$CHR" > $OUT 2>&1 &&
+					mount -t squashfs "$SQF" "$CHR" > $OUT 2>&1 &&
+					mount -o bind $DIR "$CHR$DIR" > $OUT 2>&1; then
+					{ echo "rcS: chroot $SQF ..."; mount -o bind /tmp "$CHR/tmp"
+					mount -o bind $MNT "$CHR$MNT"; mount -o bind / "$CHR$CHR"
+					[ -d "$CHRI" ] && mount -o bind "$CHRI" "$CHR$CHRI"
+					[ -d "$CHRO" ] && mount -o bind "$CHRO" "$CHR$CHRO"
+					} > $OUT 2>&1
+					exec chroot "$CHR" sh /etc/init.d/rcS-overlay "$RCS_OVERLAY" Chroot
+					{ echo "rcS: Error $?"
+					[ -d "$CHRO" ] && umount "$CHR$CHRO"; [ -d "$CHRI" ] && umount "$CHR$CHRI"
+					umount "$CHR$CHR" "$CHR$MNT" "$CHR/tmp"; } > $OUT 2>&1
+				fi; { umount "$CHR$DIR" "$CHR"; rm -rf "$CHR"; } > $OUT 2>&1
+			else echo "rcS: Error chroot $SQF" > $OUT
+			fi; umount "$USB" > $OUT 2>&1
+fi; fi; fi
 
 
-echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
-echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
-[ -f "$RCS_USR/rcS.sh" ] && { "$RCS_USR/rcS.sh" && RCS_GET "$RCS_USR" update; }
+. /etc/init.d/rcS-overlay "$RCS_OVERLAY"
 
-/etc/init.d/lgmod boot $RCS_DELAY || RCS_LGREL=1
-
-
-if [ -n "$RCS_LGREL" ]; then
-	if [ -f $RCS_CRAMING.1 ]; then
-		echo "rcS: cramfs flag file removed: $RCS_CRAMING.1"
-		echo "rcS: cramfs flag file removed: $RCS_CRAMING.1" > /dev/kmsg
-		rm -f $RCS_CRAMING.1; sync
-	fi
-
-	echo 'rcS: LGMOD gives shell - (Skipping RELEASE)'
-	echo 'rcS: LGMOD gives shell - (Skipping RELEASE)' > /dev/kmsg
-else
-	# flag files -removed if RELEASE success (stop auto-reboot loop)
-	if [ -f $RCS_CRAMING ]; then
-		( sleep 20; # it is hard but also possible - to manual trigger it
-		if ! pgrep -f RELEASE > /dev/null; then
-			echo 'rcS: cramfs FLAG FILES REMAINS!'
-			echo 'rcS: cramfs FLAG FILES REMAINS!' > /dev/kmsg
-		elif [ -f $RCS_CRAMING.1 ]; then
-			echo "rcS: cramfs flag files removed: $RCS_CRAMING.*" > /dev/kmsg
-			rm -f $RCS_CRAMING.*; sync
-		else
-			echo "rcS: cramfs flag files OFF" > /dev/kmsg
-			rm -f $RCS_CRAMING*; sync
-		fi ) &
-	fi
-
-	F=mtd10_nvram_before_erase; FF="/mnt/lg/cmn_data/${F}1-1 /mnt/lg/user/${F}2-2"
-	{ for f in $FF; do
-		f=$f.tar.gz; [ -f $f ] && continue; # TODO: force new backup if different
-		h=$(hexdump -n64 -e'"%_c"' /dev/mtd10)
-		[ "$h" = $'377*' ] && { echo 'rcS: backup nvram: empty'; break; }
-		h=$(hexdump -vs1330 -n13 -e'"%_p"' /dev/mtd10)
-		touch "/mnt/lg/cmn_data/model.${h%%.*}" "/mnt/lg/user/model.${h%%.*}"; # expose model name
-		echo "rcS: backup nvram: $f"
-		cd /dev/shm; cat /dev/mtd10 > $F
-		tar czf $f $F; rm -f $F; sync; break
-	done; } >/dev/kmsg 2>&1
-
-	echo "rcS: Starting RELEASE" > /dev/kmsg
-	cd /; #cd /mnt/lg/lginit
-	if [ -n "$RCS_TMUX" ]; then
-		insmod /lib/modules/pty.ko legacy_count=8
-		tmux new-session -d -s LGMOD -n RELEASE 'exec /mnt/lg/lgapp/RELEASE 0'
-		exit 0
-	else exec /mnt/lg/lgapp/RELEASE 0; fi
-fi
-
-
-if [ ! -f $RCS_CRAMING ]; then
-	echo "rcS: cramfs flag files ON (sh)"
-	echo "rcS: cramfs flag files ON (sh)" > /dev/kmsg
-	touch $RCS_CRAMING; sync
-fi
-#exec sh
-exit 0
+exec sh
+exit 1

@@ -1,0 +1,55 @@
+#!/bin/sh
+# Source code released under GPL License
+# OPENRELEASE by rtokarev is licensed under BSD License
+# rcS for Saturn7 by mmm4m5m
+
+# $1='force' - do not check if running
+# $4='skip' - do not read config (used when run from rcS - if $4=skip, consider next arguments)
+# $5='skip' - do not replace RELEASE.cfg
+RCS_RELEASE="$2"; RCS_CRAMFS="$3"; Rtm="$6"
+RUN=/mnt/lg/user/lgmod/init/rcS
+
+SRC=/tmp/lgmod/Root; TFS=/tmp/lgmod/tmpfs
+RBIN=/mnt/lg/lgapp/RELEASE
+if [ "$1" != force ] && pgrep -f "^$RBIN"; then
+	echo "release: Error: running: $RBIN"' (use: $1=force)'
+	return 1; exit 1
+fi
+
+if [ "$5" != skip ]; then
+	cfg=/mnt/lg/cmn_data/RELEASE.cfg; rdir=/mnt/lg/model; rcfg=$rdir/RELEASE.cfg
+	if [ "$4" = skip ]; then d=''; D=''
+	else D=$(stat -c%D $rdir $rcfg); D=$(echo $D); d="${D%% *}"; D="${D#* }"; fi
+	if [ "$d" = "$D" ]; then
+		[ -f "$cfg" ] || sed -e 's/^\(eDebugMode,\).*$/\1EVENT/' "$rcfg" > "$cfg"
+		mount -o bind "$cfg" "$rcfg"
+	fi
+fi
+
+
+if [ "$4" != skip ]; then
+	Rtm=''; (. /etc/init.d/rcS-release tm "$RCS_RELEASE") && Rtm=1
+	RCS_CRAMFS=1; [ -f "$RUN" ] && . "$RUN"
+fi
+
+[ -n "$Rtm" ] && if ! insmod /lib/modules/pty.ko legacy_count=8; then
+	lsmod | grep -q '^pty ' || { RCS_RELEASE=OPENREL-DAEMON; Rtm=''; }; fi
+
+if [ -n "$Rtm" ] && ! touch /dev/test-rw > /dev/null 2>&1; then
+	d=/dev; mkdir -p "$TFS$d" && insmod /lib/modules/mini_fo.ko &&
+		mount -t mini_fo -o base="$d",sto="$TFS$d" "mini$d" "$d" && d=''
+	if [ -n "$d" ]; then mkdir -p $SRC && mount -o bind / $SRC &&
+		cp "$SRC$d" "$TFS$d/../" && mount -o bind "$TFS$d" "$d" ||
+		{ RCS_RELEASE=OPENREL-DAEMON; Rtm=''; }; fi; # another bg <MODE> without tmux
+fi
+
+
+if [ ! -f "$RBIN" ]; then
+	CRAMFS=''; [ -n "$RCS_CRAMFS" ] && CRAMFS=check
+	[ -n "$CRAMFS" ] && . /etc/init.d/rcS-cramfs
+	[ -f "$RUN-cramfs" ] && . "$RUN-cramfs"
+	. /etc/init.d/rcS-lginit-cramfs "$CRAMFS"; # LG: mount cramfs
+fi
+
+[ -f "$RUN-release" ] && . "$RUN-release"
+. /etc/init.d/rcS-release run "$RCS_RELEASE"; # LG: RELEASE

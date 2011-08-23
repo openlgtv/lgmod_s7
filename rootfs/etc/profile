@@ -1,6 +1,6 @@
 # /etc/profile: system-wide .profile file for the Bourne shells
 
-echo -ne "\nProcessing /etc/profile...\n"
+echo "Processing /etc/profile ..."
 #export PATH=$PATH:/home
 
 alias dir="ls -al"
@@ -15,50 +15,78 @@ cd /lgsw
 #echo -ne "\nDone\n\n"
 
 
-# LG rc.sysinit
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+# profile for Saturn7 by mmm4m5m
 
-# LG lginit
-export PATH=$PATH:/usr/local/bin
-export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
-export LOG_CALLER=NO
-export OSAMEM_SIZE=0x200000
-export LOAD_SYM=1
-export HOOK_SEGV=YES
-export IS_NFS=NO
-export TERM=vt100
-export ADDON_SYS_PATH=/mnt/addon
-export ADDON_RES_PATH=/mnt/addon/res
-export ADDON_APP_CTRL=addon_mgr
-export ADDON_APP_BATCH_LIST=addon_mgr.bat
-export FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
-export FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
+# env: sh from init (putty)
+#TERM=vt102
+#PATH=/sbin:/usr/sbin:/bin:/usr/bin
+#USER=root
+#HOME=/
+#host=saturn7
+#ramdisk=0
+#ip=165.186.175.92:192.168.0.1:192.168.0.10:192.168.0.1:255.255.255.0
+#appxip_addr=0x6e00000
+#fontxip_addr=0x0
+#xipfs=18
+#memsize=128
+#boot1stver=3.00.01
+#boot2ndver=0.01.16
+#start_kernel=1453
 
-# LG after lginit
-export OSAINIT=done
+# env: ssh
+#TERM=xterm; # detected?
+#PATH=/sbin:/usr/sbin:/bin:/usr/bin; # not exported?
+#USER=root
+#HOME=/mnt/lg/user/root
+#SHELL=/bin/sh
+#LOGNAME=root
 
+# env: telnet - from rcS-lginit
+#TERM=vt100
+#PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+#LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+#USER=root
+#HOME=/mnt/lg/user/root
+#SHELL=/bin/sh
+#host=saturn7
+#ramdisk=0
+#ip=165.186.175.92:192.168.0.1:192.168.0.10:192.168.0.1:255.255.255.0
+#appxip_addr=0x6e00000
+#fontxip_addr=0x0
+#xipfs=18
+#memsize=128
+#boot1stver=3.00.01
+#boot2ndver=0.01.16
+#start_kernel=1454
+#LOG_CALLER=NO
+#OSAMEM_SIZE=0x200000
+#LOAD_SYM=1
+#HOOK_SEGV=YES
+#IS_NFS=NO
+#ADDON_SYS_PATH=/mnt/addon
+#ADDON_RES_PATH=/mnt/addon/res
+#ADDON_APP_CTRL=addon_mgr
+#ADDON_APP_BATCH_LIST=addon_mgr.bat
+#FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
+#FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
 
-# environment
-export TERMINFO_DIRS=/lib/terminfo:/usr/share/terminfo
-export TERMCAP=/etc/termcap
-export HOME=/mnt/lg/user/root
+export HOME=/mnt/lg/user/root; # sh from init (putty)
+	# note: we do not 'sh -l' from init. It is just 'sh'
 
-after=/lg/user/RA; # symbolic link
-export PATH="$PATH:$after${PATH//:/:$after}"
-export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$after${LD_LIBRARY_PATH//:/:$after}"
-export TERMINFO_DIRS="$TERMINFO_DIRS:$after${TERMINFO_DIRS//:/:$after}"
-unset after
+. /etc/init.d/rcS-lginit-env; # LG: env
 
+alias mounts='cat /proc/mounts'
+if [ -z "$TMUX" ]; then
+	if [ -z "$TERM" ] || [ "$TERM" = vt100 ]; then
+		alias tmux='TERM=linux tmux'
+		alias tma='TERM=linux tmux attach-session'
+	else
+		alias tma='tmux attach-session'
+	fi
+fi
+MODEL=$(echo /lg/user/model.*); export MODEL="${MODEL#*model.}"
+alias Rdpass='p="d '"${MODEL}"'elqjrm"; f=/tmp/openrelease.in; [ -e $f ] && echo "$p" > $f || tmux send -t RELEASE "$p" C-M;'
+alias Rtail='tail -n+1 -F /tmp/RELEASE.out /tmp/openrelease.out /tmp/openrelease.log;'
+alias Ropen='(F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F&); trap "pkill -f \"tail -F $F\"; exit" INT; cat >/tmp/openrelease.in);'
 
-#before=/lg/user/RB; # symbolic link
-#export PATH="$before${PATH//:/:$before}:$PATH"
-#export LD_LIBRARY_PATH="$before${LD_LIBRARY_PATH//:/:$before}:$LD_LIBRARY_PATH"
-#export TERMINFO_DIRS="$before${TERMINFO_DIRS//:/:$before}:$TERMINFO_DIRS"
-#unset before
-
-alias dropc='echo 3 > /proc/sys/vm/drop_caches; free'
-alias mcx='TERM=xterm mc -c'
-alias tml='TERM=linux tmux'
-alias tma='TERM=linux tmux attach-session'
-
-[ -f /mnt/cmn_data/profile ] && . /mnt/cmn_data/profile
+[ -f /lg/cmn_data/profile ] && . /lg/cmn_data/profile

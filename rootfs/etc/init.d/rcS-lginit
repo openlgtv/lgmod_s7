@@ -1,110 +1,32 @@
 #!/bin/sh
-# lginit_as_shell_script.sh by xeros
-# Modified for lgmod S7 by mmm4m5m
+# Source code released under GPL License
+# OpenLGTV BCM - lginit as shell script by xeros
+# Modified for Saturn7 by mmm4m5m
 
-# LG lginit
-export LOG_CALLER=NO
-export OSAMEM_SIZE=0x200000
-export LOAD_SYM=1
-export HOOK_SEGV=YES
-export IS_NFS=NO
-export TERM=vt100
-export ADDON_SYS_PATH=/mnt/addon
-export ADDON_RES_PATH=/mnt/addon/res
-export ADDON_APP_CTRL=addon_mgr
-export ADDON_APP_BATCH_LIST=addon_mgr.bat
-export FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
-export FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
+TFS=/tmp/lgmod/tmpfs; STO=/tmp/lgmod/Storage
 
-# LG after lginit
-export OSAINIT='done'
+OVERLAY="$1"
+
+# LG rc.local
+#HOST_NAME=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS="="; } /host=/ { print $2 } END {}'`
+
+#[ -z "$host" ] && { cmd=" $(cat /proc/cmdline) "; host="${cmd#*host=}"; export host="${host%% *}"; }
+#hostname $host
 
 
 {
-	# BCM lginit sh script
-	mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data; #-o noatime
-	if [ "$?" -ne "0" ] && [ -z "$RCS_LGINIT_ERASE" ]; then
-		echo 'rcS lginit: Erase /dev/mtd9'
-		/bin/flash_eraseall -j /dev/mtd9
-		mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data; #-o noatime
-	fi
-	mount -t jffs2 /dev/mtdblock11 /mnt/lg/user; #-o noatime
-	if [ "$?" -ne "0" ] && [ -z "$RCS_LGINIT_ERASE" ]; then
-		echo 'rcS lginit: Erase /dev/mtd11'
-		/bin/flash_eraseall -j /dev/mtd11
-		mount -t jffs2 /dev/mtdblock11 /mnt/lg/user; #-o noatime
-	fi
-
-	# LG rc.sysinit
-	mount -a
-
-	# LG rc.local and BCM lginit sh script
-	APP_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
-	FONT_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`
-	if [ "${APP_XIP}" = "" ] || [ "${APP_XIP}" = "0x0" ]; then
-		echo 'rcS lginit: squashfs /mnt/lg/lgapp'
-		mount -t squashfs /dev/mtdblock21 /mnt/lg/lgapp
-	fi
-	if [ "${FONT_XIP}" = "" ] || [ "${FONT_XIP}" = "0x0" ]; then
-		echo 'rcS lginit: squashfs /mnt/lg/res/lgfont'
-		mount -t squashfs /dev/mtdblock18 /mnt/lg/res/lgfont
-	fi
-} >/dev/kmsg 2>&1
+mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data -o noatime ||
+	echo 'rcS-lginit: help: flash_eraseall -j /dev/mtd9'
+#mount -t jffs2 /dev/mtdblock11 /mnt/lg/user -o noatime ||
+#	echo 'rcS-lginit: help: flash_eraseall -j /dev/mtd11'
 
 
-# flag files -removed if RELEASE success (stop auto-reboot loop)
-if [ ! -d "$RCS_LGMOD_CFG" ]; then
-	# TODO: turn ON if nvram crc is wrong (xeros)
-	echo "rcS: cramfs flag files ON (lgmod)"
-	echo "rcS: cramfs flag files ON (lgmod)" > /dev/kmsg
-	touch $RCS_CRAMING; sync
-fi
-if [ -f $RCS_CRAMING ]; then
-	for i in 3 2 1; do
-		flag_idx=$i; [ -f $RCS_CRAMING.$flag_idx ] || break
-	done
-	if [ -f $RCS_CRAMING.$flag_idx ]; then
-		echo 'rcS lginit: cramfs FLAG FILES! (LGMOD gives shell)'
-		echo 'rcS lginit: cramfs FLAG FILES! (LGMOD gives shell)' > /dev/kmsg
-		APP_XIP=''; FONT_XIP=''; RCS_LGREL=1; return 1
-	else
-		echo "rcS lginit: cramfs flag file: $RCS_CRAMING.$flag_idx" > /dev/kmsg
-		touch $RCS_CRAMING.$flag_idx; sync
-	fi
-fi
+[ -z "$OVERLAY" ] && { d=/lgsw; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"; }
 
+# LG rc.sysinit
+mount -a
 
-{
-	# LG rc.local and BCM lginit sh script
-	cram_app_ok=1; cram_font_ok=1
-	if [ "${APP_XIP}" != "" ] && [ "${APP_XIP}" != "0x0" ]; then
-		if [ -z "$RCS_LGCRAM" ]; then
-			cramfs_magic=`devmem $((APP_XIP+16)) 64`; release_magic=`devmem $((APP_XIP+1024*4)) 32`
-			if [ "$cramfs_magic" != '0x73736572706D6F43' ]; then
-				echo 'rcS lginit: cramfs lgapp_xip - WRONG MAGIC! (LGMOD gives shell)'
-				cram_app_ok=''; RCS_LGREL=1
-			elif [ "$release_magic" != '0x464C457F' ]; then
-				echo 'rcS lginit: cramfs RELEASE - WRONG MAGIC! (LGMOD gives shell)'
-				cram_app_ok=''; RCS_LGREL=1
-			fi
-		fi
-		if [ -n "$cram_app_ok" ]; then
-			echo 'rcS lginit: cramfs lgapp_xip'
-			mount -t cramfs lgapp_xip /mnt/lg/lgapp -o "physaddr=${APP_XIP}"
-		fi
-	fi
-	if [ "${FONT_XIP}" != "" ] && [ "${FONT_XIP}" != "0x0" ]; then
-		if [ -z "$RCS_LGCRAM" ]; then
-			cramfs_magic=`devmem $((FONT_XIP+16)) 64`
-			if [ "$cramfs_magic" != '0x73736572706D6F43' ]; then
-				echo 'rcS lginit: cramfs lgfont_xip - WRONG MAGIC! (LGMOD gives shell)'
-				cram_font_ok=''; RCS_LGREL=1
-			fi
-		fi
-		if [ -n "$cram_font_ok" ]; then
-			echo 'rcS lginit: cramfs lgfont_xip'
-			#mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o physaddr=0xf100000
-			mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o "physaddr=${FONT_XIP}"
-		fi
-	fi
-} >/dev/kmsg 2>&1
+d=/usr/local; mkdir -p "$STO$d"; lsmod | grep -q '^mini_fo ' && 
+	mount -t mini_fo -o base="$d",sto="$STO$d" "mini$d" "$d" ||
+	{ d="$d/etc"; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"; }
+} > /dev/kmsg 2>&1
