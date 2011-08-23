@@ -1,0 +1,44 @@
+#!/bin/sh
+# Source code released under GPL License
+# lginit/rcS for Saturn7 by mmm4m5m
+
+LGINIT=''; # ''=rcS; <not empty>=lg-init; LGMOD=lg-init and LGMOD
+LGI_CHROOT=''; #sdb1/lgmod_s7.sqf; # (if FAT - msdos 8.3 name, lower case)
+LGI_OVERLAY=''
+USB=/tmp/lgmod/chrusb; CHR=/tmp/lgmod/chroot
+MNT=/mnt/lg/user; RUN=$MNT/lgmod/init/lginit
+
+OUT=/dev/kmsg; [ -e $OUT ] || OUT=/dev/stdout
+DIR=/mnt/lg/lginit
+export PATH=/sbin:/usr/sbin:/bin:/usr/bin
+
+
+mount -t jffs2 /dev/mtdblock11 "$MNT" -o noatime > $OUT 2>&1
+[ -f "$RUN" ] && . "$RUN"
+
+
+DEV="/dev/${LGI_CHROOT%%/*}"; SQF="$USB/${LGI_CHROOT#*/}"
+if [ -n "$LGI_CHROOT" ] && [ -b "$DEV" ]; then
+	. $DIR/lginit-tmpfs
+	if mkdir -p "$USB" > $OUT 2>&1; then
+		. $DIR/lginit-usercall1 0 10
+		if mount "$DEV" "$USB" > $OUT 2>&1; then
+			if [ -f "$SQF" ]; then
+				if mkdir -p "$CHR" > $OUT 2>&1 &&
+					mount -t squashfs "$SQF" "$CHR" > $OUT 2>&1 &&
+					mount -o bind,rprivate $DIR "$CHR$DIR" > $OUT 2>&1; then
+					{ echo "lginit: chroot $SQF ..."; mount -o bind /tmp "$CHR/tmp"
+					mount -o bind / "$CHR$CHR"; umount -f "$MNT"; } > $OUT 2>&1
+					exec chroot "$CHR" sh $DIR/lginit-overlay "$LGINIT" "$LGI_OVERLAY" chroot
+					{ echo "lginit: Error $?"
+					umount "$CHR$CHR" "$CHR/tmp"; } > $OUT 2>&1
+				fi; { umount "$CHR$DIR/lginit-lgmod" "$CHR$DIR/lginit-overlay" "$CHR$DIR" "$CHR"; rm -rf "$CHR"; } > $OUT 2>&1
+			else echo "lginit: Error chroot $SQF" > $OUT
+			fi; umount "$USB" > $OUT 2>&1
+fi; fi; fi
+
+
+. $DIR/lginit-overlay "$LGINIT" "$LGI_OVERLAY"
+
+exec sh
+exit 1

@@ -1,0 +1,25 @@
+#!/bin/sh
+# Source code released under GPL License
+# lginit for Saturn7 by mmm4m5m
+
+LGINIT="$1"
+MNT=/mnt/lg/user
+
+OUT=/dev/kmsg; [ -e $OUT ] || OUT=/dev/stdout
+
+[ -f /etc/lgmod.sh ] || LGINIT=rootfs_unknown
+if [ -n "$LGINIT" ]; then
+	D=$(stat -c%D / $MNT); D=$(echo $D); d="${D%% *}"; D="${D#* }"
+	[ "$d" != "$D" ] && { umount -f "$MNT" > $OUT 2>&1 || LGINIT=''; }
+fi
+
+. /mnt/lg/lginit/lginit-lgmod "$@"
+
+[ -z "$LGINIT" ] && exec /sbin/init
+
+echo "lginit: Starting lg-init ($LGINIT)..." > $OUT
+exec /mnt/lg/lginit/lg-init
+echo "lginit: Error $?" > $OUT
+
+exec sh
+exit 1
