@@ -1,6 +1,6 @@
 #!/bin/sh
 # Source code released under GPL License
-# OpenLGTV BCM - lginit as shell script by xeros
+# OpenLGTV BCM by xeros
 # Modified for Saturn7 by mmm4m5m
 
 RCS_NOREL=''
@@ -13,16 +13,14 @@ RCS_RELEASE=OPENREL-DAEMON; # in bg
 #RCS_RELEASE=TMUX-PIPE
 #RCS_RELEASE=TMUX; # insmod pty.ko; in bg
 #RCS_RELEASE=''; # LG
+RCS_CRASH=1
 RUN=/mnt/lg/user/lgmod/init/rcS
 
 
 . /etc/init.d/rcS-tmpfs
 
-{ mkdir -p /tmp/var/log /tmp/var/run/tmux
-f='/var/run/utmp /var/log/wtmp'
-touch $f /var/log/lastlog
-chgrp utmp $f; chmod 0664 $f
-} > /dev/kmsg 2>&1
+{ syslogd -C16; mkdir -p /tmp/var/log /tmp/var/run/tmux; f='/var/run/utmp /var/log/wtmp'
+touch $f /var/log/lastlog; chgrp utmp $f; chmod 0664 $f; } > /dev/kmsg 2>&1
 
 # environment - minimal
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
@@ -50,11 +48,20 @@ touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
 if [ -z "$RCS_NOREL" ]; then
 	. /etc/init.d/rcS-nvram
 	Rbg=''; . /etc/init.d/rcS-release bg "$RCS_RELEASE" && Rbg=1; # Rtm
-	[ -z "$Rbg" ] && /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
-	. /etc/init.d/release force "$RCS_RELEASE" "$RCS_CRAMFS" skip '' "$Rtm"
-	[ -n "$Rbg" ] && . /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY"
+	if [ -z "$Rbg" ]; then
+		sh /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
+		. /etc/init.d/rcS-crash watch
+		. /etc/init.d/release force "$RCS_RELEASE" "$RCS_CRAMFS" skip '' "$Rtm"
+		echo "rcS-exec: Error $?"
+		. /etc/init.d/rcS-crash error
+	else
+		. /etc/init.d/rcS-crash watch
+		. /etc/init.d/release force "$RCS_RELEASE" "$RCS_CRAMFS" skip '' "$Rtm"
+		. /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY"
+	fi
 else
 	. /etc/init.d/rcS-services "$RCS_NOREL" 0 0
+	. /etc/init.d/rcS-crash minus1
 fi
 
 exit 0

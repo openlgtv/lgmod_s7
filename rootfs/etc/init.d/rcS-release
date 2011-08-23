@@ -14,9 +14,9 @@ for i in OPENREL-TMUX-PIPE OPENREL-TMUX OPENRELEASE OPENREL-DAEMON TMUX-PIPE TMU
 	[ "$2" = $i ] && Mode=$i && break; done
 
 Rtm=1; for i in OPENRELEASE OPENREL-DAEMON ''; do [ "$Mode" = "$i" ] && Rtm='' && break; done
-[ "$Action" = tm ] && { [ -n "$Rtm" ]; return; }
+[ "$Action" = tm ] && { [ -n "$Rtm" ]; return; exit; }
 Rbg=1; for i in OPENRELEASE ''; do [ "$Mode" = "$i" ] && Rbg='' && break; done
-[ "$Action" = bg ] && { [ -n "$Rbg" ]; return; }
+[ "$Action" = bg ] && { [ -n "$Rbg" ]; return; exit; }
 
 Rop=1; for i in TMUX-PIPE TMUX ''; do [ "$Mode" = "$i" ] && Rop='' && break; done
 Rod=1; [ "$Mode" != OPENREL-DAEMON ] && Rod=''
