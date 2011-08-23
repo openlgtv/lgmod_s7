@@ -14,11 +14,11 @@ content-type: text/html
  mask=`awk '{print $2}' /mnt/lg/user/lgmod/network`
  gw=`awk '{print $3}' /mnt/lg/user/lgmod/network`
  dns=`awk '{print $2}' /mnt/lg/user/lgmod/resolv.conf`
- if [ -e /mnt/lg/user/lgmod/dhcp ]; then 
+ if [ ! -e /mnt/lg/user/lgmod/network -o -e /mnt/lg/user/lgmod/dhcp ]; then 
   flag=" disabled" && yes=" checked" && no=""
-else 
- flag="" && yes="" && no=" checked"
-fi 
+ else 
+  flag="" && yes="" && no=" checked"
+ fi 
  echo "<input name="dhcp" type="radio" value="1" onclick="ip.disabled=true\;mask.disabled=true\;gw.disabled=true"$yes><b>Yes</b>"
  echo "<input name="dhcp" type="radio" value="0" onclick="ip.disabled=false\;mask.disabled=false\;gw.disabled=false"$no><b>No</b><br>"
  echo "Local IP Address:<input name="ip" type="text" id="ip" $flag value="$ip">"
