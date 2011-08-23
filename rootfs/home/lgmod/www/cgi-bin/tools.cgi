@@ -1,4 +1,4 @@
-#!/usr/bin/haserl --upload-limit=16384 --upload-dir=/dev/shm/lgmod/upload
+#!/usr/bin/haserl --upload-limit=16384 --upload-dir=/tmp/lgmod/Upload
 content-type: text/html
 
 <html>
