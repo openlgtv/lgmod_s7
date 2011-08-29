@@ -4,8 +4,6 @@
 
 # $1='force' call; $1='skip' call; $2=<SECONDS> wait (default 10)
 
-OUT=/dev/kmsg; [ -e $OUT ] || OUT=/dev/stdout
-
 call="$1"; wait="$2"; lines=''; added=''; time="${2:-10}"
 [ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || call=skip
 
@@ -19,7 +17,7 @@ if [ "$call" != force ] && [ "$call" != skip ]; then
 else wait="$time"; fi
 
 if [ "$call" = force ]; then
-	echo "lginit-usercall1: Calling($1)..." > $OUT
+	echo "lginit-usercall1: Calling($1)..."
 	echo 1 > /proc/usercalls
 fi
 
@@ -30,5 +28,5 @@ if [ -n "$wait" ]; then
 		[ "$last" != "$line" ] && { last="$line"; done=0; }
 		time=$(( time-1 )); sleep 1
 	done
-	echo "lginit-usercall1: Done($1 $2 $lines $added $done $time)" > $OUT
+	echo "lginit-usercall1: Done($1 $2 $lines $added $done $time)"
 fi

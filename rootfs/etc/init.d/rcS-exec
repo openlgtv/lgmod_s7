@@ -3,6 +3,7 @@
 # OpenLGTV BCM by xeros
 # Modified for Saturn7 by mmm4m5m
 
+# accepted config values: empty or non-empty
 RCS_NOREL=''
 RCS_CRAMFS=1
 RCS_DELAY=15
@@ -13,8 +14,9 @@ RCS_RELEASE=OPENREL-DAEMON; # in bg
 #RCS_RELEASE=TMUX-PIPE
 #RCS_RELEASE=TMUX; # insmod pty.ko; in bg
 #RCS_RELEASE=''; # LG
-RCS_CRASH=1
+RCS_CRASHDOG=''; # ''=default; 0=disable; 1=enable/enforce
 RUN=/mnt/lg/user/lgmod/init/rcS
+DBG=/mnt/lg/user/lgmod/debug
 
 
 . /etc/init.d/rcS-tmpfs
@@ -28,10 +30,11 @@ export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 export TERM=vt100
 export HOME=/mnt/lg/user/root
 
-[ -f "$RUN" ] && . "$RUN"
+[ -f "$RUN" ] && { echo "rcS: Found $RUN" > /dev/kmsg; . "$RUN"; }
 
+# lgmod: rc.sysinit rc.local
+[ -e $DBG ] && { RCS_NOREL=1; echo 'LGMOD: DEBUG!'; rm -f $DBG; sync; } >/dev/kmsg 2>&1
 
-[ -f "$RUN-init" ] && . "$RUN-init"
 
 #CHR=/tmp/lgmod/Overlay; CHRO=/tmp/lgmod/overlay; # lginit
 #OVERLAY=''; [ -d "$CHR" ] && [ $(stat -c%D / /tmp "$CHR"|sort|uniq|wc -l) = 3 ] && OVERLAY=yes
@@ -39,54 +42,35 @@ export HOME=/mnt/lg/user/root
 touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
 
 . /etc/init.d/rcS-lginit-env; # LG: env
+[ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
 . /etc/init.d/rcS-lginit "$OVERLAY"; # LG: mount
-[ -f "$RUN-mount" ] && . "$RUN-mount"
+[ -f "$RUN-mount" ] && { echo "rcS-exec: Found $RUN-mount" > /dev/kmsg; . "$RUN-mount"; }
 
 
-/etc/init.d/lgmod DEBUG || RCS_NOREL=1
+. /etc/init.d/rcS-nvram
 
 if [ -z "$RCS_NOREL" ]; then
-	. /etc/init.d/rcS-nvram
+	. /etc/init.d/rcS-crashdog watch "$RCS_CRASHDOG" ||
+		{ RCS_NOREL=1; . /etc/init.d/rcS-crashdog minus1 "$RCS_CRASHDOG"; }
+fi
+
+
+if [ -z "$RCS_NOREL" ]; then
 	Rbg=''; . /etc/init.d/rcS-release bg "$RCS_RELEASE" && Rbg=1; # Rtm
 	if [ -z "$Rbg" ]; then
 		sh /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
-		. /etc/init.d/rcS-crash watch
-		. /etc/init.d/release force "$RCS_RELEASE" "$RCS_CRAMFS" skip '' "$Rtm"
-		echo "rcS-exec: Error $?"
-		. /etc/init.d/rcS-crash error
+		. /etc/init.d/release boot "$RCS_RELEASE" "$RCS_CRAMFS" "$Rtm" skip
+		echo "rcS-exec: Error $?" > /dev/kmsg
+		. /etc/init.d/rcS-crashdog error "$RCS_CRASHDOG"
+		echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
+		echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
+		exec sh; exit 1
 	else
-		. /etc/init.d/rcS-crash watch
-		. /etc/init.d/release force "$RCS_RELEASE" "$RCS_CRAMFS" skip '' "$Rtm"
+		. /etc/init.d/release boot "$RCS_RELEASE" "$RCS_CRAMFS" "$Rtm" skip
 		. /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY"
 	fi
 else
 	. /etc/init.d/rcS-services "$RCS_NOREL" 0 0
-	. /etc/init.d/rcS-crash minus1
 fi
 
-exit 0
-
-
-#. /etc/init.d/rcS-crash mount
-. /etc/init.d/rcS-lginit-cramfs "$RCS_CRAMFS" "$RCS_CRAMFS"
-
-#echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
-#echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
-#[ -f "$RUN" ] && . "$RUN"
-
-/etc/init.d/lgmod boot $RCS_DELAY || RCS_LGREL=1
-
-
-if [ -n "$RCS_LGREL" ]; then
-	:;#. /etc/init.d/rcS-crash debug
-else
-	#. /etc/init.d/rcS-crash release
-	#. /etc/init.d/rcS-nvram
-	. /etc/init.d/rcS-release "$RCS_TMUXRELEASE" "$RCS_OPENRELEASE" "$RCS_NORELEASE"
-fi
-
-exec sh
-exit 1
-
-#. /etc/init.d/rcS-crash
 exit 0

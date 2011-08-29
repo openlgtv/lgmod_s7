@@ -2,15 +2,18 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
-F=mtd10_nvram_before_erase; FF="/mnt/lg/cmn_data/${F}1-1 /mnt/lg/user/${F}2-2"
-{ for f in $FF; do
-	f=$f.tar.gz; [ -f $f ] && continue; # TODO: force new backup if different
+F=mtd10_nvram.gz
+{
+for f in /mnt/lg/cmn_data /mnt/lg/user; do
+	[ -f $f/$F ] && continue; # TODO: force new backup if...???
+
 	h=$(hexdump -n64 -e'"%_c"' /dev/mtd10)
 	[ "$h" = $'377*' ] && { echo 'rcS-nvram: backup: empty'; break; }
+
 	h=$(hexdump -vs1330 -n13 -e'"%_p"' /dev/mtd10)
 	touch "/mnt/lg/cmn_data/model.${h%%.*}" "/mnt/lg/user/model.${h%%.*}"; # expose model name
-	echo "rcS-nvram: backup: $f"
-	cd /tmp; cat /dev/mtd10 > $F
-	tar czf $f $F; rm -f $F; sync; break
-done; } >/dev/kmsg 2>&1
- 
+
+	echo "rcS-nvram: backup: $f/$F"
+	cat /dev/mtd10 | gzip -1 > $f/$F; sync; break
+done
+} >/dev/kmsg 2>&1

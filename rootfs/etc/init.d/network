@@ -1,0 +1,69 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+START() {
+	CFG_DIR="/mnt/lg/user/lgmod"
+	NETCONF=$CFG_DIR/network
+	DHCPCFG=$CFG_DIR/dhcp
+
+	DHCP=''; [ ! -e $NETCONF -o -e $DHCPCFG ] && DHCP=1
+	[ "$2" = nodhcp ] && DHCP=''
+
+	f=/mnt/lg/cmn_data/resolv.conf; [ -h $f ] || { rm -f $f; ln -s /tmp/resolv.conf $f; }
+	f=/mnt/lg/cmn_data/hosts; [ -h $f ] || { rm -f $f; ln -s /mnt/lg/user/lgmod/hosts $f; }
+
+	if [ -z "$DHCP" ]; then
+		cfg=$(cat $NETCONF)
+		IP="${cfg%% *}"; cfg="${cfg#* }"
+		MASK="${cfg%% *}"; GW="${cfg#* }"
+		if [ -n "$IP" ] && [ -n "$MASK" ]; then
+			echo "network: Invalid configuration: IP=$IP; MASK=$MASK"
+			DHCP=1; [ "$2" = nodhcp ] && return
+		fi
+	fi
+
+	echo 'network: Setting network loopback'
+	ifconfig lo 127.0.0.1
+
+	if [ -n "$DHCP" ]; then
+		echo 'network: Configuring network via DHCP...'
+		udhcpc -t3 -A5 -S
+	else
+		echo 'network: Configuring network via network config file...'
+		ifconfig eth0 $IP netmask $MASK
+		[ -z "$GW" ] ||
+			route add default gw $GW eth0
+		[ ! -e $CFG_DIR/resolv.conf ] ||
+			cat $CFG_DIR/resolv.conf >/tmp/resolv.conf
+	fi
+}
+
+boot() {
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^udhcpc' && { echo 'network: Already started: udhcpc'; return 1; }
+	START "$@"
+}
+
+stop() {
+	pkill -f '^udhcpc'
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart [nodhcp]"; exit 1
+esac

@@ -2,7 +2,7 @@
 # Source code released under GPL License
 # lginit/rcS for Saturn7 by mmm4m5m
 
-RCS_OVERLAY="$1"
+RCS_OVERLAY="$1"; shift; # [chroot]
 STO=/tmp/lgmod/Chrsto; CHR=/tmp/lgmod/Overlay
 OVL=/mnt/lg/user/lgmod/Overlay
 
@@ -23,15 +23,15 @@ if [ -n "$RCS_OVERLAY" ]; then
 		[ -d "$CHRO" ] && mount -o bind "$CHRO" "$CHR$CHRO"
 		[ -d "$CHRR" ] && mount -o bind "$CHRR" "$CHR$CHRR"
 		} > $OUT 2>&1
-		exec chroot "$CHR" sh /etc/init.d/rcS-exec Overlay
+		exec chroot "$CHR" sh /etc/init.d/rcS-exec "$@" overlay
 		{ echo "rcS: Error $?"
 		[ -d "$CHRR" ] && umount "$CHR$CHRR"
 		[ -d "$CHRO" ] && umount "$CHR$CHRO"; [ -d "$CHRI" ] && umount "$CHR$CHRI"
 		umount "$CHR$STO" "$CHR$CHR" "$CHR$MNT" "$CHR/tmp"; } > $OUT 2>&1
-	fi; { umount "$CHR$DIR" "$CHR"; rm -rf "$CHR"; } > $OUT 2>&1
+	fi; { umount "$CHR$DIR"; umount "$CHR" && rm -rf "$CHR"; } > $OUT 2>&1
 fi
 
-. /etc/init.d/rcS-exec
+. /etc/init.d/rcS-exec "$@"
 
 exec sh
 exit 1

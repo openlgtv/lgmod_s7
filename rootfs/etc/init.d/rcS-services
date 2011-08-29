@@ -2,48 +2,33 @@
 # Source code released under GPL License
 # rcS for Satrun7 by mmm4m5m
 
-NOREL="$1"
-RBG="$2"
-DELAY="$3"
-RUN=/mnt/lg/user/lgmod/init/rcS-services
+NOREL="$1"; RBG="$2"; DELAY="$3"
 
-sleep "$DELAY"
-
-[ -f "$RUN" ] && . "$RUN"
+[ -n "$DELAY" ] && sleep "$DELAY"
 
 
-/etc/init.d/lgmod boot
+. /etc/init.d/release-patch boot; #&
+. /etc/init.d/module boot; #&
 
-CFG_DIR="/mnt/lg/user/lgmod"
-MODULES_DIR=/lib/modules
-MODULES_SH="$CFG_DIR/module.sh"
-A_SH="$CFG_DIR/auto_start.sh"
-P_SH="$CFG_DIR/patch.sh"
 
-{
-# lgmod: rc.sysinit rc.local
-# Load modules with modules script
-echo "LGMOD: Starting ${MODULES_SH##*/} ..."
-( cd $MODULES_DIR; $MODULES_SH; )
-
-if [ -z "$NOREL" ]; then
-	# Launch patch script
-	echo "LGMOD: Starting ${P_SH##*/} ... (patchwork time)"
-	$P_SH
+if [ -n "$NOREL" ]; then
+	#. /etc/init.d/rcS-usercall1 0 10 > /dev/kmsg 2>&1; # init USB (network)
+	. /etc/init.d/release-mount boot
 fi
 
-if [ -z "$NOREL" ]; then
-	. /etc/init.d/rcS-usercall1 0 10
-	for k in 1 2 3 4 5; do
-		D=$(stat -c%D /mnt/usb1 /mnt/usb1/Drive1); D=$(echo $D); d="${D%% *}"; D="${D#* }"
-		[ "$d" = "$D" ] || break; sleep 2; done
-else
-	. /etc/init.d/release-mount
-fi
+. /etc/init.d/network boot
 
-/etc/init.d/lgmod start
 
-# Launch autostart script
-echo "LGMOD: Starting ${A_SH##*/} ..."
-$A_SH
-} > /dev/kmsg 2>&1
+# TODO: symlinks /etc/rc.d/[SK]*
+for i in telnetd dropbear ntpd httpd ftpd djmount; do
+	. /etc/init.d/$i boot; #&
+done
+
+
+[ -n "$NOREL" ] && . /etc/init.d/lgmod config; # wait for Drive1
+
+for i in mount lgmod; do
+	. /etc/init.d/$i boot
+done
+
+[ -z "$NOREL" ] && . /etc/init.d/netcast-mount boot

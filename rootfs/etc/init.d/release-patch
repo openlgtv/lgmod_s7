@@ -1,0 +1,42 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+START() {
+	CFG_DIR="/mnt/lg/user/lgmod"
+	PATCH_SH=$CFG_DIR/patch.sh
+	SRC_DIR=/home/lgmod
+
+	# lgmod: rc.sysinit rc.local
+	# Copy default patch script
+	if [ ! -e $PATCH_SH ]; then
+		echo "release-patch: Default ${PATCH_SH#*/} ..."
+		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"; # first boot?
+		cp -a $SRC_DIR/default-${PATCH_SH#*/} $PATCH_SH; sync
+	fi
+	# Launch patch script
+	if [ -x $PATCH_SH ]; then
+		cat /proc/mounts | grep -q '^lgapp_xip /mnt/lg/lgapp cramfs ' ||
+			{ echo 'release-patch: Error: lgapp_xip cramfs not found'; return 1; }
+		echo "release-patch: $@ ${PATCH_SH#*/} ... (patchwork time)"
+		$PATCH_SH "$@"
+	fi
+}
+
+boot() {
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	*)			echo "Usage: $0 start"; exit 1
+esac

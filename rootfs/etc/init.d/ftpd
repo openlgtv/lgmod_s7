@@ -1,0 +1,40 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+CFG_DIR="/mnt/lg/user/lgmod"
+
+START() {
+	echo "ftpd: $@"
+	tcpsvd -E 0.0.0.0 21 ftpd -S -w `cat $CFG_DIR/ftp` &
+}
+
+boot() {
+	{
+	# Launch FTP server
+	[ -e $CFG_DIR/ftp ] && START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^tcpsvd -E 0.0.0.0 21 ftpd' && { echo 'ftpd: Already started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	pkill -f '^tcpsvd -E 0.0.0.0 21 ftpd'
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart"; exit 1
+esac

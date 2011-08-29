@@ -2,22 +2,36 @@
 # Source code released under GPL License
 # lginit for Saturn7 by mmm4m5m
 
-LGINIT="$1"
-MNT=/mnt/lg/user
+LGINIT="$1"; # [chroot] [overlay]
+MNT=/mnt/lg/user; MOD=$MNT/lgmod/init/lginit-lgmod
+DIR=/mnt/lg/lginit; RUN=/tmp/lginit-lgmod
 
 OUT=/dev/kmsg; [ -e $OUT ] || OUT=/dev/stdout
 
-[ -f /etc/lgmod.sh ] || LGINIT=rootfs_unknown
+if [ -f "$MOD" ]; then
+	echo "lginit-exec: Copy $MOD to $RUN" > $OUT
+	. $DIR/lginit-tmpfs; cp -a "$MOD" "$RUN" > $OUT 2>&1
+fi
+
+
+[ -f /etc/init.d/rcS-services ] || LGINIT=rootfs_unknown
 if [ -n "$LGINIT" ]; then
 	D=$(stat -c%D / $MNT); D=$(echo $D); d="${D%% *}"; D="${D#* }"
 	[ "$d" != "$D" ] && { umount -f "$MNT" > $OUT 2>&1 || LGINIT=''; }
 fi
 
-. /mnt/lg/lginit/lginit-lgmod "$@"
+if [ -f "$RUN" ]; then
+	echo "lginit-exec: Found $RUN" > $OUT; . "$RUN"
+elif [ "$LGINIT" = LGMOD ]; then
+	sh /etc/init.d/rcS-services '' '' 15 &
+fi
+
 
 [ -z "$LGINIT" ] && exec /sbin/init
 
 echo "lginit: Starting lg-init ($LGINIT)..." > $OUT
+echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
+echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
 exec /mnt/lg/lginit/lg-init
 echo "lginit: Error $?" > $OUT
 

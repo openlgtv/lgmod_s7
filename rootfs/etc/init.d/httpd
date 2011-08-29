@@ -1,0 +1,51 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+CFG_DIR="/mnt/lg/user/lgmod"
+
+START() {
+	HTTPD_CONF=$CFG_DIR/httpd.conf
+	SRC_DIR=/home/lgmod
+
+	[ -d /tmp/lgmod/Upload ] || mkdir -p /tmp/lgmod/Upload
+
+	# Copy default default Web UI config file with default user and password
+	if [ ! -e $HTTPD_CONF ]; then
+		echo "httpd: Default ${HTTPD_CONF#*/} ..."
+		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"
+		cp -a $SRC_DIR/default-${HTTPD_CONF#*/} $HTTPD_CONF; sync
+	fi
+	echo "httpd: $@"
+	/usr/sbin/httpd -c $HTTPD_CONF -h /var/www
+}
+
+boot() {
+	{
+	# Launch Web UI
+	[ -e $CFG_DIR/httpd-off ] || START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^/usr/sbin/httpd' && { echo 'httpd: Already started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	pkill -f '^/usr/sbin/httpd'
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart"; exit 1
+esac

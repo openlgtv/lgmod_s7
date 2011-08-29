@@ -1,5 +1,0 @@
-#!/bin/sh
-# Source code released under GPL License
-# lginit for Saturn7 by mmm4m5m
-
-[ "$LGINIT" = LGMOD ] && (sleep 15; /etc/init.d/lgmod boot 5)&

@@ -34,6 +34,7 @@ echo "rcS-release: Starting RELEASE $Mode ($cmd) ..." > /dev/kmsg
 cd /; # /mnt/lg/lginit
 
 if [ -f "$RUN-relconf" ]; then
+	echo "rcS-release: Found $RUN-relconf" > /dev/kmsg
 	. "$RUN-relconf" || { return; exit; }
 fi
 
@@ -50,11 +51,11 @@ if [ -n "$Rtm" ]; then
 	fi; } > /dev/kmsg 2>&1
 elif [ "$Mode" = OPENRELEASE ]; then
 	export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg
-	echo "rcS-release($Mode): Error $?" > /dev/kmsg
+	echo "rcS-release: Error $? ($Mode)" > /dev/kmsg
 	export LD_PRELOAD=''; # just in case
 elif [ "$Mode" = OPENREL-DAEMON ]; then
 	LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg > /dev/kmsg 2>&1
 else
 	exec $Rcmd $Rarg
-	echo "rcS-release($Mode): Error $?" > /dev/kmsg
+	echo "rcS-release: Error $? ($Mode)" > /dev/kmsg
 fi

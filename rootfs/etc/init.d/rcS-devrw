@@ -1,0 +1,22 @@
+#!/bin/sh
+# Source code released under GPL License
+# rcS for Saturn7 by mmm4m5m
+
+SRC=/tmp/lgmod/Root; TFS=/tmp/lgmod/tmpfs
+
+d=/dev
+if ! touch $d/test-rw > /dev/null 2>&1; then
+	insmod /lib/modules/mini_fo.ko > /dev/null 2>&1
+
+	mkdir -p "$TFS$d" &&
+		mount -t mini_fo -o base="$d",sto="$TFS$d" "mini$d" "$d" &&
+		{ return 0; exit 0; }
+
+	mkdir -p $SRC &&
+		mount -o bind / $SRC &&
+		cp "$SRC$d" "$TFS$d/../" &&
+		mount -o bind "$TFS$d" "$d" ||
+		{ echo 'rcS-devrw: Error: /dev is not readwrite'; return 1; exit 1; }
+fi
+
+return 0; exit 0

@@ -2,7 +2,10 @@
 #
 # /etc/init.d/rcK - run once at shutdown
 
-/etc/init.d/lgmod shutdown
+# TODO: symlinks /etc/rc.d/[SK]*
+for i in lgmod mount release-mount; do
+	. /etc/init.d/$i stop
+done
 
 sync
 

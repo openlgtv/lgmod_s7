@@ -1,0 +1,40 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+START() {
+	CFG_DIR="/mnt/lg/user/lgmod"
+	MODULES_SH=$CFG_DIR/module.sh
+	SRC_DIR=/home/lgmod
+
+	# lgmod: rc.sysinit rc.local
+	# Copy script for modules loading if not exist (first boot)
+	if [ ! -e $MODULES_SH ]; then
+		echo "module: Default ${MODULES_SH#*/} ..."
+		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"; # first boot?
+		cp -a $SRC_DIR/default-${MODULES_SH#*/} $MODULES_SH; sync
+	fi
+	# Load modules with modules script
+	if [ -x $MODULES_SH ]; then
+		echo "module: $@ ${MODULES_SH#*/} ..."
+		cd /lib/modules; $MODULES_SH "$@"
+	fi
+}
+
+boot() {
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	*)			echo "Usage: $0 start"; exit 1
+esac

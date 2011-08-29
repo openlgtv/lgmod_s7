@@ -2,8 +2,7 @@
 # Source code released under GPL License
 # lginit/rcS for Saturn7 by mmm4m5m
 
-LGINIT="$1"
-LGI_OVERLAY="$2"
+LGI_OVERLAY="$1"; shift; # LGINIT [chroot]
 STO=/tmp/lgmod/chrsto; CHR=/tmp/lgmod/overlay
 MNT=/mnt/lg/user; OVL=$MNT/lgmod/overlay
 
@@ -15,20 +14,20 @@ if [ -n "$LGI_OVERLAY" ]; then
 	if mkdir -p "$CHR" "$STO" > $OUT 2>&1 &&
 		insmod /lib/modules/mini_fo.ko > $OUT 2>&1 &&
 		mount -t mini_fo -o base=/,sto="$STO" overlay "$CHR" > $OUT 2>&1 &&
-		mount -o bind,rprivate $DIR "$CHR$DIR" > $OUT 2>&1; then
+		mount -o bind $DIR "$CHR$DIR" > $OUT 2>&1; then
 		{ echo "lginit: chroot overlay..."; mount -o bind /tmp "$CHR/tmp"
 		mount -o bind / "$CHR$CHR"; mount -o bind "$STO" "$CHR$STO"
 		[ -d "$CHRI" ] && mount -o bind "$CHRI" "$CHR$CHRI"
 		D=$(stat -c%D / $MNT); D=$(echo $D); d="${D%% *}"; D="${D#* }"
 		[ "$d" != "$D" ] && umount -f "$MNT"; } > $OUT 2>&1
-		exec chroot "$CHR" sh $DIR/lginit-exec "$LGINIT" overlay
+		exec chroot "$CHR" sh $DIR/lginit-exec "$@" overlay
 		{ echo "lginit: Error $?"
 		[ -d "$CHRI" ] && umount "$CHR$CHRI"
 		umount "$CHR$STO" "$CHR$CHR" "$CHR/tmp"; } > $OUT 2>&1
-	fi; { umount "$CHR$DIR/lginit-lgmod" "$CHR$DIR/lginit-overlay" "$CHR$DIR" "$CHR"; rm -rf "$CHR"; } > $OUT 2>&1
+	fi; { umount "$CHR$DIR"; umount "$CHR" && rm -rf "$CHR"; } > $OUT 2>&1
 fi
 
-. $DIR/lginit-exec "$LGINIT"
+. $DIR/lginit-exec "$@"
 
 exec sh
 exit 1

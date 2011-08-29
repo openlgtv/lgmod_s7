@@ -1,0 +1,40 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+START() {
+	echo "ntpd: $@"
+	ntpd -q -p `cat $CFG_DIR/ntp`
+}
+
+boot() {
+	CFG_DIR="/mnt/lg/user/lgmod"
+
+	{
+	# Launch NTP client
+	[ -e $CFG_DIR/ntp ] && START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^ntpd' && { echo 'ntpd: Already started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	pkill -f '^ntpd'
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart"; exit 1
+esac

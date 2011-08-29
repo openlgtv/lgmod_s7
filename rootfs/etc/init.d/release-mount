@@ -2,17 +2,69 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
-. /etc/init.d/rcS-usercall1 0 10
-
-{
-for j in 1 2; do
-	[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
-	for i in 1 2 3 4; do
-		arg="noatime /dev/sd$J$i /mnt/usb$j/Drive$i"
-		echo "rcS-release-mount: $arg ..."
-		mount -t vfat -o iocharset=utf8,shortname=mixed,$arg ||
-			mount -t ext3 -o $arg ||
-			mount -o $arg
+mounts() {
+	D=$(stat -c%D /mnt/usb1)
+	for j in 1 2; do
+		[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
+		for i in 1 2 3 4; do
+			ARG="noatime /dev/sd$J$i"; arg="/mnt/usb$j/Drive$i"
+			d=$(stat -c%D $arg); [ "$d" = "$D" ] || continue
+			echo "release-mount: $1 $ARG $arg ..."
+			mount -t ext3 -o $ARG $arg ||
+				mount -o $ARG $arg
+		done
 	done
-done
-} > /dev/kmsg 2>&1
+}
+
+START() {
+	. /etc/init.d/rcS-usercall1 0 10
+	D=$(stat -c%D /mnt/usb1)
+	for j in 1 2; do
+		[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
+		for i in 1 2 3 4; do
+			ARG="noatime /dev/sd$J$i"; arg="/mnt/usb$j/Drive$i"
+			d=$(stat -c%D $arg); [ "$d" = "$D" ] || continue
+			echo "release-mount: $1 $ARG $arg ..."
+			mount -t vfat -o iocharset=utf8,shortname=mixed,$ARG $arg ||
+				mount -t ntfs -o $ARG $arg
+		done
+	done
+}
+
+boot() {
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release-mount: Already started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	sync
+	ARG=''; [ "$2" != '-f' ] && [ "$2" != '-r' ] || ARG="$2"
+	D=$(stat -c%D /mnt/usb1)
+	for j in 2 1; do
+		for i in 4 3 2 1; do
+			arg=/mnt/usb$j/Drive$i
+			d=$(stat -c%D $arg); [ "$d" = "$D" ] && continue
+			echo "release-mount: $1 $ARG $arg ..."
+			umount $ARG $arg
+		done
+	done
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	mount)		mounts "$@";;
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 mount|start|stop|restart [-f|-r]"; exit 1
+esac

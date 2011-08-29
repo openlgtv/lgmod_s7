@@ -1,0 +1,41 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+START() {
+	echo "telnetd: $@"
+	insmod /lib/modules/pty.ko > /dev/null 2>&1
+	/usr/sbin/telnetd -S -l /etc/auth.sh
+}
+
+boot() {
+	CFG_DIR="/mnt/lg/user/lgmod"
+
+	{
+	# Launch telnet server
+	[ -e $CFG_DIR/telnet ] && START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^/usr/sbin/telnetd' && { echo 'telnetd: Already started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	pkill -f '^/usr/sbin/telnetd'
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart"; exit 1
+esac

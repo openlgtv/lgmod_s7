@@ -4,10 +4,12 @@
 #. /etc/rc.d/rc.local
 
 #!/bin/sh
+# LGMOD version ver=
 # Source code released under GPL License
 # lginit/rcS for Saturn7 by mmm4m5m
 
-RCS_CHROOT=''; #sdb1/lgmod_s7.sqf; # (if FAT - msdos 8.3 name, lower case)
+# accepted config values: empty or non-empty
+RCS_CHROOT=''; #sdb1/lgmod_s7.sqf
 RCS_OVERLAY=''
 USB=/tmp/lgmod/Chrusb; CHR=/tmp/lgmod/Chroot
 RUN=/mnt/lg/user/lgmod/init/rcS
@@ -24,29 +26,32 @@ if [ "$d" = "$D" ]; then
 	mount -t jffs2 /dev/mtdblock11 $MNT -o noatime > $OUT 2>&1 ||
 		echo 'rcS: help: flash_eraseall -j /dev/mtd11' > $OUT; # rcS-lginit
 fi
-[ -f "$RUN" ] && . "$RUN"
+[ -f "$RUN" ] && { echo "rcS: Found $RUN" > $OUT; . "$RUN"; }
 
 
 DEV="/dev/${RCS_CHROOT%%/*}"; SQF="$USB/${RCS_CHROOT#*/}"
 if [ -n "$RCS_CHROOT" ] && [ -b "$DEV" ]; then
 	#. /etc/init.d/rcS-tmpfs
 	if mkdir -p "$USB" > $OUT 2>&1; then
-		. /etc/init.d/rcS-usercall1 0 10
-		if mount "$DEV" "$USB" > $OUT 2>&1; then
+		echo "rcS: trying $DEV $SQF ..." > $OUT
+		. /etc/init.d/rcS-usercall1 0 10 > $OUT 2>&1
+		if mount -t vfat -o iocharset=utf8,shortname=mixed,noatime "$DEV" "$USB" > $OUT 2>&1 ||
+			mount -t ntfs -o noatime "$DEV" "$USB" > $OUT 2>&1; then
 			if [ -f "$SQF" ]; then
 				if mkdir -p "$CHR" > $OUT 2>&1 &&
 					mount -t squashfs "$SQF" "$CHR" > $OUT 2>&1 &&
 					mount -o bind $DIR "$CHR$DIR" > $OUT 2>&1; then
 					{ echo "rcS: chroot $SQF ..."; mount -o bind /tmp "$CHR/tmp"
-					mount -o bind $MNT "$CHR$MNT"; mount -o bind / "$CHR$CHR"
+					mount -o bind / "$CHR$CHR"; mount -o bind "$USB" "$CHR$USB"
+					mount -o bind $MNT "$CHR$MNT"
 					[ -d "$CHRI" ] && mount -o bind "$CHRI" "$CHR$CHRI"
 					[ -d "$CHRO" ] && mount -o bind "$CHRO" "$CHR$CHRO"
 					} > $OUT 2>&1
-					exec chroot "$CHR" sh /etc/init.d/rcS-overlay "$RCS_OVERLAY" Chroot
+					exec chroot "$CHR" sh /etc/init.d/rcS-overlay "$RCS_OVERLAY" chroot
 					{ echo "rcS: Error $?"
 					[ -d "$CHRO" ] && umount "$CHR$CHRO"; [ -d "$CHRI" ] && umount "$CHR$CHRI"
-					umount "$CHR$CHR" "$CHR$MNT" "$CHR/tmp"; } > $OUT 2>&1
-				fi; { umount "$CHR$DIR" "$CHR"; rm -rf "$CHR"; } > $OUT 2>&1
+					umount "$CHR$MNT" "$CHR$USB" "$CHR$CHR" "$CHR/tmp"; } > $OUT 2>&1
+				fi; { umount "$CHR$DIR"; umount "$CHR" && rm -rf "$CHR"; } > $OUT 2>&1
 			else echo "rcS: Error chroot $SQF" > $OUT
 			fi; umount "$USB" > $OUT 2>&1
 fi; fi; fi

@@ -1,0 +1,40 @@
+#!/bin/sh
+# Source code released under GPL License
+# rcS for Satrun7 by mmm4m5m
+
+START() {
+	echo "dropbear: $@"
+	. /etc/init.d/rcS-devrw
+	insmod /lib/modules/pty.ko > /dev/null 2>&1
+	dropbear -s
+}
+
+boot() {
+	CFG_DIR="/mnt/lg/user/lgmod"
+
+	{
+	# Launch SSH server
+	[ -e $CFG_DIR/ssh ] && START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	pgrep -f '^dropbear' && { echo 'dropbear: Already started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	pkill -f '^dropbear'
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart"; exit 1
+esac
