@@ -1,7 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / SERVICES</p><div class="pagebody">
+<? /usr/bin/haserl /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / SERVICES</p><div class="pagebody">
 
 <div class="post"><div class="posthead">Services</div><div class="posttext">
 <form action="services.cgi" method="get"><?

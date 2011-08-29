@@ -1,7 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / HOME</p><div class="pagebody">
+<? /usr/bin/haserl /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / HOME</p><div class="pagebody">
 
 <div class="post"><div class="posttext">
 Welcome to <b>LGMOD</b> and <b>OPENRELEASE</b>! Customized firmware for LG TV Sets!<br><br>

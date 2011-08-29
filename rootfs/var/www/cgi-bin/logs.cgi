@@ -1,7 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / LOGS</p><div class="pagebody">
+<? /usr/bin/haserl /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / LOGS</p><div class="pagebody">
 
 <div class="post"><div class="posthead">logread</div><div class="posttext">
 <pre><? logread ?></pre>

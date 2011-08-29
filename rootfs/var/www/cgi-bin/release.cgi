@@ -1,7 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / RELEASE - Dangerous!</p><div class="pagebody">
+<? /usr/bin/haserl /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / RELEASE - Dangerous!</p><div class="pagebody">
 
 <?
 send=''; orel='' tmux=''

@@ -1,7 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / INIT - Advanced!</p><div class="pagebody">
+<? /usr/bin/haserl /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / INIT - Advanced!</p><div class="pagebody">
 
 <div class="post"><div class="posthead">Commands</div><div class="posttext">
 <form action="init.cgi" method="post"><input type="submit" name="cmd_reboot" value="Reboot"></form>
