@@ -1,7 +1,8 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? /usr/bin/haserl /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / HOME</p><div class="pagebody">
+<? cat /var/www/cgi-bin/header.inc; [ -d /mnt/lg/user/lgmod/init ] && echo 'Advanced:&nbsp;<a href="init.cgi">INIT</a>&nbsp;&nbsp;'; ?>
+</div><hr><p class="largefont">LGMOD CONFIGURATION / HOME</p><div class="pagebody">
 
 <div class="post"><div class="posttext">
 Welcome to <b>LGMOD</b> and <b>OPENRELEASE</b>! Customized firmware for LG TV Sets!<br><br>

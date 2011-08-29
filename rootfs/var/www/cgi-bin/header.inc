@@ -52,13 +52,3 @@ th { padding: 1px; font-size: 12px; }
 		<a href="services.cgi">Services</a>&nbsp;&nbsp;&nbsp;
 		<a href="remote.cgi">Remote</a>&nbsp;&nbsp;&nbsp;
 		<a href="release.cgi">RELEASE</a>&nbsp;&nbsp;
-<?
-if [ -d /mnt/lg/user/lgmod/init ]; then
-	?>
-		Advanced:&nbsp;
-		<a href="init.cgi">INIT</a>&nbsp;&nbsp;
-	<?
-fi
-?>
-	</div>
-	<hr>
