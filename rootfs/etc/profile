@@ -70,8 +70,7 @@ cd /lgsw
 #FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
 #FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
 
-export HOME=/mnt/lg/user/root; # sh from init (putty)
-	# note: we do not 'sh -l' from init. It is just 'sh'
+export HOME=/mnt/lg/user/root
 
 . /etc/init.d/rcS-lginit-env; # LG: env
 
