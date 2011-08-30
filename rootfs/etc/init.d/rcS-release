@@ -29,14 +29,18 @@ RUN=/mnt/lg/user/lgmod/init/rcS
 
 Tcmd="tmux pipe-pane 'cat >> $Rpipe'; tmux detach-client; echo '$Mode PIPE: $Rpipe'"
 Ocmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
-[ -n "$Rop" ] && cmd="$Ocmd" || cmd="$Rcmd $Rarg"
-echo "rcS-release: Starting RELEASE $Mode ($cmd) ..." > /dev/kmsg
 cd /; # /mnt/lg/lginit
 
 if [ -f "$RUN-relconf" ]; then
 	echo "rcS-release: Found $RUN-relconf" > /dev/kmsg
 	. "$RUN-relconf" || { return; exit; }
 fi
+
+
+[ -n "$Rop" ] && cmd="$Ocmd" || cmd="$Rcmd $Rarg"
+[ "$Mode" = OPENRELEASE ] && cmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
+[ "$Mode" = OPENREL-DAEMON ] && cmd="LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg"
+echo "rcS-release: Starting RELEASE $Mode ($cmd) ..." > /dev/kmsg
 
 
 if [ -n "$Rtm" ]; then
@@ -54,7 +58,7 @@ elif [ "$Mode" = OPENRELEASE ]; then
 	echo "rcS-release: Error $? ($Mode)" > /dev/kmsg
 	export LD_PRELOAD=''; # just in case
 elif [ "$Mode" = OPENREL-DAEMON ]; then
-	LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg > /dev/kmsg 2>&1
+	LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg; # > /dev/kmsg 2>&1
 else
 	exec $Rcmd $Rarg
 	echo "rcS-release: Error $? ($Mode)" > /dev/kmsg

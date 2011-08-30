@@ -4,7 +4,19 @@ content-type: text/html
 <? cat /var/www/cgi-bin/header.inc; [ -d /mnt/lg/user/lgmod/init ] && echo 'Advanced:&nbsp;<a href="init.cgi">INIT</a>&nbsp;&nbsp;'; ?>
 </div><hr><p class="largefont">LGMOD CONFIGURATION / RELEASE - Dangerous!</p><div class="pagebody">
 
-<?
+<div class="post"><div class="posthead">RELEASE OUT - require tmux-pipe or OPENRELEASE mode</div><div class="posttext">
+<form action="release.cgi" method="post"><?
+if [ "$FORM_tvstartup" = "1" ]; then
+	touch /mnt/lg/user/lgmod/tvstartup
+else
+	rm /mnt/lg/user/lgmod/tvstartup
+fi 
+
+echo '<b>Enable/Disable TV startup mods (OPENRELEASE/tmux):</b>&nbsp;<input name="tvstartup" type="checkbox" value="1"'
+[ -e /mnt/lg/user/lgmod/tvstartup ] && echo ' checked'
+echo '>&nbsp;&nbsp;<input type="submit" name="save" value="Save"><br><br></form>'
+
+
 send=''; orel='' tmux=''
 if [ -n "$FORM_CR" ]; then orel="$orel"$'\n'; tmux="$tmux C-m"
 fi
@@ -35,10 +47,9 @@ if [ -n "$send$orel$tmux" ]; then
 		fi 2>&1)
 	sleep 0.2
 fi
-?>
 
-<div class="post"><div class="posthead">RELEASE OUT - require tmux-pipe or OPENRELEASE mode</div><div class="posttext">
-<pre><?
+
+echo '<pre>'
 if [ -f /tmp/openrelease.out ]; then
 	tail -n100 /tmp/openrelease.out; # | /home/lgmod/ansi2html.sh
 else

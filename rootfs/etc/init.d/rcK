@@ -16,7 +16,7 @@ elif pgrep -f '^/mnt/lg/lgapp/RELEASE'; then
 	# LG inittab
 	/bin/umount -a -r
 else
-	umount -r $(cat /proc/mounts|grep -nv ' cramfs '|sort -nr|cut -d' ' -f2)
+	umount -r $(cat /proc/mounts|grep -nv ' / \| cramfs '|sort -nr|cut -d' ' -f2)
 fi
 
 echo 'rcK: shutdown DONE'

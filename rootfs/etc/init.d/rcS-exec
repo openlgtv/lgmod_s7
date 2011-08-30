@@ -16,7 +16,7 @@ RCS_RELEASE=OPENREL-DAEMON; # in bg
 #RCS_RELEASE=''; # LG
 RCS_CRASHDOG=''; # ''=default; 0=disable; 1=enable/enforce
 RUN=/mnt/lg/user/lgmod/init/rcS
-DBG=/mnt/lg/user/lgmod/debug
+CFG=/mnt/lg/user/lgmod
 
 
 . /etc/init.d/rcS-tmpfs
@@ -30,10 +30,12 @@ export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
 export TERM=vt100
 export HOME=/mnt/lg/user/root
 
-[ -f "$RUN" ] && { echo "rcS: Found $RUN" > /dev/kmsg; . "$RUN"; }
+[ -f $CFG/tvstartup ] || RCS_RELEASE=''; # LG
 
 # lgmod: rc.sysinit rc.local
-[ -e $DBG ] && { RCS_NOREL=1; echo 'LGMOD: DEBUG!'; rm -f $DBG; sync; } >/dev/kmsg 2>&1
+[ -e $CFG/debug ] && { RCS_NOREL=1; echo 'LGMOD: DEBUG!'; rm -f $CFG/debug; sync; } >/dev/kmsg 2>&1
+
+[ -f "$RUN" ] && { echo "rcS: Found $RUN" > /dev/kmsg; . "$RUN"; }
 
 
 #CHR=/tmp/lgmod/Overlay; CHRO=/tmp/lgmod/overlay; # lginit

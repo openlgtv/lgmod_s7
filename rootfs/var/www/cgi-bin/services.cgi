@@ -12,8 +12,7 @@ content-type: text/html
 pgrep=''
 for i in /etc/init.d/??[^SK]*; do
 	I="${i##*/}"
-	[ "$I" = lgmod ] && continue
-	pgrep="$pgrep|$I"
+	[ "$I" = lgmod ] || pgrep="$pgrep|$I"
 done
 pgrep=$(pgrep -fl "$pgrep") 2>&1
 
@@ -22,7 +21,8 @@ for i in /etc/init.d/??[^SK]*; do
 	I="${i##*/}"
 	echo "<tr><td><a href='?cmd=$i start'>start</a>&nbsp;</td><td><a href='?cmd=$i stop'>stop</a>&nbsp;"
 	echo "</td><td><a href='?cmd=$i restart'>restart</a>&nbsp;</td><td><nobr>$I</nobr>&nbsp;</td><td><nobr>"
-	echo -n "$pgrep" | grep -m1 $I; echo '</nobr></td></tr>'
+	[ "$I" = lgmod ] || echo -n "$pgrep" | grep -m1 $I
+	echo '</nobr></td></tr>'
 done
 echo '</table>'
 ?></form></div></div>
