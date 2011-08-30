@@ -98,20 +98,20 @@ START() {
 
 	# Copy default autostart script
 	if [ ! -e $A_SH ]; then
-		echo "lgmod: Default ${A_SH#*/} ..."
+		echo "lgmod: Default ${A_SH##*/} ..."
 		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"
-		cp -a $SRC_DIR/default-${A_SH#*/} $A_SH; sync
+		cp -a $SRC_DIR/default-${A_SH##*/} $A_SH; sync
 	fi
 	# Copy default autostop script
 	if [ ! -e $S_SH ]; then
-		echo "lgmod: Default ${S_SH#*/} ..."
+		echo "lgmod: Default ${S_SH##*/} ..."
 		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"
-		cp -a $SRC_DIR/default-${S_SH#*/} $S_SH; sync
+		cp -a $SRC_DIR/default-${S_SH##*/} $S_SH; sync
 	fi
 
 	# Launch autostart script
 	if [ -x $A_SH ]; then
-		echo "lgmod: $@ ${A_SH#*/} ..."
+		echo "lgmod: $@ ${A_SH##*/} ..."
 		$A_SH "$@"
 	fi
 }
@@ -128,7 +128,7 @@ start() {
 
 stop() {
 	if [ -x $S_SH ]; then
-		echo "lgmod: $@ ${S_SH#*/} ..."
+		echo "lgmod: $@ ${S_SH##*/} ..."
 		$S_SH "$@"
 	fi
 }

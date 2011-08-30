@@ -12,13 +12,13 @@ START() {
 	# lgmod: rc.sysinit rc.local
 	# Copy script for modules loading if not exist (first boot)
 	if [ ! -e $MODULES_SH ]; then
-		echo "module: Default ${MODULES_SH#*/} ..."
+		echo "module: Default ${MODULES_SH##*/} ..."
 		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"; # first boot?
-		cp -a $SRC_DIR/default-${MODULES_SH#*/} $MODULES_SH; sync
+		cp -a $SRC_DIR/default-${MODULES_SH##*/} $MODULES_SH; sync
 	fi
 	# Load modules with modules script
 	if [ -x $MODULES_SH ]; then
-		echo "module: $@ ${MODULES_SH#*/} ..."
+		echo "module: $@ ${MODULES_SH##*/} ..."
 		cd /lib/modules; $MODULES_SH "$@"
 	fi
 }

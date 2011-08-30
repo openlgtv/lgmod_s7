@@ -14,9 +14,9 @@ START() {
 
 	# Copy default default Web UI config file with default user and password
 	if [ ! -e $HTTPD_CONF ]; then
-		echo "httpd: Default ${HTTPD_CONF#*/} ..."
+		echo "httpd: Default ${HTTPD_CONF##*/} ..."
 		[ -d "$CFG_DIR" ] || mkdir -p "$CFG_DIR"
-		cp -a $SRC_DIR/default-${HTTPD_CONF#*/} $HTTPD_CONF; sync
+		cp -a $SRC_DIR/default-${HTTPD_CONF##*/} $HTTPD_CONF; sync
 	fi
 	echo "httpd: $@"
 	/usr/sbin/httpd -c $HTTPD_CONF -h /var/www
