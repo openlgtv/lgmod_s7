@@ -14,7 +14,9 @@ CONFIG() {
 	[ "$6" = skip ] || RELCFG '' > /dev/kmsg 2>&1
 
 	if [ "$5" != skip ]; then
-		RCS_CRAMFS=1; [ -f "$RUN" ] && . "$RUN"
+		RCS_CRAMFS=1
+		RCS_RELEASE=OPENREL-DAEMON; # in bg
+		[ -f "$RUN" ] && . "$RUN"
 		Rtm=''; (. /etc/init.d/rcS-release tm "$RCS_RELEASE") && Rtm=1
 	fi
 

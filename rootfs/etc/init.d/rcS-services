@@ -6,13 +6,18 @@ NOREL="$1"; RBG="$2"; DELAY="$3"
 
 [ -n "$DELAY" ] && sleep "$DELAY"
 
+if [ -z "$NOREL" ]; then
+	pgrep -f '^/mnt/lg/lgapp/RELEASE' > /dev/null || NOREL=1
+fi
+
 
 . /etc/init.d/release-patch boot; #&
 . /etc/init.d/module boot; #&
 
 
-if [ -n "$NOREL" ]; then
-	#. /etc/init.d/rcS-usercall1 0 10 > /dev/kmsg 2>&1; # init USB (network)
+if [ -z "$NOREL" ]; then
+	. /etc/init.d/rcS-usercall1 0 10 > /dev/kmsg 2>&1; # init USB (network)
+else
 	. /etc/init.d/release-mount boot
 fi
 

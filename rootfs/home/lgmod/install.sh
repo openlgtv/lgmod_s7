@@ -5,6 +5,7 @@
 
 # defaults
 workdir=''; busybox=/tmp/install-root/bin/busybox
+lginitmd5=1e6ee0f4d9d08f920c406c2173f855a3
 info=1; cmagic=1; dvrchk=1
 kill=1; backup_kill=''
 backup=1; update_backup=1
@@ -37,7 +38,6 @@ infofile="backup-$date-info.txt"
 bkpdir="backup-$date"
 rootfs=$(echo lgmod_S7_*.sqfs)
 lginit=mtd4_lg-init.sqfs
-lginitmd5=1e6ee0f4d9d08f920c406c2173f855a3
 required_free_ram=10000
 KILL='addon_mgr stagecraft udhcpc ntpd tcpsvd djmount'
 	# LG: addon_mgr stagecraft

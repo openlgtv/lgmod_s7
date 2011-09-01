@@ -19,7 +19,7 @@ START() {
 		cfg=$(cat $NETCONF)
 		IP="${cfg%% *}"; cfg="${cfg#* }"
 		MASK="${cfg%% *}"; GW="${cfg#* }"
-		if [ -n "$IP" ] && [ -n "$MASK" ]; then
+		if [ -z "$IP" ] || [ -z "$MASK" ]; then
 			echo "network: Invalid configuration: IP=$IP; MASK=$MASK"
 			DHCP=1; [ "$2" = nodhcp ] && return
 		fi

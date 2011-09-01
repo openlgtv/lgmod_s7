@@ -59,17 +59,14 @@ fi
 
 if [ -z "$RCS_NOREL" ]; then
 	Rbg=''; . /etc/init.d/rcS-release bg "$RCS_RELEASE" && Rbg=1; # Rtm
+	sh /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
+	. /etc/init.d/release boot "$RCS_RELEASE" "$RCS_CRAMFS" "$Rtm"
 	if [ -z "$Rbg" ]; then
-		sh /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
-		. /etc/init.d/release boot "$RCS_RELEASE" "$RCS_CRAMFS" "$Rtm" skip
 		echo "rcS-exec: Error $?" > /dev/kmsg
 		. /etc/init.d/rcS-crashdog error "$RCS_CRASHDOG"
 		echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
 		echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
 		exec sh; exit 1
-	else
-		. /etc/init.d/release boot "$RCS_RELEASE" "$RCS_CRAMFS" "$Rtm" skip
-		. /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY"
 	fi
 else
 	. /etc/init.d/rcS-services "$RCS_NOREL" 0 0
