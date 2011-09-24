@@ -2,31 +2,59 @@
 # Source code released under GPL License
 # lginit/rcS for Saturn7 by mmm4m5m
 
-# $1='force' call; $1='skip' call; $2=<SECONDS> wait (default 10)
+PREFIX="lginit-usercall1: $1 -"
 
-call="$1"; wait="$2"; lines=''; added=''; time="${2:-10}"
-[ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || call=skip
-
-if [ "$call" != force ] && [ "$call" != skip ]; then
-	dmesg=$(dmesg | grep -q ' calling user_initcall ') || { call=force; wait="$time"; }
-	if [ -z "$wait" ]; then
-		lines=$(echo "$dmesg" | wc -l)
-		added=$(dmesg | grep -q ' Adding user_initcall' | wc -l)
-		[ "$lines" -lt "$added" ] && wait="$time"
-	fi
-else wait="$time"; fi
-
-if [ "$call" = force ]; then
-	echo "lginit-usercall1: Calling($1)..."
+call() {
+	# init USB
+	echo "$PREFIX Calling..."
 	echo 1 > /proc/usercalls
-fi
-
-if [ -n "$wait" ]; then
-	last='(NONE)'; done=0
-	while [ "$done" -lt 2 ] && [ "$time" -gt 0 ]; do
-		line=$(dmesg | tail -n1); done=$(( done+1 ))
-		[ "$last" != "$line" ] && { last="$line"; done=0; }
-		time=$(( time-1 )); sleep 1
+}
+wait() {
+	# wait for USB init
+	last=$'\0'; done=0; time=0
+	while [ $done -lt ${2:-1} ] && [ $time -lt ${3:-5} ]; do
+		[ "$last" = $'\0' ] || { time=$(( time+1 )); sleep ${4:-2}; }; curr=$(dmesg | tail -n1)
+		[ "$last" = "$curr" ] && done=$(( done+1 )) || { last="$curr"; done=0; }
 	done
-	echo "lginit-usercall1: Done($1 $2 $lines $added $done $time)"
-fi
+	echo "$PREFIX Done($done $time $2 $3 $4)"
+}
+call_wait() {
+	# init USB and wait
+	call; wait "$@"
+}
+
+ready() {
+	# is USB init ready?
+	added=$(dmesg | grep -q ' Adding user_initcall' | wc -l)
+	lines=$(dmesg | grep -q ' calling user_initcall ' | wc -l)
+	[ "$lines" -ge "$added" ] || return 1
+	echo "$PREFIX Ready($added $lines)"
+}
+
+called() {
+	# is USB init started?
+	[ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || return 0
+	dmesg | grep -q ' calling user_initcall ' || return 1
+}
+call_and_wait() {
+	# check if USB init started, else init USB; then wait for USB
+	if ! called; then call; wait "$@"
+	else ready || wait "$@"; fi
+}
+
+wait_or_call() {
+	# wait RELEASE to init USB, else init USB; then wait for USB
+	time=${5:-10}; while [ $time -gt 0 ]; do
+		[ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || break
+		sleep ${6:-3}; time=$(( time-1 )); done
+	if [ $time != 0 ]; then ready || wait "$@"
+	else echo "$PREFIX Timeout($4 $5)"; call_and_wait "$@"; fi
+}
+
+case "$1" in
+	wait)			wait "$@";;
+	call_wait)		call_wait "$@";;
+	call_and_wait)	call_and_wait "$@";;
+	wait_or_call)	wait_or_call "$@";;
+	*)			echo "Usage: $0 wait|call_wait|call_and_wait|wait_or_call"; exit 1
+esac

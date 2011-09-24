@@ -2,38 +2,32 @@
 # Source code released under GPL License
 # rcS for Satrun7 by mmm4m5m
 
-NOREL="$1"; RBG="$2"; DELAY="$3"
+[ -n "$1" ] && sleep "$1"
 
-[ -n "$DELAY" ] && sleep "$DELAY"
-
-if [ -z "$NOREL" ]; then
-	pgrep -f '^/mnt/lg/lgapp/RELEASE' > /dev/null || NOREL=1
-fi
+r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+[ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
 
-. /etc/init.d/release-patch boot; #&
 . /etc/init.d/module boot; #&
 
-
 if [ -z "$NOREL" ]; then
-	. /etc/init.d/rcS-usercall1 0 10 > /dev/kmsg 2>&1; # init USB (network)
+	. /etc/init.d/rcS-usercall1 call_wait > /dev/kmsg 2>&1; # wait USB (network)
 else
-	. /etc/init.d/release-mount boot
+	. /etc/init.d/release-mount boot; # init USB (network)
 fi
 
 . /etc/init.d/network boot
 
-
-# TODO: symlinks /etc/rc.d/[SK]*
 for i in telnetd dropbear ntpd httpd ftpd djmount; do
+	# TODO: use sym.links /etc/rc.d/[SK]*
 	. /etc/init.d/$i boot; #&
 done
 
 
-[ -n "$NOREL" ] && . /etc/init.d/lgmod config; # wait for Drive1
+[ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for Drive1
+. /etc/init.d/mount boot
+[ -z "$NOREL" ] && . /etc/init.d/netcast boot
 
-for i in mount lgmod; do
+for i in lgmod; do
 	. /etc/init.d/$i boot
 done
-
-[ -z "$NOREL" ] && . /etc/init.d/netcast-mount boot

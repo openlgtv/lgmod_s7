@@ -14,10 +14,14 @@ if [ -f "$MOD" ]; then
 fi
 
 
-[ -f /etc/init.d/rcS-services ] || LGINIT=rootfs_unknown
-if [ -n "$LGINIT" ]; then
-	D=$(stat -c%D / $MNT); D=$(echo $D); d="${D%% *}"; D="${D#* }"
-	[ "$d" != "$D" ] && { umount -f "$MNT" > $OUT 2>&1 || LGINIT=''; }
+# >=1.0.10 or <1.0.10 or another mod - other way use LG default boot
+[ -f /etc/init.d/rcS-services ] || [ -f /etc/init.d/lgmod ] ||
+	[ -f /etc/lgmod.sh ] ||
+	[ -f /etc/mountscript.sh ] ||
+	LGINIT=rootfs_unknown
+
+[ -n "$LGINIT" ] && if ! umount -f "$MNT" > $OUT 2>&1; then
+	D=$(stat -c%D / $MNT); n=$'\n'; [ "${D%%$n*}" = "${D#*$n}" ] || LGINIT=''
 fi
 
 if [ -f "$RUN" ]; then

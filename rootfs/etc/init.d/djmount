@@ -8,7 +8,7 @@ CFG_DIR="/mnt/lg/user/lgmod"
 
 START() {
 	echo "djmount: $@"
-	insmod /lib/modules/fuse.ko
+	modprobe /lib/modules/fuse.ko
 	djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
 }
 

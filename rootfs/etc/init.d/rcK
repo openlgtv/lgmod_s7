@@ -2,8 +2,8 @@
 #
 # /etc/init.d/rcK - run once at shutdown
 
-# TODO: symlinks /etc/rc.d/[SK]*
-for i in lgmod mount release-mount; do
+for i in lgmod netcast mount release-mount; do
+	# TODO: use sym.links /etc/rc.d/[SK]*
 	. /etc/init.d/$i stop
 done
 
@@ -12,9 +12,9 @@ sync
 if ! cat /proc/mounts | grep -q ' cramfs '; then
 	# LG inittab
 	/bin/umount -a -r
-elif pgrep -f '^/mnt/lg/lgapp/RELEASE'; then
-	# LG inittab
-	/bin/umount -a -r
+#elif pgrep -f '^/mnt/lg/lgapp/RELEASE'; then
+#	# LG inittab
+#	/bin/umount -a -r
 else
 	umount -r $(cat /proc/mounts|grep -nv ' / \| cramfs '|sort -nr|cut -d' ' -f2)
 fi

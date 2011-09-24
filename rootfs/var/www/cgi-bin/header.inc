@@ -52,3 +52,4 @@ th { padding: 1px; font-size: 12px; }
 		<a href="services.cgi">Services</a>&nbsp;&nbsp;&nbsp;
 		<a href="remote.cgi">Remote</a>&nbsp;&nbsp;&nbsp;
 		<a href="release.cgi">RELEASE</a>&nbsp;&nbsp;
+	</div><hr>

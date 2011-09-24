@@ -1,0 +1,60 @@
+#!/bin/sh
+# Source code released under GPL License
+# rcS for Saturn7 by mmm4m5m
+
+START() {
+	for i in 1 2 3 4; do
+		for j in 1 2; do
+			arg="/mnt/usb$j/Drive$i/LGMOD_S7"
+			[ -d "$arg/contents" ] || continue
+			D=$(stat -c%D $arg $arg/cache); n=$'\n'
+			if [ "${D%%$n*}" = "${D#*$n}" ]; then
+				[ -d "$arg/cache" ] || mkdir -p "$arg/cache"
+				echo "netcast: $1 bind $arg/cache"
+				mount -o bind "$arg/cache" /mnt/cache
+			fi
+			D=$(stat -c%D $arg $arg/contents); n=$'\n'
+			if [ "${D%%$n*}" = "${D#*$n}" ]; then
+				echo "netcast: $1 bind $arg/contents"
+				mount -o bind "$arg/contents" /mnt/addon/contents
+				killall stagecraft
+			fi
+			break 2
+		done
+	done
+}
+
+boot() {
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+	[ "$r" -lt 2 ] && { echo 'netcast: Not started'; return 1; }
+	START "$@"
+}
+
+stop() {
+	sync
+	ARG=''; [ "$2" != '-f' ] && [ "$2" != '-r' ] || ARG="$2"
+	for arg in /mnt/addon/contents /mnt/cache; do
+		D=$(stat -c%D $arg/.. $arg); n=$'\n'
+		[ "${D%%$n*}" = "${D#*$n}" ] && continue
+		echo "netcast: $1 $ARG $arg ..."
+		umount $ARG $arg
+	done
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart [-f|-r]"; exit 1
+esac

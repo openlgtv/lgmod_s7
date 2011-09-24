@@ -3,13 +3,15 @@
 # Source code released under GPL License
 # lginit/rcS for Saturn7 by mmm4m5m
 
-# accepted config values: empty or non-empty
-LGI_MENU=''
+# config values: empty or non-empty
+LGI_MENU=1; # 1=enable "Press any key for shell"
 LGI_CHROOT=''; #sdb1/lgmod_s7.sqf
 LGI_OVERLAY=''
+LGI_OVERLAY_ONCE=''
 LGINIT=''; # ''=rcS; <not empty>=lg-init; LGMOD=lg-init and LGMOD
+LGINIT_ONCE=''; # ''=rcS; <not empty>=lg-init; LGMOD=lg-init and LGMOD
 USB=/tmp/lgmod/chrusb; CHR=/tmp/lgmod/chroot
-MNT=/mnt/lg/user; RUN=$MNT/lgmod/init/lginit
+MNT=/mnt/lg/user; BOOTMOD=$MNT/lgmod/boot
 
 OUT=/dev/kmsg; [ -e $OUT ] || OUT=/dev/stdout
 DIR=/mnt/lg/lginit
@@ -17,13 +19,18 @@ export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 
 mount -t jffs2 /dev/mtdblock11 "$MNT" -o noatime > $OUT 2>&1
-[ -f "$RUN" ] && { echo "lginit: Found $RUN" > $OUT; . "$RUN"; }
+if [ -f "$BOOTMOD" ]; then
+	echo "lginit: Found $BOOTMOD" > $OUT; . "$BOOTMOD"
+	[ -n "$LGI_OVERLAY_ONCE" ] && { LGI_OVERLAY="$LGI_OVERLAY_ONCE"; sed -ie '/^LGI_OVERLAY_ONCE=/d' "$BOOTMOD" > $OUT 2>&1; }
+	[ -n "$LGINIT_ONCE" ] && { LGINIT="$LGINIT_ONCE"; sed -ie '/^LGINIT_ONCE=/d' "$BOOTMOD" > $OUT 2>&1; }
+	[ -n "$LGI_OVERLAY_ONCE$LGINIT_ONCE" ] && sync > $OUT 2>&1
+fi
 
-[ -d $MNT/lgmod ] && [ -z "$LGI_MENU" ] || {
-	echo -n 'lginit: Menu ("X" to disable menu): Press any key for shell ...'
-	for i in 3 2 1; do echo -n " $i"; if read -n1 -t1 r; then
-		[ "$r" = X ] && { mkdir -p "$MNT/lgmod"; sync; }; sh; break
-	fi; done; echo; }
+[ "$LGI_MENU" = 1 ] || {
+	echo 'lginit: Menu ("X" to disable menu): Press any key for shell ...'
+	if read -n1 -t1 r; then
+		[ "$r" = X ] && { mkdir -p "$MNT/lgmod"; echo 'LGI_MENU=0' >> "$BOOTMOD"; sync; }
+		sh; fi; }
 
 
 DEV="/dev/${LGI_CHROOT%%/*}"; SQF="$USB/${LGI_CHROOT#*/}"
@@ -31,7 +38,7 @@ if [ -n "$LGI_CHROOT" ] && [ -b "$DEV" ]; then
 	. $DIR/lginit-tmpfs
 	if mkdir -p "$USB" > $OUT 2>&1; then
 		echo "lginit: trying $DEV $SQF ..." > $OUT
-		. $DIR/lginit-usercall1 0 10 > $OUT 2>&1
+		. $DIR/lginit-usercall1 call_wait > $OUT 2>&1
 		if mount -t vfat -o iocharset=utf8,shortname=mixed,noatime "$DEV" "$USB" > $OUT 2>&1 ||
 			mount -t ntfs -o noatime "$DEV" "$USB" > $OUT 2>&1; then
 			if [ -f "$SQF" ]; then

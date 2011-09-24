@@ -1,12 +1,13 @@
-::sysinit:/etc/init.d/rcS
-#ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt102
-#::respawn:/bin/login
-#ttyS0::askfirst:-/bin/sh
 # LG
+#::sysinit:/etc/init.d/rcS
+##ttyS0::respawn:/sbin/getty -L ttyS0 115200 vt102
+##::respawn:/bin/login
+##ttyS0::askfirst:-/bin/sh
 #console::once:-/bin/sh
 #::shutdown:/bin/umount -a -r
 ::restart:/sbin/init
 # lgmod
+ttyS0::sysinit:/etc/init.d/rcS
 console::askfirst:-/bin/sh
 ::shutdown:/etc/init.d/rcK
 ::ctrlaltdel:/sbin/reboot

@@ -1,8 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc; [ -d /mnt/lg/user/lgmod/init ] && echo 'Advanced:&nbsp;<a href="init.cgi">INIT</a>&nbsp;&nbsp;'; ?>
-</div><hr><p class="largefont">LGMOD CONFIGURATION / LOGS</p><div class="pagebody">
+<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / LOGS</p><div class="pagebody">
 
 <div class="post"><div class="posthead">logread</div><div class="posttext">
 <pre><? logread ?></pre>
@@ -12,16 +11,16 @@ content-type: text/html
 <pre><? dmesg ?></pre>
 </div></div>
 
-<div class="post"><div class="posthead">openrelease.log - require OPENRELEASE mode</div><div class="posttext">
-<pre><? cat /tmp/openrelease.log 2>&1 ?></pre>
+<div class="post"><div class="posthead">openrelease.log (require OPENRELEASE)</div><div class="posttext">
+<pre><? [ -f /tmp/openrelease.log ] && cat /tmp/openrelease.log 2>&1 ?></pre>
 </div></div>
 
-<div class="post"><div class="posthead">RELEASE.out - require tmux-pipe mode</div><div class="posttext">
-<? [ -f /tmp/RELEASE.out ] && { cat /tmp/RELEASE.out | /home/lgmod/ansi2html.sh --bg=dark; } 2>&1 ?>
-</div></div>
-
-<div class="post"><div class="posthead">openrelease.out - require OPENRELEASE mode</div><div class="posttext">
+<div class="post"><div class="posthead">openrelease.out (require OPENRELEASE)</div><div class="posttext">
 <? [ -f /tmp/openrelease.out ] && { cat /tmp/openrelease.out | /home/lgmod/ansi2html.sh --bg=dark; } 2>&1 ?>
+</div></div>
+
+<div class="post"><div class="posthead">RELEASE.out (require tmux-pipe)</div><div class="posttext">
+<? [ -f /tmp/RELEASE.out ] && { cat /tmp/RELEASE.out | /home/lgmod/ansi2html.sh --bg=dark; } 2>&1 ?>
 </div></div>
 
 </div></div>

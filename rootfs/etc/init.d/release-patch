@@ -18,20 +18,20 @@ START() {
 	fi
 	# Launch patch script
 	if [ -x $PATCH_SH ]; then
-		cat /proc/mounts | grep -q '^lgapp_xip /mnt/lg/lgapp cramfs ' ||
-			{ echo 'release-patch: Error: lgapp_xip cramfs not found'; return 1; }
 		echo "release-patch: $@ ${PATCH_SH##*/} ... (patchwork time)"
 		$PATCH_SH "$@"
 	fi
 }
 
 boot() {
-	{
+	#{
 	START "$@"
-	} > /dev/kmsg 2>&1
+	#} > /dev/kmsg 2>&1
 }
 
 start() {
+	cat /proc/mounts | grep -q '^lgapp_xip /mnt/lg/lgapp cramfs ' ||
+		{ echo 'release-patch: lgapp_xip cramfs not found'; return 1; }
 	START "$@"
 }
 

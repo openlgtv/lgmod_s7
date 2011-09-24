@@ -3,73 +3,54 @@
 # OpenLGTV BCM by xeros
 # Modified for Saturn7 by mmm4m5m
 
-# accepted config values: empty or non-empty
+# [chroot] [overlay]
+# config values: empty or non-empty
+RCS_SYSLOG=1; # 1=enable
 RCS_NOREL=''
-RCS_CRAMFS=1
-RCS_DELAY=15
-#RCS_RELEASE=OPENREL-TMUX-PIPE
-#RCS_RELEASE=OPENREL-TMUX
-#RCS_RELEASE=OPENRELEASE
-RCS_RELEASE=OPENREL-DAEMON; # in bg
-#RCS_RELEASE=TMUX-PIPE
-#RCS_RELEASE=TMUX; # insmod pty.ko; in bg
-#RCS_RELEASE=''; # LG
+RCS_NOREL_ONCE=''
+RCS_DELAY=15; # seconds delay before services
 RCS_CRASHDOG=''; # ''=default; 0=disable; 1=enable/enforce
-RUN=/mnt/lg/user/lgmod/init/rcS
-CFG=/mnt/lg/user/lgmod
+RUN=/mnt/lg/user/lgmod/init/rcS; BOOTMOD=/mnt/lg/user/lgmod/boot
 
+export HOME=/mnt/lg/user/root
+. /etc/init.d/rcS-lginit-env; # LG: env
 
 . /etc/init.d/rcS-tmpfs
 
-{ syslogd -C16; mkdir -p /tmp/var/log /tmp/var/run/tmux; f='/var/run/utmp /var/log/wtmp'
-touch $f /var/log/lastlog; chgrp utmp $f; chmod 0664 $f; } > /dev/kmsg 2>&1
-
-# environment - minimal
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
-export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib
-export TERM=vt100
-export HOME=/mnt/lg/user/root
-
-[ -f $CFG/tvstartup ] || RCS_RELEASE=''; # LG
-
-# lgmod: rc.sysinit rc.local
-[ -e $CFG/debug ] && { RCS_NOREL=1; echo 'LGMOD: DEBUG!'; rm -f $CFG/debug; sync; } >/dev/kmsg 2>&1
-
-[ -f "$RUN" ] && { echo "rcS: Found $RUN" > /dev/kmsg; . "$RUN"; }
+{ mkdir -p /tmp/var/log /tmp/var/run/tmux; f='/var/run/utmp /var/log/wtmp'
+	touch /var/log/lastlog $f; chgrp utmp $f; chmod 0664 $f; } > /dev/kmsg 2>&1
 
 
-#CHR=/tmp/lgmod/Overlay; CHRO=/tmp/lgmod/overlay; # lginit
-#OVERLAY=''; [ -d "$CHR" ] && [ $(stat -c%D / /tmp "$CHR"|sort|uniq|wc -l) = 3 ] && OVERLAY=yes
-#[ -z "$OVERLAY" ] && [ -d "$CHRO" ] && [ $(stat -c%D / /tmp "$CHRO"|sort|uniq|wc -l) = 3 ] && OVERLAY=yes
-touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
-
-. /etc/init.d/rcS-lginit-env; # LG: env
-[ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
-. /etc/init.d/rcS-lginit "$OVERLAY"; # LG: mount
-[ -f "$RUN-mount" ] && { echo "rcS-exec: Found $RUN-mount" > /dev/kmsg; . "$RUN-mount"; }
-
-
-. /etc/init.d/rcS-nvram
-
-if [ -z "$RCS_NOREL" ]; then
-	. /etc/init.d/rcS-crashdog watch "$RCS_CRASHDOG" ||
-		{ RCS_NOREL=1; . /etc/init.d/rcS-crashdog minus1 "$RCS_CRASHDOG"; }
+if [ -f "$BOOTMOD" ]; then
+	echo "rcS: Found $BOOTMOD" > /dev/kmsg; . "$BOOTMOD"
+	[ -n "$RCS_NOREL_ONCE" ] && { RCS_NOREL="$RCS_NOREL_ONCE"; sed -ie '/^RCS_NOREL_ONCE=/d' "$BOOTMOD" > /dev/kmsg 2>&1; }
+	[ -n "$RCS_NOREL_ONCE" ] && sync > /dev/kmsg 2>&1
 fi
 
+[ "$RCS_SYSLOG" = 1 ] && syslogd -C16 > /dev/kmsg 2>&1
+
+[ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
+. /etc/init.d/rcS-lginit; # LG: mount
+[ -f "$RUN-mount" ] && { echo "rcS-exec: Found $RUN-mount" > /dev/kmsg; . "$RUN-mount"; }
+
+. /etc/init.d/rcS-nvram
+setsid sh /etc/init.d/rcS-services "$RCS_DELAY" &
+
+
+[ -n "$RCS_BREAK_CTRL_C" ] && { echo 'Note: Press "exit" to continue...'; sh; }
+
+if [ -z "$RCS_NOREL" ] && [ "$RCS_CRASHDOG" != 0 ]; then
+	. /etc/init.d/rcS-crashdog check "$RCS_CRASHDOG" || RCS_NOREL=1; fi
 
 if [ -z "$RCS_NOREL" ]; then
-	Rbg=''; . /etc/init.d/rcS-release bg "$RCS_RELEASE" && Rbg=1; # Rtm
-	sh /etc/init.d/rcS-services "$RCS_NOREL" "$Rbg" "$RCS_DELAY" &
-	. /etc/init.d/release boot "$RCS_RELEASE" "$RCS_CRAMFS" "$Rtm"
-	if [ -z "$Rbg" ]; then
-		echo "rcS-exec: Error $?" > /dev/kmsg
-		. /etc/init.d/rcS-crashdog error "$RCS_CRASHDOG"
-		echo 'rcS: help - sh  : $ call debug_os_shell+0xb0' > /dev/kmsg
-		echo 'rcS: help - user: # cd / && tar xzvf /mnt/usb1/Drive1/backup-user.tar.gz' > /dev/kmsg
-		exec sh; exit 1
-	fi
-else
-	. /etc/init.d/rcS-services "$RCS_NOREL" 0 0
+	err=''; . /etc/init.d/release boot || err=$?
+	if [ -z "$err" ]; then
+		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+		[ "$r" -lt 2 ] && err=1; fi
+	[ -n "$err" ] && {
+		echo "rcS-release: Error $err ($Mode)" > /dev/kmsg
+		. /etc/init.d/rcS-crashdog error
+		exec sh; exit 1; }
 fi
 
 exit 0

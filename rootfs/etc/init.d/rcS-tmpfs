@@ -5,13 +5,10 @@
 OUT=/dev/kmsg
 
 {
-D='/ /proc /sys /tmp'; U=/proc/bus/usb; [ -d $U ] && { D="$D $U"; U=''; }
-D=$(stat -c%D $D); D=$(echo $D); d="${D%% *}"; D="${D#* }"
-d1="${D%% *}"; D="${D#* }"; d2="${D%% *}"; D="${D#* }"
-d3="${D%% *}"; d4="${D#* }"; [ -n "$U" ] && d4="$d"
-
-[ "$d" = "$d1" ] && mount -t proc proc /proc
-[ "$d" = "$d2" ] && mount -t sysfs sysfs /sys
-[ "$d" = "$d4" ] && mount -t usbfs usbfs /proc/bus/usb
-[ "$d" = "$d3" ] && mount -t tmpfs tmpfs /tmp -o size=24M
+if [ ! -d /proc/bus/usb ]; then
+	mount -t proc proc /proc
+	mount -t sysfs sysfs /sys
+	mount -t usbfs usbfs /proc/bus/usb
+	mount -t tmpfs tmpfs /tmp -o size=24M
+fi
 } > $OUT 2>&1

@@ -2,7 +2,7 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
-mounts() {
+mountall() {
 	D=$(stat -c%D /mnt/usb1)
 	for j in 1 2; do
 		[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
@@ -10,14 +10,15 @@ mounts() {
 			ARG="noatime /dev/sd$J$i"; arg="/mnt/usb$j/Drive$i"
 			d=$(stat -c%D $arg); [ "$d" = "$D" ] || continue
 			echo "release-mount: $1 $ARG $arg ..."
-			mount -t ext3 -o $ARG $arg ||
+			mount -t vfat -o iocharset=utf8,shortname=mixed,$ARG $arg ||
+				mount -t ntfs -o $ARG $arg ||
+				mount -t ext3 -o $ARG $arg ||
 				mount -o $ARG $arg
 		done
 	done
 }
 
 START() {
-	. /etc/init.d/rcS-usercall1 0 10
 	D=$(stat -c%D /mnt/usb1)
 	for j in 1 2; do
 		[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
@@ -33,16 +34,19 @@ START() {
 
 boot() {
 	{
+	. /etc/init.d/rcS-usercall1 call_wait
 	START "$@"
 	} > /dev/kmsg 2>&1
 }
 
 start() {
 	pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release-mount: Already started'; return 1; }
+	. /etc/init.d/rcS-usercall1 call_and_wait
 	START "$@"
 }
 
 stop() {
+	#pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release-mount: Already started'; return 1; }
 	sync
 	ARG=''; [ "$2" != '-f' ] && [ "$2" != '-r' ] || ARG="$2"
 	D=$(stat -c%D /mnt/usb1)
@@ -61,10 +65,10 @@ restart() {
 }
 
 case "$1" in
-	mount)		mounts "$@";;
+	mountall)	mountall "$@";;
 	boot)		boot "$@";;
 	start)		start "$@";;
 	stop)		stop "$@";;
 	restart)	restart "$@";;
-	*)			echo "Usage: $0 mount|start|stop|restart [-f|-r]"; exit 1
+	*)			echo "Usage: $0 mountall|start|stop|restart [-f|-r]"; exit 1
 esac

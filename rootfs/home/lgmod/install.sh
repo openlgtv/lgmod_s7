@@ -59,7 +59,7 @@ if [ -n "$info" ]; then
 fi
 if [ -n "$info" ]; then
 	err=0
-	{ echo -ne "\n\n#$# INFO($err): "; date
+	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$#' cat /proc/mtd; cat /proc/mtd || err=11
 		echo -e '\n\n$# dump mtdinfo (/dev/mtd2)'; mtdinfo=$($busybox hexdump /dev/mtd2 -vs240 \
 			-e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"'| \
@@ -73,7 +73,7 @@ if [ -n "$info" ]; then
 		s=7;w=5;m=3;cat /dev/mtd5 |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'|sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' \
 			-e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' -e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 || err=18
 	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
-	{ echo -ne "\n\n#$# INFO($err): "; date
+	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$#' free; free || err=12
 		echo -e '\n\n$#' cat /proc/cpuinfo; cat /proc/cpuinfo || err=11
 		echo -e '\n\n$#' lsmod; lsmod || err=12
@@ -89,7 +89,7 @@ if [ -n "$info" ]; then
 		echo -e '\n\n$#' fdisk -l; fdisk -l $(cat /proc/mtd | grep '^mtd' | sed -e 's/:.*//' -e 's/^mtd/\/dev\/mtdblock/') | grep : || err=14
 		cat /tmp/install-info || err=11
 	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
-	{ echo -ne "\n\n#$# INFO($err): "; date
+	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$# dump RELEASE version'
 		f=/mnt/lg/lgapp/RELEASE; b=10000; s=$(stat -c%s $f); s=$((s/b*8/17)); flag=''
 		dd bs=$b skip=$s count=300 if=$f 2>/dev/null|tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
@@ -99,7 +99,7 @@ if [ -n "$info" ]; then
 		if [ -n "$flag" ]; then cat $f|tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			grep '....'|grep -m2 -B1 -A10 swfarm || err=18; fi
 	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
-	{ echo -ne "\n\n#$# INFO($err): "; date
+	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$# strings lginit (lg-init)'
 		f=/mnt/lg/lginit/lg-init; [ ! -f $f ] && { f=/mnt/lg/lginit/lginit; [ -f $f ] && md5sum $f; }
 		w=5;m=3;[ -f $f ] && cat $f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'|sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' \
@@ -119,7 +119,7 @@ if [ -n "$info" ]; then
 	#	appxip_addr=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
 	#	echo -e '\n\n$# dump lgapp (/dev/mem)'; $busybox hexdump /dev/mem -vs$((appxip_addr)) -n160 -e'4 "%08x "" " 16 "%_p"" " 4 "%08x "" " 10 "%_p" 1/2 " %04x" "\n" 7 "%08x "" " 7 "%_p"" " 1/1 "%02x " 4 "%08x " "\n" 10 "%_p" 1/2 " %04x" 3 " %08x"" " 15 "%_p" 3 " %08x" "\n"' || err=13
 	#	echo -e '\n\n$# dump RELEASE (/dev/mem)'; $busybox hexdump /dev/mem -vs$((appxip_addr+1024*4)) -n512 -e'128 "%_p" "\n"' || err=13
-	{ echo -ne "\n\n#$# INFO($err): "; date; } >> "$infofile"; sync
+	{ echo -ne '\n\n#$#'" INFO($err): "; date; } >> "$infofile"; sync
 	[ $err != 0 ] && echo "Error($err): Info file failed"
 fi
 
@@ -251,6 +251,14 @@ fi
 
 # install
 if [ -n "$install" ]; then
+	# Enable lginit menu, Force RELEASE LG default
+	MNT=/mnt/lg/user; BOOTMOD=$MNT/lgmod/boot
+	RELMOD=/mnt/lg/user/lgmod/release
+	n=LGI_MENU; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
+	n=MODE; [ -f $RELMOD ] && grep -q "^$n=" $RELMOD && sed -ie "/^$n=\|^$/d" $RELMOD
+	[ -f $RELMOD ] && [ ! -s $RELMOD ] && rm -f $RELMOD
+	[ -f $RELMOD ] && echo "$n=LG" >> $RELMOD
+
 	if [ -n "$kill" ]; then
 		echo 'NOTE: Freeing memory (killing daemons) ...'
 		for i in $KILL; do pkill $i && echo $i; killall $i 2> /dev/null && echo $i; done
@@ -329,11 +337,11 @@ if [ -n "$install" ]; then
 			if $busybox tty > /dev/null; then $busybox sh; else
 				bb=$($busybox realpath $busybox); pty="${bb%/bin/busybox}/lib/modules/pty.ko"
 				echo '#!'"$bb sh"$'\n'"exec $busybox sh" > /tmp/auth.sh; chmod +x /tmp/auth.sh
-				$busybox insmod "$pty" 2>/dev/null; $busybox telnetd -l /tmp/auth.sh -p 1023
+				$busybox modprobe "$pty" 2>/dev/null; $busybox telnetd -l /tmp/auth.sh -p 1023
 				echo "INFO: telnetd started at port 1023: $busybox"
 			fi
 		elif ! tty > /dev/null; then
-			insmod /lib/modules/pty.ko; telnetd -p 1023
+			modprobe /lib/modules/pty.ko; telnetd -p 1023
 			echo 'INFO: telnetd started at port 1023: chroot'
 		else sh; fi; exit $err
 	else

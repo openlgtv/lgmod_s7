@@ -8,11 +8,14 @@
 # Source code released under GPL License
 # lginit/rcS for Saturn7 by mmm4m5m
 
-# accepted config values: empty or non-empty
+trap 'RCS_BREAK_CTRL_C=1' INT; # requre: ttyS0::sysinit:...
+
+# config values: empty or non-empty
 RCS_CHROOT=''; #sdb1/lgmod_s7.sqf
 RCS_OVERLAY=''
+RCS_OVERLAY_ONCE=''
 USB=/tmp/lgmod/Chrusb; CHR=/tmp/lgmod/Chroot
-RUN=/mnt/lg/user/lgmod/init/rcS
+BOOTMOD=/mnt/lg/user/lgmod/boot
 
 DIR=/mnt/lg/lginit; MNT=/mnt/lg/user; OUT=/dev/kmsg
 CHRI=/tmp/lgmod/chroot; CHRO=/tmp/lgmod/overlay; # lginit
@@ -20,13 +23,15 @@ export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 . /etc/init.d/rcS-tmpfs
 
-
-D=$(stat -c%D / $MNT); D=$(echo $D); d="${D%% *}"; D="${D#* }"
-if [ "$d" = "$D" ]; then
+D=$(stat -c%D / $MNT); n=$'\n'; [ "${D%%$n*}" = "${D#*$n}" ] && {
 	mount -t jffs2 /dev/mtdblock11 $MNT -o noatime > $OUT 2>&1 ||
-		echo 'rcS: help: flash_eraseall -j /dev/mtd11' > $OUT; # rcS-lginit
+		echo 'rcS: help: flash_eraseall -j /dev/mtd11' > $OUT; }; # rcS-lginit
+
+if [ -f "$BOOTMOD" ]; then
+	echo "rcS: Found $BOOTMOD" > $OUT; . "$BOOTMOD"
+	[ -n "$RCS_OVERLAY_ONCE" ] && { RCS_OVERLAY="$RCS_OVERLAY_ONCE"; sed -ie '/^RCS_OVERLAY_ONCE=/d' "$BOOTMOD" > $OUT 2>&1; }
+	[ -n "$RCS_OVERLAY_ONCE" ] && sync > $OUT 2>&1
 fi
-[ -f "$RUN" ] && { echo "rcS: Found $RUN" > $OUT; . "$RUN"; }
 
 
 DEV="/dev/${RCS_CHROOT%%/*}"; SQF="$USB/${RCS_CHROOT#*/}"
@@ -34,7 +39,7 @@ if [ -n "$RCS_CHROOT" ] && [ -b "$DEV" ]; then
 	#. /etc/init.d/rcS-tmpfs
 	if mkdir -p "$USB" > $OUT 2>&1; then
 		echo "rcS: trying $DEV $SQF ..." > $OUT
-		. /etc/init.d/rcS-usercall1 0 10 > $OUT 2>&1
+		. /etc/init.d/rcS-usercall1 call_and_wait > $OUT 2>&1
 		if mount -t vfat -o iocharset=utf8,shortname=mixed,noatime "$DEV" "$USB" > $OUT 2>&1 ||
 			mount -t ntfs -o noatime "$DEV" "$USB" > $OUT 2>&1; then
 			if [ -f "$SQF" ]; then

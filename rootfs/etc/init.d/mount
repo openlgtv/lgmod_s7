@@ -7,17 +7,33 @@
 CFG_DIR="/mnt/lg/user/lgmod"
 FS_MNT=$CFG_DIR/ndrvtab
 
+wait() {
+	{
+	echo "mount: $1"
+	for k in 1 2 3 4 5 6 7; do
+		D=$(stat -c%D /mnt/usb1 /mnt/usb1/Drive1); n=$'\n'
+		[ "${D%%$n*}" = "${D#*$n}" ] || break; sleep 3; done
+	[ "${D%%$n*}" = "${D#*$n}" ] && { echo "mount: $1 - timeout"; return 1; }
+	last=$'\0'; done=0
+	while [ "$done" -lt 2 ]; do
+		[ "$last" = $'\0' ] && sleep 2; curr=$(stat -c%D /mnt/usb?/Drive?)
+		[ "$last" = "$curr" ] && done=$(( done+1 )) || { last="$curr"; done=0; }
+	done
+	echo "mount: $1 - done"
+	} > /dev/kmsg 2>&1
+}
+
 START() {
 	if [ -f $FS_MNT ]; then
 		cat $FS_MNT | while read ndrv; do
 			automount="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			[ "$automount" = "1" ] || continue
 			fs_type="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			src="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			dst="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			opt="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			uname="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			pass="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
-			[ "$automount" = "1" ] || continue
 			mnt_opt="noatime";
 			[ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
 			[ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
@@ -44,9 +60,12 @@ stop() {
 		ARG=''; [ "$2" != '-f' ] && [ "$2" != '-r' ] || ARG="$2"
 		grep -n '' $FS_MNT | sort -nr | cut -d':' -f 2- | while read ndrv; do
 			automount="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			[ "$automount" = "1" ] || continue
 			fs_type="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			src="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			dst="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
+			D=$(stat -c%D $dst/.. $dst); n=$'\n'
+			[ "${D%%$n*}" = "${D#*$n}" ] && continue
 			echo "mount: $1 $ARG $dst ..."
 			umount $ARG "$dst"
 		done
@@ -58,9 +77,10 @@ restart() {
 }
 
 case "$1" in
+	wait)		wait "$@";;
 	boot)		boot "$@";;
 	start)		start "$@";;
 	stop)		stop "$@";;
 	restart)	restart "$@";;
-	*)			echo "Usage: $0 start|stop|restart [-f|-r]"; exit 1
+	*)			echo "Usage: $0 wait|start|stop|restart [-f|-r]"; exit 1
 esac

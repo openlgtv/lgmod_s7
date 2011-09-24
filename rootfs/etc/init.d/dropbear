@@ -5,7 +5,7 @@
 START() {
 	echo "dropbear: $@"
 	. /etc/init.d/rcS-devrw
-	insmod /lib/modules/pty.ko > /dev/null 2>&1
+	modprobe /lib/modules/pty.ko > /dev/null 2>&1
 	dropbear -s
 }
 

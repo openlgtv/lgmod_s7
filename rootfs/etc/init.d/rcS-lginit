@@ -5,7 +5,7 @@
 
 TFS=/tmp/lgmod/tmpfs; STO=/tmp/lgmod/Storage
 
-OVERLAY="$1"
+touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
 
 # LG rc.local
 #HOST_NAME=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS="="; } /host=/ { print $2 } END {}'`
@@ -26,7 +26,10 @@ mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data -o noatime ||
 # LG rc.sysinit
 mount -a
 
-d=/usr/local; mkdir -p "$STO$d"; lsmod | grep -q '^mini_fo ' && 
-	mount -t mini_fo -o base="$d",sto="$STO$d" "mini$d" "$d" ||
-	{ d="$d/etc"; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"; }
+if [ -z "$OVERLAY" ]; then
+	d=/usr/local/etc; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"
+else
+	d=/usr/local; mkdir -p "$STO$d"
+	mount -t mini_fo -o base="$d",sto="$STO$d" "mini$d" "$d"
+fi
 } > /dev/kmsg 2>&1

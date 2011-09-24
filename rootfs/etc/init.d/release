@@ -3,76 +3,106 @@
 # OPENRELEASE by rtokarev is licensed under BSD License
 # rcS for Saturn7 by mmm4m5m
 
-RCS_RELEASE="$2"; RCS_CRAMFS="$3"; Rtm="$4"
-# $5='skip' - do not read config
-# $6='skip' - do not replace RELEASE.cfg
-RUN=/mnt/lg/user/lgmod/init/rcS
+# config values: empty or non-empty
+CRAMFS=1; # 1=check cramfs magic
+#MODE=OPENREL-TMUX-PIPE
+#MODE=OPENREL-TMUX
+#MODE=OPENRELEASE
+MODE=OPENREL-DAEMON; # in bg
+#MODE=TMUX-PIPE
+#MODE=TMUX; # modprobe pty.ko; in bg
+#MODE=LG
+RELMOD=/mnt/lg/user/lgmod/release
 
-RBIN=/mnt/lg/lgapp/RELEASE
-
-CONFIG() {
-	[ "$6" = skip ] || RELCFG '' > /dev/kmsg 2>&1
-
-	if [ "$5" != skip ]; then
-		RCS_CRAMFS=1
-		RCS_RELEASE=OPENREL-DAEMON; # in bg
-		[ -f "$RUN" ] && . "$RUN"
-		Rtm=''; (. /etc/init.d/rcS-release tm "$RCS_RELEASE") && Rtm=1
-	fi
-
-	START "$@"
+wait() {
+	{
+	sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+	[ "$r" -lt 2 ] && { echo "release: $1 - not started ($r)"; return 1; }
+	} > /dev/kmsg 2>&1
+	. /etc/init.d/mount wait && {
+		. /etc/init.d/mount start
+		. /etc/init.d/netcast start
+		} > /dev/kmsg 2>&1
 }
 
 RELCFG() {
 	cfg=/mnt/lg/cmn_data/RELEASE.cfg; rdir=/mnt/lg/model; rcfg=$rdir/RELEASE.cfg
 	[ -f "$cfg" ] || sed -e 's/^\(eDebugMode,\).*$/\1EVENT/' "$rcfg" > "$cfg"
-	if [ "$1" = skip ]; then d=''; D=''
-	else D=$(stat -c%D $rdir $rcfg); D=$(echo $D); d="${D%% *}"; D="${D#* }"; fi
-	[ "$d" = "$D" ] && mount -o bind "$cfg" "$rcfg"
+	if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
+	else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
+		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
 
-	cfg=/mnt/lg/cmn_data/openrelease_keymap.cfg; rdir=/etc/openrelease; rcfg=$rdir/openrelease_keymap.cfg
-	if [ ! -f "$cfg" ]; then d=1; D=0
-	elif [ "$1" = skip ]; then d=''; D=''
-	else D=$(stat -c%D $rdir $rcfg); D=$(echo $D); d="${D%% *}"; D="${D#* }"; fi
-	[ "$d" = "$D" ] && mount -o bind "$cfg" "$rcfg"
+	#f=openrelease_keymap.cfg; cfg=/mnt/lg/cmn_data/$f; rdir=/etc/openrelease; rcfg=$rdir/$f
+	#if [ -f "$cfg" ]; then
+	#	if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
+	#	else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
+	#		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
+	#fi
+}
+
+PREPARE() {
+	if [ -n "$Rtmux" ]; then
+		modprobe /lib/modules/pty.ko ||
+			{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+	elif [ -n "$Ropen" ]; then
+		modprobe /lib/modules/pty.ko ||
+			{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
+	fi
+	if [ -n "$Rtmux" ]; then
+		. /etc/init.d/rcS-devrw ||
+			{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+	fi
+}
+
+CRAMFS() {
+	if [ ! -f /mnt/lg/lgapp/RELEASE ]; then
+		. /etc/init.d/rcS-lginit-cramfs "$CRAMFS"; # LG: mount cramfs
+		# test/debug - skip if 'replace'
+		[ "$1" != replace ] && [ -f /mnt/lg/lgapp/RELEASE ] &&
+			. /etc/init.d/release-patch "$1"
+	fi
 }
 
 START() {
-	[ -n "$Rtm" ] && if ! insmod /lib/modules/pty.ko > /dev/kmsg 2>&1; then
-		lsmod | grep -q '^pty ' || { RCS_RELEASE=OPENREL-DAEMON; Rtm=''; }; fi
-	if [ -n "$Rtm" ]; then
-		. /etc/init.d/rcS-devrw > /dev/kmsg 2>&1 ||
-			{ RCS_RELEASE=OPENREL-DAEMON; Rtm=''; }; # another bg <MODE> without tmux
-	fi
-
-	if [ ! -f "$RBIN" ]; then
-		CRAMFS=''; [ -n "$RCS_CRAMFS" ] && CRAMFS=check
-		[ -n "$CRAMFS" ] && . /etc/init.d/rcS-cramfs
-		. /etc/init.d/rcS-lginit-cramfs "$CRAMFS"; # LG: mount cramfs
-	fi
-	. /etc/init.d/rcS-release run "$RCS_RELEASE"; # LG: RELEASE
+	[ -n "$2" ] && MODE="$2"; [ -n "$3" ] && CRAMFS="$3"
+	. /etc/init.d/rcS-release test "$MODE"; # Ropen; Rtmux
+	RELCFG "$1"; PREPARE; CRAMFS "$1"
 }
 
-boot() {
-	RELCFG skip > /dev/kmsg 2>&1
+CONFIG() {
+	[ -f "$RELMOD" ] && { echo "release: Found $RELMOD"; . "$RELMOD" "$@" || return $?; }
 	START "$@"
 }
 
+boot() {
+	[ -f "$RELMOD" ] || MODE=LG
+	[ -f "$RELMOD" ] && { echo "release: Found $RELMOD" > /dev/kmsg; . "$RELMOD" "$@" || return $?; }
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+	. /etc/init.d/rcS-release run "$MODE" || return $?; # LG: RELEASE
+}
+
 start() {
-	pgrep -f "^$RBIN" && { echo 'release: Already started'; return 1; }
+	pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release: Already started'; return 1; }
 	/etc/init.d/mount stop
 	/etc/init.d/release-mount stop
 	CONFIG "$@"
-	echo 'Note: After RELEASE mounts run: /etc/init.d/mount start && /etc/init.d/netcast-mount start'
+	/etc/init.d/release wait &
+	. /etc/init.d/rcS-release run "$MODE" || return $?; # LG: RELEASE
 }
 
-restart() {
+replace() {
+	/etc/init.d/netcast stop
+	/etc/init.d/mount stop
 	CONFIG "$@"
+	. /etc/init.d/rcS-release run "$MODE" || return $?; # LG: RELEASE
 }
 
 case "$1" in
+	wait)		wait "$@";;
 	boot)		boot "$@";;
 	start)		start "$@";;
-	restart)	restart "$@";;
-	*)			echo "Usage: $0 start|restart [MODE] [CRAMFS] [RTM] [skip] [skip]"; exit 1
+	replace)	replace "$@";;
+	*)			echo "Usage: $0 wait|start|replace [MODE] [CRAMFS]"; exit 1
 esac

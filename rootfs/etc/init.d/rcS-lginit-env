@@ -6,7 +6,7 @@
 # Description: used in rcS and profile
 
 # LG lginit
-#export TERM=vt100; # moved to rcS
+export TERM=vt100
 export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
 export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
 export LOG_CALLER=NO

@@ -1,8 +1,7 @@
 #!/usr/bin/haserl
 content-type: text/html
 
-<? cat /var/www/cgi-bin/header.inc; [ -d /mnt/lg/user/lgmod/init ] && echo 'Advanced:&nbsp;<a href="init.cgi">INIT</a>&nbsp;&nbsp;'; ?>
-</div><hr><p class="largefont">LGMOD CONFIGURATION / DRIVES</p><div class="pagebody">
+<? cat /var/www/cgi-bin/header.inc ?><p class="largefont">LGMOD CONFIGURATION / DRIVES</p><div class="pagebody">
 
 <div class="post"><div class="posthead">CD-ROM Drive (Mounted on USB Stick first partition cdrom directory, need to create if does not exist)</div><div class="posttext">
 <b>Status :</b>

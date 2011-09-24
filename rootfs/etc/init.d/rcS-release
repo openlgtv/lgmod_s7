@@ -4,46 +4,33 @@
 # rcS for Saturn7 by mmm4m5m
 
 # Usage:
-#	$0 tm <MODE>	return true is <MODE> require tmux
-#	$0 bg <MODE>	return true is <MODE> run in background
-#	$0 '' <MODE>	run RELEASE
-# unknown MODE='' - LG default
+#	$0 test <MODE>	return true is <MODE> require tmux
+#	$0 .... <MODE>	run RELEASE
+# unknown MODE=LG	LG default
 
-Action="$1"; Mode=''
+Action="$1"; Mode=LG
 for i in OPENREL-TMUX-PIPE OPENREL-TMUX OPENRELEASE OPENREL-DAEMON TMUX-PIPE TMUX; do
 	[ "$2" = $i ] && Mode=$i && break; done
-
-Rtm=1; for i in OPENRELEASE OPENREL-DAEMON ''; do [ "$Mode" = "$i" ] && Rtm='' && break; done
-[ "$Action" = tm ] && { [ -n "$Rtm" ]; return; exit; }
-Rbg=1; for i in OPENRELEASE ''; do [ "$Mode" = "$i" ] && Rbg='' && break; done
-[ "$Action" = bg ] && { [ -n "$Rbg" ]; return; exit; }
-
-Rop=1; for i in TMUX-PIPE TMUX ''; do [ "$Mode" = "$i" ] && Rop='' && break; done
-Rod=1; [ "$Mode" != OPENREL-DAEMON ] && Rod=''
+Ropen=1; for i in TMUX-PIPE TMUX LG; do [ "$Mode" = "$i" ] && Ropen='' && break; done
+Rtmux=1; for i in OPENRELEASE OPENREL-DAEMON LG; do [ "$Mode" = "$i" ] && Rtmux='' && break; done
+[ "$Action" = test ] && { [ -n "$Rtmux" ]; return; exit; }
 
 Rcmd=/mnt/lg/lgapp/RELEASE; Rarg='0'; Rpipe=/tmp/RELEASE.out
 Ocfg='-c /etc/openrelease/openrelease.cfg'
-[ -n "$Rod" ] && Ocfg='-c /etc/openrelease/openrel-daemon.cfg'
+#[ "$Mode" = OPENREL-DAEMON ] && Ocfg='-c /etc/openrelease/openrel-daemon.cfg'
 Oarg='-l /tmp/openrelease.log -vvv'; OLIB=libopenrelease.so
-RUN=/mnt/lg/user/lgmod/init/rcS
 
-Tcmd="tmux pipe-pane 'cat >> $Rpipe'; tmux detach-client; echo '$Mode PIPE: $Rpipe'"
-Ocmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
 cd /; # /mnt/lg/lginit
 
-if [ -f "$RUN-relconf" ]; then
-	echo "rcS-release: Found $RUN-relconf" > /dev/kmsg
-	. "$RUN-relconf" || { return; exit; }
-fi
+Ocmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
+hint="$Ocmd"; [ "$Mode" = OPENREL-DAEMON ] && hint="LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg" ||
+	for i in TMUX-PIPE TMUX LG; do [ "$Mode" = "$i" ] && hint="$Rcmd $Rarg" && break; done
+echo 'rcS-release: help: $ call debug_os_shell+0xb0' > /dev/kmsg
+echo "rcS-release: Starting RELEASE $Mode ($hint) ..." > /dev/kmsg
 
 
-[ -n "$Rop" ] && cmd="$Ocmd" || cmd="$Rcmd $Rarg"
-[ "$Mode" = OPENRELEASE ] && cmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
-[ "$Mode" = OPENREL-DAEMON ] && cmd="LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg"
-echo "rcS-release: Starting RELEASE $Mode ($cmd) ..." > /dev/kmsg
-
-
-if [ -n "$Rtm" ]; then
+if [ -n "$Rtmux" ]; then
+	Tcmd="tmux pipe-pane 'cat >> $Rpipe'; tmux detach-client; echo '$Mode PIPE: $Rpipe'"
 	{ if [ "$Mode" = OPENREL-TMUX-PIPE ]; then
 		COLUMNS=300 tmux new-session -s LGMOD -n RELEASE "$Tcmd; $Ocmd"
 	elif [ "$Mode" = OPENREL-TMUX ]; then
@@ -54,12 +41,13 @@ if [ -n "$Rtm" ]; then
 		COLUMNS=300 tmux new-session -d -s LGMOD -n RELEASE "echo '$Mode'; exec $Rcmd $Rarg"
 	fi; } > /dev/kmsg 2>&1
 elif [ "$Mode" = OPENRELEASE ]; then
-	export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg
-	echo "rcS-release: Error $? ($Mode)" > /dev/kmsg
-	export LD_PRELOAD=''; # just in case
+	LD_PRELOAD=$OLIB exec $Rcmd $Ocfg $Oarg -- $Rarg
+	return 1; exit 1
 elif [ "$Mode" = OPENREL-DAEMON ]; then
 	LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg; # > /dev/kmsg 2>&1
 else
 	exec $Rcmd $Rarg
-	echo "rcS-release: Error $? ($Mode)" > /dev/kmsg
+	return 1; exit 1
 fi
+
+return 0; exit 0

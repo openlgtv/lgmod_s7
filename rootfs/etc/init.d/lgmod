@@ -16,12 +16,6 @@ config() {
 	P_SH=$CFG_DIR/patch.sh
 	sync=''
 
-	{
-	echo "lgmod: $@"
-	for k in 1 2 3 4 5 6 7 8 9 0; do
-		D=$(stat -c%D /mnt/usb1 /mnt/usb1/Drive1); D=$(echo $D); d="${D%% *}"; D="${D#* }"
-		[ "$d" = "$D" ] || break; sleep 3; done
-
 	# Reset all LGMOD configs to default if special file is present on USB drive
 	f=/mnt/usb1/Drive1/lgmod_reset_config
 	if [ -e $f ]; then
@@ -90,7 +84,6 @@ config() {
 	fi
 
 	[ -n "$sync" ] && sync
-	} > /dev/kmsg 2>&1
 }
 
 START() {
@@ -119,6 +112,7 @@ START() {
 boot() {
 	{
 	START "$@"
+	config "$1" config
 	} > /dev/kmsg 2>&1
 }
 

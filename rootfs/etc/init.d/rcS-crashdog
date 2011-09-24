@@ -2,64 +2,53 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
-# Description: mark before mount cramfs and 'watch' (wait) for RELEASE - will it start or crash
+# Description: mark before mount cramfs, 'watch' (wait) for RELEASE, clear mark if no crash
 
-ACT="$1"; RCS_CRASHDOG="$2"
-[ "$RCS_CRASHDOG" = 0 ] && { return 0; exit 0; }
-
-LGMOD_CFG=/mnt/lg/user/lgmod
 CRASHON=/mnt/lg/cmn_data/crash-on
 CRASHCNT=/mnt/lg/cmn_data/crash-index
-CRASHCMD='sh /etc/init.d/rcS-crashdog check'
-RBIN=/mnt/lg/lgapp/RELEASE
-
-if [ "$ACT" = watch ] && [ ! -f $CRASHON ]; then
-	# TODO: more reasons to turn it ON - if nvram crc is wrong (xeros)
-	{ if [ -n "$RCS_CRASHDOG" ]; then
-		echo 'rcS-crashdog: ON (config)'; touch $CRASHON; sync
-	elif [ ! -d "$LGMOD_CFG" ]; then
-		echo 'rcS-crashdog: ON (lgmod)'; touch $CRASHON; sync
-	fi; } > /dev/kmsg 2>&1
-fi
-
+ACT="$1"; CRASHDOG="$2"
 
 if [ "$ACT" = error ]; then
-	echo 'rcS-chashdog: ON (error)' > /dev/kmsg
-	{ touch $CRASHON; sync; } > /dev/kmsg 2>&1
+	{ echo 'rcS-chashdog: ON (error)'; touch $CRASHON; sync; } > /dev/kmsg 2>&1
 
 elif [ "$ACT" = watch ]; then
-	[ -f $CRASHON ] || { return 0; exit 0; }
-	for idx in 3 2 1; do
-		if [ ! -f $CRASHCNT.$idx ]; then
-			echo "rcS-crashdog: Crash limit $idx/3" > /dev/kmsg
-			{ touch $CRASHCNT.$idx; sync; } > /dev/kmsg 2>&1
-			$CRASHCMD &
-			return 0; exit 0
-		fi
-	done
-	{ rm -f $CRASHCNT.1; sync; } > /dev/kmsg 2>&1; # minus 1
-	echo 'rcS-crashdog: Error: maximum crash limit reached' > /dev/kmsg
-	return 1; exit 1; # something wrong: don't mount cramfs, don't start RELEASE
-
-elif [ "$ACT" = check ]; then
 	{
-	sleep 25; # to manually trigger 'max crash limit' - fast power off TV
-	for i in 1 2 3 4 5 6 7; do
-		if pgrep -f "^$RBIN" > /dev/null; then
+	sleep 20; # to manually trigger 'crash limit MAX' - fast power off TV
+	for i in 1 2 3 4 5 6 7 8; do
+		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+		[ "$r" -lt 2 ] || {
 			if [ -f $CRASHCNT.1 ]; then
-				echo 'rcS-crashdog: crash count=0'
-				rm -f $CRASHCNT.*; sync
+				echo 'rcS-crashdog: crash count=0'; rm -f $CRASHCNT.*; sync
 			else
-				echo 'rcS-crashdog: OFF'
-				rm -f $CRASHCNT.* $CRASHON; sync
+				echo 'rcS-crashdog: OFF'; rm -f $CRASHCNT.* $CRASHON; sync
 			fi
-			return 0; exit 0
-		fi
-		sleep 5
+			return 0; exit 0; }
 	done
 	echo 'rcS-crashdog: Warning: crash count+1'
 	} > /dev/kmsg 2>&1
 
-fi
+elif [ "$ACT" = check ]; then
+	if [ ! -f $CRASHON ]; then
+		# TODO: more reasons to turn it ON - if nvram crc is wrong (xeros)
+		{
+		if [ -n "$CRASHDOG" ]; then
+			echo 'rcS-crashdog: ON (config)'; touch $CRASHON; sync
+		elif [ ! -d /mnt/lg/user/lgmod ]; then
+			echo 'rcS-crashdog: ON (lgmod)'; touch $CRASHON; sync
+		fi
+		} > /dev/kmsg 2>&1
+	fi
+	[ -f $CRASHON ] || { return 0; exit 0; }
 
-return 1; exit 1
+	for idx in 3 2 1; do
+		[ -f $CRASHCNT.$idx ] && continue
+		{ echo "rcS-crashdog: Crash limit $idx/3"
+			touch $CRASHCNT.$idx; sync; } > /dev/kmsg 2>&1
+		sh /etc/init.d/rcS-crashdog watch &
+		return 0; exit 0
+	done
+
+	{ rm -f $CRASHCNT.1; sync; } > /dev/kmsg 2>&1; # minus 1
+	echo 'rcS-crashdog: Error: crash limit MAX' > /dev/kmsg
+	return 1; exit 1; # something wrong: don't mount cramfs, don't start RELEASE
+fi
