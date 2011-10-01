@@ -1,8 +1,9 @@
 #!/bin/bash
 
 cd "${0%/*}"; CONF_DIR=$(pwd)
-#cd "../rootfs"; INST_DIR=$(pwd)
-cd "../../../Saturn7"
+cd "../rootfs"; INST_DIR=$(pwd)
+cd "../../extroot"; INST_DIR2=$(pwd)
+cd "../../Saturn7"
 
 CC_DIR="$(pwd)/GP2_MSTAR"
 S7_DIR="$(pwd)/GP2_M_CO_FI_2010"
@@ -39,13 +40,20 @@ export PATH="$CC_BIN:$PATH"
 # config, build
 cd "$K_DIR"
 [ "$1" = bash ] && { bash; exit; }
-[ "$1" = noclean ] || make clean
-cp -ax "$CONF_DIR/.config" ./
+[ "$1" = noclean ] && shift || make clean
+[ "$1" = noconfig ] || cp -ax "$CONF_DIR/.config" ./
 make menuconfig
-cp -ax ./.config "$CONF_DIR/"
-make
-make modules
+[ "$1" = noconfig ] && shift || cp -ax ./.config "$CONF_DIR/"
+[ "$1" = nomake ] && shift || make
+[ "$1" = nomodules ] && shift || make modules
 
-# TODO: install
-#read -n1 -p "Press any key to install..."
-#make CONFIG_PREFIX="$INST_DIR" install
+# install
+[ "$1" = noinstall ] && exit
+read -n1 -p "Press any key to install..."
+make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules" modules_install
+
+cd "$INST_DIR2/lib/modules"
+mv cdc_ether.ko cdc_subset.ko dm9601.ko gl620a.ko kaweth.ko mcs7830.ko net1080.ko plusb.ko zaurus.ko "$INST_DIR/lib/modules/"
+mv cifs.ko ext2.ko ext3.ko jbd.ko lockd.ko nfs sunrpc.ko "$INST_DIR/lib/modules/"
+mv cdrom.ko fuse.ko isofs.ko rndis_host.ko sr_mod.ko "$INST_DIR/lib/modules/"
+mv uinput.ko input-core.ko evdev.ko "$INST_DIR/lib/modules/"
