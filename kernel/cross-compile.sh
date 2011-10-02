@@ -1,10 +1,10 @@
 #!/bin/bash
 
 cd "${0%/*}"; CONF_DIR=$(pwd)
-cd "../rootfs"; INST_DIR=$(pwd)
-cd "../../extroot"; INST_DIR2=$(pwd)
-cd "../../s6_s7_modules"; MODS_DIR=$(pwd); MODS_EXT='pty mini_fo'
-cd "../Saturn7"
+cd ../rootfs; INST_DIR=$(pwd)
+cd ../../extroot; INST_DIR2=$(pwd)
+cd ../../s6_s7_modules; MODS_DIR=$(pwd); MODS_EXT='pty mini_fo'
+cd ../Saturn7
 
 CC_DIR="$(pwd)/GP2_MSTAR"
 S7_DIR="$(pwd)/GP2_M_CO_FI_2010"
