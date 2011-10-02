@@ -1,7 +1,7 @@
 #!/bin/sh
 # Source code released under GPL License
 # OPENRELEASE by rtokarev is licensed under BSD License
-# rcS for Saturn7 by mmm4m5m
+# rcS for Saturn6/Saturn7 by mmm4m5m
 
 # Usage:
 #	$0 test <MODE>	return true is <MODE> require tmux
@@ -20,7 +20,11 @@ Ocfg='-c /etc/openrelease/openrelease.cfg'
 #[ "$Mode" = OPENREL-DAEMON ] && Ocfg='-c /etc/openrelease/openrel-daemon.cfg'
 Oarg='-l /tmp/openrelease.log -vvv'; OLIB=libopenrelease.so
 
-cd /; # /mnt/lg/lginit
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	cd /; #??? Rcmd=./RELEASE; Rarg=''; cd /mnt/lg/lgapp
+else # S7
+	cd /; # /mnt/lg/lginit
+fi
 
 Ocmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
 hint="$Ocmd"; [ "$Mode" = OPENREL-DAEMON ] && hint="LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg" ||

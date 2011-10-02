@@ -10,7 +10,7 @@ CRAMFS=1; # 1=check cramfs magic
 #MODE=OPENRELEASE
 MODE=OPENREL-DAEMON; # in bg
 #MODE=TMUX-PIPE
-#MODE=TMUX; # modprobe pty.ko; in bg
+#MODE=TMUX; # pty.ko; in bg
 #MODE=LG
 RELMOD=/mnt/lg/user/lgmod/release
 
@@ -21,7 +21,9 @@ wait() {
 	} > /dev/kmsg 2>&1
 	. /etc/init.d/mount wait && {
 		. /etc/init.d/mount start
-		. /etc/init.d/netcast start
+		if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+			[ -f /etc/init.d/netcast ] && . /etc/init.d/netcast start
+		fi
 		} > /dev/kmsg 2>&1
 }
 
@@ -38,15 +40,32 @@ RELCFG() {
 	#	else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
 	#		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
 	#fi
+
+	#cfg=/mnt/lg/cmn_data/openrelease_keymap.cfg
+	#if [ ! -f $cfg ]; then
+	#	echo "release: Default ${cfg##*/} ..."
+	#	cp -a /etc/openrelease/default-${cfg##*/} $cfg; sync
+	#fi
 }
 
 PREPARE() {
+	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
 	if [ -n "$Rtmux" ]; then
-		modprobe /lib/modules/pty.ko ||
-			{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+		if [ $modprobe = modprobe ]; then
+			$modprobe /lib/modules/pty.ko ||
+				{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+		elif ! $modprobe /lib/modules/pty.ko; then
+			lsmod | grep -q '^pty ' ||
+				{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+		fi
 	elif [ -n "$Ropen" ]; then
-		modprobe /lib/modules/pty.ko ||
-			{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
+		if [ $modprobe = modprobe ]; then
+			$modprobe /lib/modules/pty.ko ||
+				{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
+		elif ! $modprobe /lib/modules/pty.ko; then
+			lsmod | grep -q '^pty ' ||
+				{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
+		fi
 	fi
 	if [ -n "$Rtmux" ]; then
 		. /etc/init.d/rcS-devrw ||
@@ -93,7 +112,9 @@ start() {
 }
 
 replace() {
-	/etc/init.d/netcast stop
+	if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+		[ -f /etc/init.d/netcast ] && /etc/init.d/netcast stop
+	fi
 	/etc/init.d/mount stop
 	CONFIG "$@"
 	. /etc/init.d/rcS-release run "$MODE" || return $?; # LG: RELEASE

@@ -143,10 +143,15 @@ RELMOD=/mnt/lg/user/lgmod/release
 
 {
 if [ "$FORM_save_init" = "Save" ]; then
-	n=LGI_MENU; v="$FORM_LGI_MENU"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
-		[ -n "$v" ] && echo "$n=$v" >> $BOOTMOD
-	n=LGI_CHROOT; v="$FORM_LGI_CHROOT"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
-		[ -n "$v" ] && echo "$n=$v" >> $BOOTMOD
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		n=RCS_CHROOT; v="$FORM_RCS_CHROOT"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
+			[ -n "$v" ] && echo "$n=$v" >> $BOOTMOD
+	else # S7
+		n=LGI_MENU; v="$FORM_LGI_MENU"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
+			[ -n "$v" ] && echo "$n=$v" >> $BOOTMOD
+		n=LGI_CHROOT; v="$FORM_LGI_CHROOT"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
+			[ -n "$v" ] && echo "$n=$v" >> $BOOTMOD
+	fi
 	n=RCS_SYSLOG; v="$FORM_RCS_SYSLOG"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
 		[ -n "$v" ] && echo "$n=$v" >> $BOOTMOD
 	n=RCS_NOREL; v="$FORM_RCS_NOREL"; [ -f $BOOTMOD ] && grep -q "^$n=" $BOOTMOD && sed -ie "/^$n=/d" $BOOTMOD
@@ -163,18 +168,23 @@ if [ "$FORM_save_init" = "Save" ]; then
 	sync
 fi
 
-n=LGI_MENU; v=0; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
-	echo "<b>Disable lginit menu ('Press any key for shell') </b><input name=LGI_MENU type=checkbox value='$v' $c><br>"
-n=LGI_CHROOT; v=sda1/lgmod_s7.sqf; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
-	echo "<b>Chroot to sda1/lgmod_s7.sqf </b><input name=LGI_CHROOT type=checkbox value='$v' $c><br>"
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	n=RCS_CHROOT; v=sda1/lgmod_s6.sqf; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
+		echo "<b>Chroot to sda1/lgmod_s6.sqf </b><input name=$n type=checkbox value='$v' $c><br>"
+else # S7
+	n=LGI_MENU; v=0; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
+		echo "<b>Disable lginit menu ('Press any key for shell') </b><input name=$n type=checkbox value='$v' $c><br>"
+	n=LGI_CHROOT; v=sda1/lgmod_s7.sqf; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
+		echo "<b>Chroot to sda1/lgmod_s7.sqf </b><input name=$n type=checkbox value='$v' $c><br>"
+fi
 n=RCS_SYSLOG; v=0; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
-	echo "<b>Disable syslogd </b><input name=RCS_SYSLOG type=checkbox value='$v' $c><br>"
+	echo "<b>Disable syslogd </b><input name=$n type=checkbox value='$v' $c><br>"
 n=RCS_NOREL; v=1; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
-	echo "<b>Disable RELEASE start </b><input name=RCS_NOREL type=checkbox value='$v' $c> "
+	echo "<b>Disable RELEASE start </b><input name=$n type=checkbox value='$v' $c> "
 n=RCS_NOREL_ONCE; v=1; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
-	echo "<b> once at next restart only </b><input name=RCS_NOREL_ONCE type=checkbox value='$v' $c><br>"
+	echo "<b> once at next restart only </b><input name=$n type=checkbox value='$v' $c><br>"
 n=RCS_CRASHDOG; v=1; c=''; [ -f $BOOTMOD ] && grep -q "^$n=$v$" $BOOTMOD && c=checked
-	echo "<b>Enable (force) crashdog (watch mount cramfs and RELEASE startup) </b><input name=RCS_CRASHDOG type=checkbox value='$v' $c><br>"
+	echo "<b>Enable (force) crashdog (watch mount cramfs and RELEASE startup) </b><input name=$n type=checkbox value='$v' $c><br>"
 
 echo '<br><b>RELEASE startup mode:</b><br>'
 #n=MODE; v=OPENREL-TMUX-PIPE; c=''; [ -f $RELMOD ] && grep -q "^$n=$v$" $RELMOD && c=checked

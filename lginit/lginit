@@ -18,7 +18,8 @@ DIR=/mnt/lg/lginit
 export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 
-mount -t jffs2 /dev/mtdblock11 "$MNT" -o noatime > $OUT 2>&1
+. $DIR/lginit-lguser > $OUT 2>&1
+
 if [ -f "$BOOTMOD" ]; then
 	echo "lginit: Found $BOOTMOD" > $OUT; . "$BOOTMOD"
 	[ -n "$LGI_OVERLAY_ONCE" ] && { LGI_OVERLAY="$LGI_OVERLAY_ONCE"; sed -ie '/^LGI_OVERLAY_ONCE=/d' "$BOOTMOD" > $OUT 2>&1; }

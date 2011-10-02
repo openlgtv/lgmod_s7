@@ -1,11 +1,22 @@
 #!/bin/sh
 # Source code released under GPL License
-# rcS for Saturn7 by mmm4m5m
+# rcS for Saturn6/Saturn7 by mmm4m5m
+
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	appxip_addr=`cat /proc/xipfs`
+	fontxip_addr=`cat /proc/fontxipfs`
+fi
+
 
 if [ "$1" != 1 ]; then
 	# LG rc.local
-	APP_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
-	FONT_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		APP_XIP="$appxip_addr"
+		FONT_XIP="$fontxip_addr"
+	else # S7
+		APP_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
+		FONT_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`
+	fi
 else
 	CMD=''
 
@@ -46,16 +57,32 @@ fi
 
 # LG rc.local
 if [ "${APP_XIP}" != "" ] && [ "${APP_XIP}" != "0x0" ]; then
-	mount -t cramfs lgapp_xip /mnt/lg/lgapp -o "physaddr=${APP_XIP}"
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		mount -t cramfs lgapp /mnt/lg/lgapp -o "physaddr=${APP_XIP}"
+	else # S7
+		mount -t cramfs lgapp_xip /mnt/lg/lgapp -o "physaddr=${APP_XIP}"
+	fi
 else
 	echo 'rcS-lginit: squashfs /mnt/lg/lgapp'
-	mount -t squashfs /dev/mtdblock21 /mnt/lg/lgapp
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		mount -t squashfs /dev/mtdblock8 /mnt/lg/lgapp
+	else # S7
+		mount -t squashfs /dev/mtdblock21 /mnt/lg/lgapp
+	fi
 fi
 
 if [ "${FONT_XIP}" != "" ] && [ "${FONT_XIP}" != "0x0" ]; then
 	echo 'rcS-lginit: cramfs lgfont_xip'
-	#mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o physaddr=0xf100000
-	mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o "physaddr=${FONT_XIP}"
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		mount -t cramfs lgfont /mnt/lg/res/lgfont -o "physaddr=${FONT_XIP}"
+	else # S7
+		#mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o physaddr=0xf100000
+		mount -t cramfs lgfont_xip /mnt/lg/res/lgfont -o "physaddr=${FONT_XIP}"
+	fi
 else
-	mount -t squashfs /dev/mtdblock18 /mnt/lg/res/lgfont
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		mount -t squashfs /dev/mtdblock10 /mnt/lg/res/lgfont
+	else # S7
+		mount -t squashfs /dev/mtdblock18 /mnt/lg/res/lgfont
+	fi
 fi

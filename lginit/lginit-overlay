@@ -11,8 +11,9 @@ DIR=/mnt/lg/lginit; CHRI=/tmp/lgmod/chroot
 
 if [ -n "$LGI_OVERLAY" ]; then
 	. $DIR/lginit-tmpfs
+	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
 	if mkdir -p "$CHR" "$STO" > $OUT 2>&1 &&
-		modprobe /lib/modules/mini_fo.ko > $OUT 2>&1 &&
+		$modprobe /lib/modules/mini_fo.ko > $OUT 2>&1 &&
 		mount -t mini_fo -o base=/,sto="$STO" overlay "$CHR" > $OUT 2>&1 &&
 		mount -o bind $DIR "$CHR$DIR" > $OUT 2>&1; then
 		{ echo "lginit: chroot overlay..."; mount -o bind /tmp "$CHR/tmp"

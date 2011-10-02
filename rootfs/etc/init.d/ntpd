@@ -4,14 +4,14 @@
 # Copyright 2010 Arno1
 # Copyright 2011 lprot, mmm4m5m
 
+CFG_DIR="/mnt/lg/user/lgmod"
+
 START() {
 	echo "ntpd: $@"
 	ntpd -q -p `cat $CFG_DIR/ntp`
 }
 
 boot() {
-	CFG_DIR="/mnt/lg/user/lgmod"
-
 	{
 	# Launch NTP client
 	[ -e $CFG_DIR/ntp ] && START "$@"
@@ -20,6 +20,7 @@ boot() {
 
 start() {
 	pgrep -f '^ntpd' && { echo 'ntpd: Already started'; return 1; }
+	[ -f $CFG_DIR/ntp ] || { echo "ntpd: File not found: $CFG_DIR/ntp"; return 1; }
 	START "$@"
 }
 

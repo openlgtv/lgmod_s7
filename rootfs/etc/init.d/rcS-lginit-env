@@ -1,25 +1,39 @@
 #!/bin/sh
 # Source code released under GPL License
 # OpenLGTV BCM - lginit as shell script by xeros
-# Modified for Saturn7 by mmm4m5m
+# Modified for Saturn6/Saturn7 by mmm4m5m
 
 # Description: used in rcS and profile
 
 # LG lginit
 export TERM=vt100
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
-export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
-export LOG_CALLER=NO
 export OSAMEM_SIZE=0x200000
 export LOAD_SYM=1
-export HOOK_SEGV=YES
-export IS_NFS=NO
-export ADDON_SYS_PATH=/mnt/addon
-export ADDON_RES_PATH=/mnt/addon/res
-export ADDON_APP_CTRL=addon_mgr
-export ADDON_APP_BATCH_LIST=addon_mgr.bat
-export FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
-export FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
+BEQUIET=`cat /proc/cmdline | grep quiet_app`
+[ -n "$BEQUIET" ] && export PRINTLOG=0 || export PRINTLOG=1
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+	export LD_LIBRARY_PATH=/mnt/lg/res/lgres:/mnt/lg/res/lgfont:$LD_LIBRARY_PATH
+	export LOG_CALLER=YES
+	export HOOK_SEGV=NO
+else
+	export PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin
+	export LD_LIBRARY_PATH=/lib:/usr/lib:/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+	export LOG_CALLER=NO
+	export HOOK_SEGV=YES
+	export IS_NFS=NO
+	export ADDON_SYS_PATH=/mnt/addon
+	export ADDON_RES_PATH=/mnt/addon/res
+	export ADDON_APP_CTRL=addon_mgr
+	export ADDON_APP_BATCH_LIST=addon_mgr.bat
+	export FLASH_APP_NAME=/mnt/addon/stagecraft/bin/stagecraft
+	export FLASH_EMANUAL_PATH=/mnt/addon/contents/emanual/emmanager.swf
+
+	# LG rc.local
+	#HOST_NAME=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS="="; } /host=/ { print $2 } END {}'`
+	#[ -z "$host" ] && { cmd=" $(cat /proc/cmdline) "; host="${cmd#*host=}"; export host="${host%% *}"; }
+	#hostname $host
+fi
 
 # environment kernel/init - before lginit
 #???export TERM=vt102

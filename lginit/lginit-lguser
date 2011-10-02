@@ -1,0 +1,16 @@
+#!/bin/sh
+# Source code released under GPL License
+# lginit/rcS for Saturn6/Saturn7 by mmm4m5m
+
+PREFIX="lginit-lguser: help: flash_eraseall -j /dev/mtd"
+
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	PK_PJ=`dmesg | grep MTD | grep partitions | grep 21`
+	if [ "$PK_PJ" != "" ]; then # PK or PJ model
+		mount -t jffs2 /dev/mtdblock19 /mnt/lg/user -o noatime || echo "${PREFIX}19"
+	else # LH model
+		mount -t jffs2 /dev/mtdblock17 /mnt/lg/user -o noatime || echo "${PREFIX}17"
+	fi
+else # S7
+	mount -t jffs2 /dev/mtdblock11 /mnt/lg/user -o noatime || echo "${PREFIX}11"
+fi

@@ -1,7 +1,7 @@
 #!/bin/sh
 # Source code released under GPL License
 # OpenLGTV BCM by xeros
-# Modified for Saturn7 by mmm4m5m
+# Modified for Saturn6/Saturn7 by mmm4m5m
 
 # [chroot] [overlay]
 # config values: empty or non-empty
@@ -27,13 +27,16 @@ if [ -f "$BOOTMOD" ]; then
 	[ -n "$RCS_NOREL_ONCE" ] && sync > /dev/kmsg 2>&1
 fi
 
-[ "$RCS_SYSLOG" = 1 ] && syslogd -C16 > /dev/kmsg 2>&1
+[ "$RCS_SYSLOG" = 1 ] && [ -f /sbin/syslogd ] && syslogd -C16 > /dev/kmsg 2>&1
 
 [ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
 . /etc/init.d/rcS-lginit; # LG: mount
 [ -f "$RUN-mount" ] && { echo "rcS-exec: Found $RUN-mount" > /dev/kmsg; . "$RUN-mount"; }
 
-. /etc/init.d/rcS-nvram
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	[ -f /etc/init.d/rcS-nvram ] && . /etc/init.d/rcS-nvram
+fi
+
 setsid sh /etc/init.d/rcS-services "$RCS_DELAY" &
 
 

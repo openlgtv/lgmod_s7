@@ -1,35 +1,45 @@
 #!/bin/sh
 # Source code released under GPL License
 # OpenLGTV BCM - lginit as shell script by xeros
-# Modified for Saturn7 by mmm4m5m
+# Modified for Saturn6/Saturn7 by mmm4m5m
 
 TFS=/tmp/lgmod/tmpfs; STO=/tmp/lgmod/Storage
 
 touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
 
-# LG rc.local
-#HOST_NAME=`cat /proc/cmdline | awk 'BEGIN { RS="[ ]"; FS="="; } /host=/ { print $2 } END {}'`
-
-#[ -z "$host" ] && { cmd=" $(cat /proc/cmdline) "; host="${cmd#*host=}"; export host="${host%% *}"; }
-#hostname $host
-
-
 {
-mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data -o noatime ||
-	echo 'rcS-lginit: help: flash_eraseall -j /dev/mtd9'
-#mount -t jffs2 /dev/mtdblock11 /mnt/lg/user -o noatime ||
-#	echo 'rcS-lginit: help: flash_eraseall -j /dev/mtd11'
+[ -z "$OVERLAY" ] && {
+	d=/lgsw; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"
+	d=/mnt/lg/bt; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"; }
 
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	[ -d /mnt/lg/user/cmn_data ] || mkdir /mnt/lg/user/cmn_data
+	mount -o bind /mnt/lg/user/cmn_data /mnt/lg/cmn_data
+else # S7
+	mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data -o noatime ||
+		echo 'rcS-lginit: help: flash_eraseall -j /dev/mtd9'
+fi
+#. /etc/init.d/rcS-lguser
 
-[ -z "$OVERLAY" ] && { d=/lgsw; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"; }
 
 # LG rc.sysinit
 mount -a
 
-if [ -z "$OVERLAY" ]; then
-	d=/usr/local/etc; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"
-else
-	d=/usr/local; mkdir -p "$STO$d"
-	mount -t mini_fo -o base="$d",sto="$STO$d" "mini$d" "$d"
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	PK_PJ=`dmesg | grep MTD | grep partitions | grep 21`
+	if [ "$PK_PJ" != "" ]; then # PK or PJ model
+		mount -t squashfs /dev/mtdblock15 /mnt/lg/ciplus/cert
+		mount -t jffs2 /dev/mtdblock16 /mnt/lg/ciplus/authcxt
+		mount -t jffs2 /dev/mtdblock17 /mnt/lg/recdb
+	else # LH model
+		mount -t jffs2 /dev/mtdblock15 /mnt/lg/recdb
+	fi
+else # S7
+	if [ -z "$OVERLAY" ]; then
+		d=/usr/local/etc; mkdir -p "$TFS$d"; mount -o bind "$TFS$d" "$d"
+	else
+		d=/usr/local; mkdir -p "$STO$d"
+		mount -t mini_fo -o base="$d",sto="$STO$d" "mini$d" "$d"
+	fi
 fi
 } > /dev/kmsg 2>&1

@@ -2,9 +2,14 @@
 #
 # /etc/init.d/rcK - run once at shutdown
 
+#!/bin/sh
+# Source code released under GPL License
+# rcS for Saturn6/Saturn7 by mmm4m5m
+
+# Note: 'netcast' removed from rootfs-S6
 for i in lgmod netcast mount release-mount; do
 	# TODO: use sym.links /etc/rc.d/[SK]*
-	. /etc/init.d/$i stop
+	[ -f /etc/init.d/$i ] && . /etc/init.d/$i stop
 done
 
 sync

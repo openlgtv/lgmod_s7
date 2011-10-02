@@ -23,9 +23,8 @@ export PATH=/sbin:/usr/sbin:/bin:/usr/bin
 
 . /etc/init.d/rcS-tmpfs
 
-D=$(stat -c%D / $MNT); n=$'\n'; [ "${D%%$n*}" = "${D#*$n}" ] && {
-	mount -t jffs2 /dev/mtdblock11 $MNT -o noatime > $OUT 2>&1 ||
-		echo 'rcS: help: flash_eraseall -j /dev/mtd11' > $OUT; }; # rcS-lginit
+D=$(stat -c%D / $MNT); n=$'\n'; [ "${D%%$n*}" = "${D#*$n}" ] &&
+	. /etc/init.d/rcS-lguser > $OUT 2>&1; # rcS-lginit
 
 if [ -f "$BOOTMOD" ]; then
 	echo "rcS: Found $BOOTMOD" > $OUT; . "$BOOTMOD"

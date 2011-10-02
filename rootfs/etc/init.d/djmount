@@ -8,7 +8,8 @@ CFG_DIR="/mnt/lg/user/lgmod"
 
 START() {
 	echo "djmount: $@"
-	modprobe /lib/modules/fuse.ko
+	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+	$modprobe /lib/modules/fuse.ko
 	djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
 }
 
@@ -21,6 +22,7 @@ boot() {
 
 start() {
 	pgrep -f '^djmount' && { echo 'djmount: Already started'; return 1; }
+	[ -f $CFG_DIR/upnp ] || { echo "djmount: File not found: $CFG_DIR/upnp"; return 1; }
 	START "$@"
 }
 
