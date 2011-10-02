@@ -29,13 +29,16 @@ export PATH="$CC_BIN:$PATH"
 echo 'Note: Busybox Settings->Build Options->Cross Compiler prefix'
 echo "	../${CC_DIR##*/}/bin/mipsel-"
 
-# config, build, install
+# config, build
 cd "$BB_DIR"
 [ "$1" = bash ] && { bash; exit; }
-[ "$1" = noclean ] || make clean
-cp -ax "$CONF_DIR/.config" ./
+[ "$1" = clean ] && { shift; make clean; }
+[ "$1" = noconfig ] || cp -ax "$CONF_DIR/.config" ./
 make menuconfig
-cp -ax ./.config "$CONF_DIR/"
-make 
+[ "$1" = noconfig ] && shift || cp -ax ./.config "$CONF_DIR/"
+[ "$1" = nomake ] && shift || make
+
+# install
+[ "$1" = noinstall ] && exit
 read -n1 -p "Press any key to install..."
 make CONFIG_PREFIX="$INST_DIR" install
