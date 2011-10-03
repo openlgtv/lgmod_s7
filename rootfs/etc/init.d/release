@@ -14,6 +14,10 @@ MODE=OPENREL-DAEMON; # in bg
 #MODE=LG
 RELMOD=/mnt/lg/user/lgmod/release
 
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	CRAMFS=0
+fi
+
 wait() {
 	{
 	sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)

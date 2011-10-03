@@ -21,7 +21,7 @@ Ocfg='-c /etc/openrelease/openrelease.cfg'
 Oarg='-l /tmp/openrelease.log -vvv'; OLIB=libopenrelease.so
 
 if [ ! -d /mnt/lg/lginit ]; then # S6
-	cd /; #??? Rcmd=./RELEASE; Rarg=''; cd /mnt/lg/lgapp
+	Rarg=''; cd /mnt/lg/lgapp; #Rcmd=./RELEASE
 else # S7
 	cd /; # /mnt/lg/lginit
 fi
