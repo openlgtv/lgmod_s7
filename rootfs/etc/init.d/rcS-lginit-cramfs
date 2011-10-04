@@ -2,31 +2,32 @@
 # Source code released under GPL License
 # rcS for Saturn6/Saturn7 by mmm4m5m
 
-if [ ! -d /mnt/lg/lginit ]; then # S6
-	appxip_addr=`cat /proc/xipfs`
-	fontxip_addr=`cat /proc/fontxipfs`
-fi
-
-
 if [ "$1" != 1 ]; then
 	# LG rc.local
 	if [ ! -d /mnt/lg/lginit ]; then # S6
-		APP_XIP="$appxip_addr"
-		FONT_XIP="$fontxip_addr"
+		APP_XIP=`cat /proc/xipfs`
+		FONT_XIP=`cat /proc/fontxipfs`
 	else # S7
 		APP_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`
 		FONT_XIP=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`
 	fi
 else
+	if [ ! -d /mnt/lg/lginit ]; then # S6
+		I='1'; # ugly?
+	else # S7
+		I='2 3 4 5'
+	fi
 	CMD=''
 
-	APP_XIP=''; addr="$appxip_addr"; ADDR=''
-	for i in 1 2 3 4; do
-		[ -z "$CMD" ] && [ $i != 1 ] && [ $i != 2 ] && CMD=" $(cat /proc/cmdline) "
-		if   [ $i = 2 ]; then addr="${CMD#*appxip_addr=}"; addr="${addr%% *}"
-		elif [ $i = 3 ]; then addr="${CMD##*appxip_addr=}"; addr="${addr%% *}"
-		else addr=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`; fi
-		[ $i != 1 ] && [ "$addr" = "$ADDR" ] && continue; ADDR="$addr"
+	APP_XIP=''; ADDR=''
+	for i in $I; do
+		if [ $i = 3 ] || [ $i = 4 ]; then [ -z "$CMD" ] && CMD=" $(cat /proc/cmdline) "; fi
+		if   [ $i = 1 ]; then addr=''; f=/proc/xipfs; [ -e $f ] && addr=`cat $f`; # S6
+		elif [ $i = 2 ]; then addr="$appxip_addr"; # kernel/init export
+		elif [ $i = 3 ]; then addr="${CMD#*appxip_addr=}"; addr="${addr%% *}"; # kernel first cmd line arg
+		elif [ $i = 4 ]; then addr="${CMD##*appxip_addr=}"; addr="${addr%% *}"; # kernel last cmd line arg
+		elif [ $i = 5 ]; then addr=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/appxip_addr=/ { print $2 }'`; # S7 LG rc.local
+		else break; fi; [ "$addr" = "$ADDR" ] && continue; ADDR="$addr"; # skip if already checked
 		if [ "$addr" != "" ] && [ "$addr" != "0x0" ]; then
 			cramfs_magic=`devmem $((addr+16)) 64`
 			release_magic=`devmem $((addr+1024*4)) 32`
@@ -38,13 +39,15 @@ else
 		fi
 	done
 
-	FONT_XIP=''; addr="$fontxip_addr"; ADDR=''
-	for i in 1 2 3 4; do
-		[ -z "$CMD" ] && [ $i != 1 ] && [ $i != 2 ] && CMD=" $(cat /proc/cmdline) "
-		if   [ $i = 2 ]; then addr="${CMD#*fontxip_addr=}"; addr="${addr%% *}"
-		elif [ $i = 3 ]; then addr="${CMD##*fontxip_addr=}"; addr="${addr%% *}"
-		else addr=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`; fi
-		[ $i != 1 ] && [ "$addr" = "$ADDR" ] && continue; ADDR="$addr"
+	FONT_XIP=''; ADDR=''
+	for i in $I; do
+		if [ $i = 3 ] || [ $i = 4 ]; then [ -z "$CMD" ] && CMD=" $(cat /proc/cmdline) "; fi
+		if   [ $i = 1 ]; then addr=''; f=/proc/fontxipfs; [ -e $f ] && addr=`cat $f`; # S6
+		elif [ $i = 2 ]; then addr="$fontxip_addr"; # kernel/init export
+		elif [ $i = 3 ]; then addr="${CMD#*fontxip_addr=}"; addr="${addr%% *}"; # kernel first cmd line arg
+		elif [ $i = 4 ]; then addr="${CMD##*fontxip_addr=}"; addr="${addr%% *}"; # kernel last cmd line arg
+		elif [ $i = 5 ]; then addr=`cat /proc/cmdline | awk -v RS='[ ]' -F= '/fontxip_addr=/ { print $2 }'`; # S7 LG rc.local
+		else break; fi; [ "$addr" = "$ADDR" ] && continue; ADDR="$addr"; # skip if already checked
 		if [ "$addr" != "" ] && [ "$addr" != "0x0" ]; then
 			cramfs_magic=`devmem $((addr+16)) 64`
 			if [ "$cramfs_magic" != '0x73736572706D6F43' ]; then

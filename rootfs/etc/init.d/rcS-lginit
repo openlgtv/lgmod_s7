@@ -14,7 +14,6 @@ touch /test-rw > /dev/null 2>&1 && OVERLAY=1 || OVERLAY=''
 
 if [ ! -d /mnt/lg/lginit ]; then # S6
 	[ -d /mnt/lg/user/cmn_data ] || mkdir /mnt/lg/user/cmn_data
-	mount -o bind /mnt/lg/user/cmn_data /mnt/lg/cmn_data
 else # S7
 	mount -t jffs2 /dev/mtdblock9 /mnt/lg/cmn_data -o noatime ||
 		echo 'rcS-lginit: help: flash_eraseall -j /dev/mtd9'

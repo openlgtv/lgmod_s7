@@ -52,7 +52,7 @@ if [ -z "$RCS_NOREL" ]; then
 		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
 		[ "$r" -lt 2 ] && err=1; fi
 	[ -n "$err" ] && {
-		echo "rcS-release: Error $err ($Mode)" > /dev/kmsg
+		echo "rcS-exec: Error $err ($Mode)" > /dev/kmsg
 		. /etc/init.d/rcS-crashdog error
 		exec sh; exit 1; }
 fi

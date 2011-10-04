@@ -24,12 +24,12 @@ if [ ! -d /mnt/lg/lginit ]; then # S6
 	Rarg=''; cd /mnt/lg/lgapp; #Rcmd=./RELEASE
 else # S7
 	cd /; # /mnt/lg/lginit
+	echo 'rcS-release: help: $ call debug_os_shell+0xb0' > /dev/kmsg
 fi
 
 Ocmd="export LD_PRELOAD=$OLIB; exec $Rcmd $Ocfg $Oarg -- $Rarg"
 hint="$Ocmd"; [ "$Mode" = OPENREL-DAEMON ] && hint="LD_PRELOAD=$OLIB $Rcmd $Ocfg -d $Oarg -- $Rarg" ||
 	for i in TMUX-PIPE TMUX LG; do [ "$Mode" = "$i" ] && hint="$Rcmd $Rarg" && break; done
-echo 'rcS-release: help: $ call debug_os_shell+0xb0' > /dev/kmsg
 echo "rcS-release: Starting RELEASE $Mode ($hint) ..." > /dev/kmsg
 
 
