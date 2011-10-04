@@ -14,9 +14,7 @@ MODE=OPENREL-DAEMON; # in bg
 #MODE=LG
 RELMOD=/mnt/lg/user/lgmod/release
 
-if [ ! -d /mnt/lg/lginit ]; then # S6
-	CRAMFS=0
-fi
+[ -d /mnt/lg/lginit ] || CRAMFS=0; # S6
 
 wait() {
 	{
@@ -32,11 +30,13 @@ wait() {
 }
 
 RELCFG() {
-	cfg=/mnt/lg/cmn_data/RELEASE.cfg; rdir=/mnt/lg/model; rcfg=$rdir/RELEASE.cfg
-	[ -f "$cfg" ] || sed -e 's/^\(eDebugMode,\).*$/\1EVENT/' "$rcfg" > "$cfg"
-	if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
-	else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
-		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
+	if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+		cfg=/mnt/lg/cmn_data/RELEASE.cfg; rdir=/mnt/lg/model; rcfg=$rdir/RELEASE.cfg
+		[ -f "$cfg" ] || sed -e 's/^\(eDebugMode,\).*$/\1EVENT/' "$rcfg" > "$cfg"
+		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
+		else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
+			[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
+	fi
 
 	#f=openrelease_keymap.cfg; cfg=/mnt/lg/cmn_data/$f; rdir=/etc/openrelease; rcfg=$rdir/$f
 	#if [ -f "$cfg" ]; then

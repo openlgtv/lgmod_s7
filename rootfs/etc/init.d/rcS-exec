@@ -18,7 +18,8 @@ export HOME=/mnt/lg/user/root
 . /etc/init.d/rcS-tmpfs
 
 { mkdir -p /tmp/var/log /tmp/var/run/tmux; f='/var/run/utmp /var/log/wtmp'
-	touch /var/log/lastlog $f; chgrp utmp $f; chmod 0664 $f; } > /dev/kmsg 2>&1
+	touch /var/log/lastlog $f; chmod 0664 $f
+	[ -f /bin/chown ] && chown :utmp $f; } > /dev/kmsg 2>&1
 
 
 if [ -f "$BOOTMOD" ]; then
