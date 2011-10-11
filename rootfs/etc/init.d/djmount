@@ -10,7 +10,12 @@ START() {
 	echo "djmount: $@"
 	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
 	$modprobe /lib/modules/fuse.ko
-	djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
+	if [ -n "$2" ]; then
+		djmount -f -o kernel_cache "$2" &
+	else
+		[ -f $CFG_DIR/upnp ] || { echo "djmount: File not found: $CFG_DIR/upnp"; return 1; }
+		djmount -f -o kernel_cache `cat $CFG_DIR/upnp` &
+	fi
 }
 
 boot() {
@@ -21,13 +26,12 @@ boot() {
 }
 
 start() {
-	pgrep -f '^djmount' && { echo 'djmount: Already started'; return 1; }
-	[ -f $CFG_DIR/upnp ] || { echo "djmount: File not found: $CFG_DIR/upnp"; return 1; }
+	pgrep -f '^djmount ' && { echo 'djmount: Already started'; return 1; }
 	START "$@"
 }
 
 stop() {
-	pkill -f '^djmount'
+	pkill -f '^djmount '
 }
 
 restart() {
@@ -39,5 +43,5 @@ case "$1" in
 	start)		start "$@";;
 	stop)		stop "$@";;
 	restart)	restart "$@";;
-	*)			echo "Usage: $0 start|stop|restart"; exit 1
+	*)			echo "Usage: $0 start|stop|restart [DIR]"; exit 1
 esac

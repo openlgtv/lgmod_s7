@@ -31,7 +31,7 @@ boot() {
 }
 
 start() {
-	r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+	r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 	[ "$r" -lt 2 ] && { echo 'netcast: Not started'; return 1; }
 	START "$@"
 }

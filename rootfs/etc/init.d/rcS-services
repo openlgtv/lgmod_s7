@@ -4,7 +4,7 @@
 
 [ -n "$1" ] && sleep "$1"
 
-r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
 

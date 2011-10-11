@@ -48,12 +48,12 @@ boot() {
 }
 
 start() {
-	pgrep -f '^udhcpc' && { echo 'network: Already started: udhcpc'; return 1; }
+	pgrep -f '^udhcpc ' && { echo 'network: Already started: udhcpc'; return 1; }
 	START "$@"
 }
 
 stop() {
-	pkill -f '^udhcpc'
+	pkill -f '^udhcpc '
 }
 
 restart() {

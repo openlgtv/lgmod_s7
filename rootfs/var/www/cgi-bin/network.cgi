@@ -11,11 +11,13 @@ if [ "$FORM_save" = "Save config" ]; then
     rm /mnt/lg/user/lgmod/dhcp 
     echo -n "$FORM_ip $FORM_mask $FORM_gw" > /mnt/lg/user/lgmod/network
   fi 
-  if [ "$FORM_ssh" = "1" ]; then
-    echo -n > /mnt/lg/user/lgmod/ssh
-  else
-    rm /mnt/lg/user/lgmod/ssh
-  fi 
+	if [ "$FORM_ssh" = "1" ]; then
+		f=/mnt/lg/user/lgmod/ssh
+		if [ "$FORM_ssh_pass" = "1" ]; then echo -n > $f
+		else [ -s $f ] || echo -n '-s' > $f; fi; # preserve command line parameters
+	else
+		rm /mnt/lg/user/lgmod/ssh
+	fi 
   if [ "$FORM_tel" = "1" ]; then
     echo -n > /mnt/lg/user/lgmod/telnet
   else
@@ -82,12 +84,11 @@ else
   echo "<br>Media mount point (default /mnt/usb1/Drive1/upnp for upnp folder on USB stick first partition) :<input name='cmntp' type='text' id='cmntp' disabled value='$cmntp'><br>"
 fi
 
-echo '<br><b>Launch ssh service at startup:</b>'
-if [ -e /mnt/lg/user/lgmod/ssh ]; then
-  echo '<input name="ssh" type="checkbox" value="1" checked><br>'
-else
-  echo '<input name="ssh" type="checkbox" value="1"><br>'
-fi
+f=/mnt/lg/user/lgmod/ssh
+echo '<br><b>Launch ssh (dropbear) service at startup:</b><input name="ssh" type="checkbox" value="1"'
+[ -f $f ] && echo ' checked'; echo '><br>'
+echo '&nbsp;&nbsp;<b>Enable password logins:</b><input name="ssh_pass" type="checkbox" value="1"'
+[ -f $f ] && [ ! -s $f ] && echo ' checked'; echo '><br>'
 
 echo '<br><b>Launch telnetd service at startup:</b>'
 if [ -e /mnt/lg/user/lgmod/telnet ]; then

@@ -19,12 +19,12 @@ boot() {
 }
 
 start() {
-	pgrep -f '^tcpsvd -E 0.0.0.0 21 ftpd' && { echo 'ftpd: Already started'; return 1; }
+	pgrep -f '^tcpsvd -E 0.0.0.0 21 ftpd ' && { echo 'ftpd: Already started'; return 1; }
 	START "$@"
 }
 
 stop() {
-	pkill -f '^tcpsvd -E 0.0.0.0 21 ftpd'
+	pkill -f '^tcpsvd -E 0.0.0.0 21 ftpd '
 }
 
 restart() {

@@ -21,12 +21,12 @@ boot() {
 }
 
 start() {
-	pgrep -f '^/usr/sbin/telnetd' && { echo 'telnetd: Already started'; return 1; }
+	pgrep -f '^/usr/sbin/telnetd ' && { echo 'telnetd: Already started'; return 1; }
 	START "$@"
 }
 
 stop() {
-	pkill -f '^/usr/sbin/telnetd'
+	pkill -f '^/usr/sbin/telnetd '
 }
 
 restart() {

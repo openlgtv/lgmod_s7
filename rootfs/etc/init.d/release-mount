@@ -40,13 +40,13 @@ boot() {
 }
 
 start() {
-	pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release-mount: Already started'; return 1; }
+	pgrep -f '^/mnt/lg/lgapp/RELEASE ' && { echo 'release-mount: Already started'; return 1; }
 	. /etc/init.d/rcS-usercall1 call_and_wait
 	START "$@"
 }
 
 stop() {
-	#pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release-mount: Already started'; return 1; }
+	#pgrep -f '^/mnt/lg/lgapp/RELEASE ' && { echo 'release-mount: Already started'; return 1; }
 	sync
 	ARG=''; [ "$2" != '-f' ] && [ "$2" != '-r' ] || ARG="$2"
 	D=$(stat -c%D /mnt/usb1)

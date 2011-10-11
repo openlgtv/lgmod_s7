@@ -17,7 +17,7 @@ sync
 if ! cat /proc/mounts | grep -q ' cramfs '; then
 	# LG inittab
 	/bin/umount -a -r
-#elif pgrep -f '^/mnt/lg/lgapp/RELEASE'; then
+#elif pgrep -f '^/mnt/lg/lgapp/RELEASE '; then
 #	# LG inittab
 #	/bin/umount -a -r
 else

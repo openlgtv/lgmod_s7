@@ -18,7 +18,7 @@ RELMOD=/mnt/lg/user/lgmod/release
 
 wait() {
 	{
-	sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+	sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 	[ "$r" -lt 2 ] && { echo "release: $1 - not started ($r)"; return 1; }
 	} > /dev/kmsg 2>&1
 	. /etc/init.d/mount wait && {
@@ -106,7 +106,7 @@ boot() {
 }
 
 start() {
-	pgrep -f '^/mnt/lg/lgapp/RELEASE' && { echo 'release: Already started'; return 1; }
+	pgrep -f '^/mnt/lg/lgapp/RELEASE ' && { echo 'release: Already started'; return 1; }
 	/etc/init.d/mount stop
 	/etc/init.d/release-mount stop
 	CONFIG "$@"

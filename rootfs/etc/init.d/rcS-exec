@@ -28,7 +28,7 @@ if [ -f "$BOOTMOD" ]; then
 	[ -n "$RCS_NOREL_ONCE" ] && sync > /dev/kmsg 2>&1
 fi
 
-[ "$RCS_SYSLOG" = 1 ] && [ -f /sbin/syslogd ] && syslogd -C16 > /dev/kmsg 2>&1
+[ "$RCS_SYSLOG" = 1 ] && [ -f /sbin/syslogd ] && syslogd -C16 > /dev/kmsg 2>&1; # redirect is ok?
 
 [ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
 . /etc/init.d/rcS-lginit; # LG: mount
@@ -49,7 +49,7 @@ if [ -z "$RCS_NOREL" ] && [ "$RCS_CRASHDOG" != 0 ]; then
 if [ -z "$RCS_NOREL" ]; then
 	err=''; . /etc/init.d/release boot || err=$?
 	if [ -z "$err" ]; then
-		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE' | wc -l)
+		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 		[ "$r" -lt 2 ] && err=1; fi
 	[ -n "$err" ] && {
 		echo "rcS-exec: Error $err ($Mode)" > /dev/kmsg
@@ -57,4 +57,5 @@ if [ -z "$RCS_NOREL" ]; then
 		exec sh; exit 1; }
 fi
 
+sleep 1; # setsid does not work sometimes?
 exit 0

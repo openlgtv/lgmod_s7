@@ -19,13 +19,13 @@ boot() {
 }
 
 start() {
-	pgrep -f '^ntpd' && { echo 'ntpd: Already started'; return 1; }
+	pgrep -f '^ntpd ' && { echo 'ntpd: Already started'; return 1; }
 	[ -f $CFG_DIR/ntp ] || { echo "ntpd: File not found: $CFG_DIR/ntp"; return 1; }
 	START "$@"
 }
 
 stop() {
-	pkill -f '^ntpd'
+	pkill -f '^ntpd '
 }
 
 restart() {
