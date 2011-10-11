@@ -1,37 +1,35 @@
 #!/bin/bash
 
 cd "${0%/*}"; CONF_DIR=$(pwd)
-cd ../rootfs; INST_DIR=$(pwd)
-cd ../../..
-
+d=../rootfs; cd $d || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
+cd ../../..; BB_DIR="$(pwd)/busybox-1.18.5"
 #CC_DIR="$(pwd)/cross-compiler-mipsel"
-BB_DIR="$(pwd)/busybox-1.18.5"
+CC_DIR="$(pwd)/Saturn7/cross-compiler"
 
-cd Saturn7
-CC_DIR="$(pwd)/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl"
+echo 'Note: Busybox Settings->Build Options->Cross Compiler prefix'
+#echo "	../${CC_DIR##*/}/bin/mipsel-"
+echo "	../Saturn7/cross-compiler/bin/mipsel-linux-"
 
 # download, extract
-if [ ! -d "$CC_DIR" ]; then
-	tar=cross-compiler-mipsel.tar.bz2
-	read -n1 -p "Press any key to download and extract $tar..."
-	[ ! -f "$tar" ] || wget "http://www.uclibc.org/downloads/binaries/0.9.30.1/$tar"
-	tar -xvjf "$tar"
-fi
 if [ ! -d "$BB_DIR" ]; then
-	tar=busybox-1.18.5.tar.bz2
+	dir=busybox-1.18.5; tar=$dir.tar.bz2
 	read -n1 -p "Press any key to download and extract $tar..."
-	[ ! -f "$tar" ] || wget "http://www.busybox.net/downloads/$tar"
+	[ -f "$tar" ] || { wget "http://www.busybox.net/downloads/$tar" || exit 3; }
 	tar -xvjf "$tar"
+	exit
 fi
+#if [ ! -d "$CC_DIR" ]; then
+#	dir=cross-compiler-mipsel; tar=$dir.tar.bz2
+#	read -n1 -p "Press any key to download and extract $tar..."
+#	[ -f "$tar" ] || { wget "http://www.uclibc.org/downloads/binaries/0.9.30.1/$tar" || exit 4; }
+#	tar -xvjf "$tar"
+#fi
 
 # environment, config
 CC_BIN="$CC_DIR/bin"
-[ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 1; }
-[ -d "$BB_DIR" ] || { echo "ERROR: $BB_DIR not found."; exit 2; }
+[ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 11; }
+[ -d "$BB_DIR" ] || { echo "ERROR: $BB_DIR not found."; exit 12; }
 export PATH="$CC_BIN:$PATH"
-echo 'Note: Busybox Settings->Build Options->Cross Compiler prefix'
-#echo "	../${CC_DIR##*/}/bin/mipsel-"
-echo "	../Saturn7/GP2_MSTAR/${CC_DIR##*/}/bin/mipsel-linux-"
 
 # config, build
 cd "$BB_DIR"
@@ -44,5 +42,6 @@ make menuconfig
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press any key to install..."
+read -n1 -p "Press any key to install..."; echo
 make CONFIG_PREFIX="$INST_DIR" install
+cd $INST_DIR; svn revert trunk/rootfs/bin/kill trunk/rootfs/bin/watch

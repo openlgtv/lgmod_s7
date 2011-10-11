@@ -84,8 +84,8 @@ if [ -z "$TMUX" ]; then
 	fi
 fi
 MODEL=$(echo /lg/user/model.*); export MODEL="${MODEL#*model.}"
-alias Rdpass='p="d '"${MODEL}"'elqjrm"; f=/tmp/openrelease.in; [ -e $f ] && echo "$p" > $f || tmux send -t RELEASE "$p" C-M;'
-alias Rtail='tail -n+1 -F /tmp/RELEASE.out /tmp/openrelease.out /tmp/openrelease.log;'
-alias Ropen='(F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F&); trap "pkill -f \"tail -F $F\"; exit" INT; cat >/tmp/openrelease.in);'
+alias Rdpass='p="d '"${MODEL}"'elqjrm"; f=/tmp/openrelease.in; [ -e $f ] && echo "$p" > $f || tmux send -t RELEASE "$p" C-M'
+alias Rtail='tail -n+1 -F /tmp/RELEASE.out /tmp/openrelease.out /tmp/openrelease.log'
+alias Ropen='(F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F&); trap "pkill -f \"tail -F $F\"; exit" INT; cat >/tmp/openrelease.in)'
 
 [ -f /lg/cmn_data/profile ] && . /lg/cmn_data/profile
