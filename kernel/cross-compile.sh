@@ -1,44 +1,47 @@
 #!/bin/bash
 
 cd "${0%/*}"; CONF_DIR=$(pwd)
-cd ../rootfs; INST_DIR=$(pwd)
-cd ../../extroot; INST_DIR2=$(pwd)
-cd ../../s6_s7_modules; MODS_DIR=$(pwd); MODS_EXT='pty mini_fo'
-cd ../Saturn7
+d=../rootfs; cd $d || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
+d=../../extroot; mkdir -p $d/lib/modules; cd $d; INST_DIR2=$(pwd)
+d=../../s6_s7_modules; cd $d || { echo "ERROR: $d not found."; exit 2; }; MODS_DIR=$(pwd); MODS_EXT='pty mini_fo'
+d=../Saturn7; mkdir -p $d; cd $d
+S_dir=GP2_M_CO_FI_2010; K_dir=$S_dir/kernel_src/kernel/linux-2.6.26-saturn7
+T_dir=GP2_MSTAR; CC_dir=$T_dir/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl
+S_DIR="$(pwd)/$S_dir"; K_DIR="$(pwd)/$K_dir"
+T_DIR="$(pwd)/$T_dir"; CC_DIR="$(pwd)/cross-compiler"
 
-CC_DIR="$(pwd)/GP2_MSTAR"
-S7_DIR="$(pwd)/GP2_M_CO_FI_2010"
-K_DIR="$S7_DIR/kernel_src/kernel/linux-2.6.26-saturn7"
+echo 'Note: Copy new modules sources:'
+echo "	cp -ax '$MODS_DIR'/*.[ch] '$K_DIR/drivers/net/usb/'"
 
 # download, extract
-if [ ! -d "$CC_DIR" ]; then
-	tar=GP2_MSTAR_2.tar.gz
-	read -n1 -p "Press any key to download and extract $tar (toolchain)..."
-	[ ! -f "$tar" ] || wget 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_MSTAR_2.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGSZ%2FGP2_MSTAR.tar.gz' \
-		-O - > "$tar"
-	tar -xvjf "$tar"
-	cd "$CC_DIR"; tar -xvzf toolchian-bin.tgz; rm -f toolchian-bin.tgz; cd ..
-fi
-if [ ! -d "$S7_DIR" ]; then
-	tar=GP2_M_CO_FI_2010.tar.gz.zip
+if [ ! -d "$S_DIR" ]; then
+	dir=$S_dir; tar=$dir.tar.gz.zip
 	read -n1 -p "Press any key to download and extract $tar (sources)..."
-	[ ! -f "$tar" ] || wget 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_M_CO_FI_2010.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGLZ%2FGP2_M_CO_FI_2010.tar.gz' \
-		-O - > "$tar"
-	unzip "$tar" -d GP2_M_CO_FI_2010
-	mkdir -p src/utils; cp "$S7_DIR/u-boot/tools/ccdv" src/utils/; chmod 777 src/utils/ccdv
-	cd GP2_M_CO_FI_2010; tar -xvzf kernel.tgz; rm -f kernel.tgz
-	cd kernel_src/kernel; tar -xvzf linux-2.6.26-saturn7.tgz; rm -f linux-2.6.26-saturn7.tgz
+	[ -f "$tar" ] || { wget 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_M_CO_FI_2010.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGLZ%2FGP2_M_CO_FI_2010.tar.gz' \
+		-O - > "$tar" || exit 4; }
+	unzip "$tar" -d $dir
+	mkdir -p src/utils; cp "$S_DIR/u-boot/tools/ccdv" src/utils/; chmod 777 src/utils/ccdv
+	cd $dir; tar -xzf kernel.tgz; rm -f kernel.tgz
+	cd kernel_src/kernel; tar -xzf linux-2.6.26-saturn7.tgz; rm -f linux-2.6.26-saturn7.tgz
 	cp -ax linux-2.6.26-saturn7-svn/config-flash "$K_DIR/.config"
 	cd ../../..
+	ln -s $K_dir "${K_DIR##*/}"
+fi
+if [ ! -d "$T_DIR" ]; then
+	dir=$T_dir; tar=${dir}_2.tar.gz
+	read -n1 -p "Press any key to download and extract $tar (toolchain)..."
+	[ -f "$tar" ] || { wget 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_MSTAR_2.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGSZ%2FGP2_MSTAR.tar.gz' \
+		-O - > "$tar" || exit 3; }
+	tar -xzf "$tar"
+	cd "$T_DIR"; tar -xzf toolchian-bin.tgz; rm -f toolchian-bin.tgz; cd ..
+	ln -s $CC_dir "${CC_DIR##*/}"
 fi
 
 # environment, config
-CC_BIN="$CC_DIR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin"
-[ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 1; }
-[ -d "$K_DIR" ] || { echo "ERROR: $K_DIR not found."; exit 2; }
+CC_BIN="$CC_DIR/bin"
+[ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 11; }
+[ -d "$K_DIR" ] || { echo "ERROR: $K_DIR not found."; exit 12; }
 export PATH="$CC_BIN:$PATH"
-echo 'Note: Copy new modules sources:'
-echo "	cp -ax '$MODS_DIR'/*.[ch] '$K_DIR/drivers/net/usb/'"
 
 # config, build
 cd "$K_DIR"
@@ -59,7 +62,7 @@ make menuconfig
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press any key to install..."
+read -n1 -p "Press any key to install..."; echo
 make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules" modules_install
 for i in $MODS_EXT; do
 	cp -ax "$MODS_DIR/$i/$i.ko" "$INST_DIR2/lib/modules/"
