@@ -16,7 +16,7 @@ echo "	cp -ax '$MODS_DIR'/*.[ch] '$K_DIR/drivers/net/usb/'"
 # download, extract
 if [ ! -d "$S_DIR" ]; then
 	dir=$S_dir; tar=$dir.tar.gz.zip
-	read -n1 -p "Press any key to download and extract $tar (sources)..."
+	read -n1 -p "Press Y to download and extract $tar (sources)... " r; echo; [ "$r" = Y ] || exit
 	[ -f "$tar" ] || { wget 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_M_CO_FI_2010.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGLZ%2FGP2_M_CO_FI_2010.tar.gz' \
 		-O - > "$tar" || exit 4; }
 	unzip "$tar" -d $dir
@@ -29,7 +29,7 @@ if [ ! -d "$S_DIR" ]; then
 fi
 if [ ! -d "$T_DIR" ]; then
 	dir=$T_dir; tar=${dir}_2.tar.gz
-	read -n1 -p "Press any key to download and extract $tar (toolchain)..."
+	read -n1 -p "Press Y to download and extract $tar (toolchain)... " r; echo; [ "$r" = Y ] || exit
 	[ -f "$tar" ] || { wget 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_MSTAR_2.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGSZ%2FGP2_MSTAR.tar.gz' \
 		-O - > "$tar" || exit 3; }
 	tar -xzf "$tar"
@@ -46,6 +46,7 @@ export PATH="$CC_BIN:$PATH"
 # config, build
 cd "$K_DIR"
 [ "$1" = bash ] && { bash; exit; }
+[ "$1" = noclean ] && shift
 [ "$1" = clean ] && { shift; make clean
 	for i in $MODS_EXT; do
 		( cd "$MODS_DIR/$i"; make clean ); done; }
@@ -62,7 +63,7 @@ make menuconfig
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press any key to install..."; echo
+read -n1 -p 'Press Y to install... ' r; echo; [ "$r" = Y ] || exit
 make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules" modules_install
 for i in $MODS_EXT; do
 	cp -ax "$MODS_DIR/$i/$i.ko" "$INST_DIR2/lib/modules/"
