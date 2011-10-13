@@ -43,11 +43,11 @@ cd "$SRC_DIR"
 [ "$1" = noclean ] && shift || { make clean
 	if [ "$PLATFORM" = S7 ]; then
 	     #PKG_CONFIG_LIBDIR="$PKG_CFG" PKG_CONFIG_PATH="$PKG_CFG"
-	     ./configure --host=$CC_PREF --prefix="$INST_DIR2/usr/local"; #CFLAGS="-static"
-	else ./configure --host=$CC_PREF --prefix="$INST_DIR2/usr/local"; CFLAGS="-static"; fi; }
+	     ./configure --host=$CC_PREF; #CFLAGS="-static"
+	else ./configure --host=$CC_PREF; CFLAGS="-static"; fi; }
 [ "$1" = nomake ] && shift || make
 
 # install
 [ "$1" = noinstall ] && exit
 read -n1 -p "Press Y to install in $INST_DIR2/usr/local ... " r; echo; [ "$r" = Y ] || exit
-make install; #CONFIG_PREFIX="$INST_DIR2/usr/local"
+make install DESTDIR="$INST_DIR2"
