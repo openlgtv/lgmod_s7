@@ -12,16 +12,21 @@ d="../rootfs$SUFFIX"; cd "$d" || { echo "ERROR: $d not found."; exit 1; }; INST_
 cd ../../..
 if [ "$PLATFORM" = S7 ]; then CC_DIR="$(pwd)/Saturn7/cross-compiler"; CC_PREF=mipsel-linux
 else CC_DIR="$(pwd)/cross-compiler-mipsel"; CC_PREF=mipsel; fi
-d=sources; mkdir -p $d; cd $d; SRC_DIR="$(pwd)/djmount-0.71"
+d=sources; mkdir -p $d; cd $d; SRC_dir=djmount-0.71; SRC_DIR="$(pwd)/$SRC_dir"
 
 # download, extract
-if [ ! -d "$SRC_DIR" ]; then
-	dirp=djmount-large5; tar=$dirp.zip
-	read -n1 -p "Press Y to download and extract $tar..." r; echo; [ "$r" = Y ] || exit
+dirp=djmount-large5
+if [ ! -d "$dirp" ]; then
+	tar=$dirp.zip
+	read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
 	[ -f "$tar" ] || { wget "http://www.mediafire.com/file/wmnk2xz11ki/$tar" || exit 4; }
 	unzip "$tar"
-	dir=djmount-0.71; tar=$dir.tar.gz
-	read -n1 -p "Press Y to download and extract $tar..." r; echo; [ "$r" = Y ] || exit
+	exit
+fi
+dir=$SRC_dir
+if [ ! -d "$dir" ]; then
+	tar=$dir.tar.gz
+	read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
 	[ -f "$tar" ] || { wget "http://sourceforge.net/projects/djmount/files/djmount/0.71/$tar" || exit 3; }
 	tar -xzf "$tar"
 	cd $dir; mv libupnp libupn_org; ln -s ../libupnp-1.6.6 libupnp
@@ -49,6 +54,7 @@ export FUSE_CFLAGS="-I${SRC_DIR%/*}/fuse-2.8.6/include -D_FILE_OFFSET_BITS=64"
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press Y to install..." r; echo; [ "$r" = Y ] || exit
-for i in djmount; do d="$INST_DIR/usr/bin/"
-	f="$d$i"; cp -ax $i "$d"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
+read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
+d="$INST_DIR/usr/bin/"
+for i in djmount; do
+	f="$d$i"; cp -ax $i "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done

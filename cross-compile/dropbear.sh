@@ -12,12 +12,13 @@ d="../rootfs$SUFFIX"; cd "$d" || { echo "ERROR: $d not found."; exit 1; }; INST_
 cd ../../..
 if [ "$PLATFORM" = S7 ]; then CC_DIR="$(pwd)/Saturn7/cross-compiler"; CC_PREF=mipsel-linux
 else CC_DIR="$(pwd)/cross-compiler-mipsel"; CC_PREF=mipsel; fi
-d=sources; mkdir -p $d; cd $d; SRC_DIR="$(pwd)/dropbear-0.53.1"
+d=sources; mkdir -p $d; cd $d; SRC_dir=dropbear-0.53.1; SRC_DIR="$(pwd)/$SRC_dir"
 
 # download, extract
-if [ ! -d "$SRC_DIR" ]; then
-	dir=dropbear-0.53.1; tar=$dir.tar.bz2
-	read -n1 -p "Press Y to download and extract $tar..." r; echo; [ "$r" = Y ] || exit
+dir=$SRC_dir
+if [ ! -d "$dir" ]; then
+	tar=$dir.tar.bz2
+	read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
 	[ -f "$tar" ] || { wget "http://matt.ucc.asn.au/dropbear/releases/$tar" || exit 3; }
 	tar -xjf "$tar"
 	exit
@@ -54,10 +55,13 @@ cd "$SRC_DIR"
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press Y to install..." r; echo; [ "$r" = Y ] || exit
-for i in dropbear scp; do d="$INST_DIR/usr/sbin/"
-	f="$d$i"; cp -ax $i "$d"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
-for i in dbclient dropbearkey; do d="$INST_DIR/usr/bin/"
-	f="$d$i"; cp -ax $i "$d"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
-for i in dropbearconvert; do d="$INST_DIR/usr/lib/dropbear/"
-	f="$d$i"; cp -ax $i "$d"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
+read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
+d="$INST_DIR/usr/sbin/"
+for i in dropbear scp; do
+	f="$d$i"; cp -ax $i "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
+d="$INST_DIR/usr/bin/"
+for i in dbclient dropbearkey; do
+	f="$d$i"; cp -ax $i "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
+d="$INST_DIR/usr/lib/dropbear/"
+for i in dropbearconvert; do
+	f="$d$i"; cp -ax $i "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done

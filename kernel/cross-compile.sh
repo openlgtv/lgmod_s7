@@ -1,17 +1,15 @@
 #!/bin/bash
 
+SUFFIX=''; # TODO
+
 cd "${0%/*}"; CONF_DIR=$(pwd)
-d=../rootfs; cd $d || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
-d=../../extroot; mkdir -p $d/lib/modules; cd $d; INST_DIR2=$(pwd)
-d=../../s6_s7_modules; cd $d || { echo "ERROR: $d not found."; exit 2; }; MODS_DIR=$(pwd); MODS_EXT='pty mini_fo'
-d=../Saturn7; mkdir -p $d; cd $d
+d="../rootfs$SUFFIX"; cd "$d" || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
+d="../../extroot$SUFFIX"; cd "$d"; mkdir -p lib/modules; INST_DIR2=$(pwd)
+d=../../Saturn7; mkdir -p $d; cd $d
 S_dir=GP2_M_CO_FI_2010; K_dir=$S_dir/kernel_src/kernel/linux-2.6.26-saturn7
 T_dir=GP2_MSTAR; CC_dir=$T_dir/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl
 S_DIR="$(pwd)/$S_dir"; K_DIR="$(pwd)/$K_dir"
-T_DIR="$(pwd)/$T_dir"; CC_DIR="$(pwd)/cross-compiler"
-
-echo 'Note: Copy new modules sources:'
-echo "	cp -ax '$MODS_DIR'/*.[ch] '$K_DIR/drivers/net/usb/'"
+T_DIR="$(pwd)/$T_dir"; CC_DIR="$(pwd)/cross-compiler"; CC_PREF=mipsel-linux
 
 # download, extract
 if [ ! -d "$S_DIR" ]; then
@@ -26,6 +24,7 @@ if [ ! -d "$S_DIR" ]; then
 	cp -ax linux-2.6.26-saturn7-svn/config-flash "$K_DIR/.config"
 	cd ../../..
 	ln -s $K_dir "${K_DIR##*/}"
+	exit
 fi
 if [ ! -d "$T_DIR" ]; then
 	dir=$T_dir; tar=${dir}_2.tar.gz
@@ -35,6 +34,7 @@ if [ ! -d "$T_DIR" ]; then
 	tar -xzf "$tar"
 	cd "$T_DIR"; tar -xzf toolchian-bin.tgz; rm -f toolchian-bin.tgz; cd ..
 	ln -s $CC_dir "${CC_DIR##*/}"
+	exit
 fi
 
 # environment, config
@@ -47,32 +47,22 @@ export PATH="$CC_BIN:$PATH"
 cd "$K_DIR"
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift
-[ "$1" = clean ] && { shift; make clean
-	for i in $MODS_EXT; do
-		( cd "$MODS_DIR/$i"; make clean ); done; }
+[ "$1" = clean ] && { shift; make clean; }
 [ "$1" = noconfig ] || cp -ax "$CONF_DIR/.config" ./
 make menuconfig
 [ "$1" = noconfig ] && shift || cp -ax ./.config "$CONF_DIR/"
 [ "$1" = nomake ] && shift || make
-[ "$1" = nomodules ] && shift || {
-	make modules
-	for i in $MODS_EXT; do
-		( cd "$MODS_DIR/$i"
-		make CROSS_COMPILE=mipsel-linux- "KERNEL_SRC=$K_DIR")
-	done; }
+[ "$1" = nomodules ] && shift || make modules
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p 'Press Y to install... ' r; echo; [ "$r" = Y ] || exit
+read -n1 -p "Press Y to install in $INST_DIR2 and $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules" modules_install
-for i in $MODS_EXT; do
-	cp -ax "$MODS_DIR/$i/$i.ko" "$INST_DIR2/lib/modules/"
-	"$CC_BIN/mipsel-linux-strip" --strip-unneeded "$INST_DIR2/lib/modules/$i.ko"; done
 
 # install in rootfs
 cd "$INST_DIR2/lib/modules"
-mv cdc_ether.ko cdc_subset.ko dm9601.ko gl620a.ko kaweth.ko mcs7830.ko net1080.ko plusb.ko zaurus.ko "$INST_DIR/lib/modules/"
-mv cifs.ko ext2.ko ext3.ko jbd.ko lockd.ko nfs.ko sunrpc.ko "$INST_DIR/lib/modules/"
-mv cdrom.ko fuse.ko isofs.ko rndis_host.ko sr_mod.ko "$INST_DIR/lib/modules/"
-mv uinput.ko input-core.ko evdev.ko "$INST_DIR/lib/modules/"
-mv mini_fo.ko pty.ko "$INST_DIR/lib/modules/"
+d="$INST_DIR/lib/modules/"
+mv cdc_ether.ko cdc_subset.ko gl620a.ko kaweth.ko mcs7830.ko net1080.ko plusb.ko zaurus.ko "$d"
+mv cifs.ko ext2.ko ext3.ko jbd.ko lockd.ko nfs.ko sunrpc.ko "$d"
+mv cdrom.ko fuse.ko isofs.ko rndis_host.ko sr_mod.ko "$d"
+mv uinput.ko input-core.ko evdev.ko "$d"

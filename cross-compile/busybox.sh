@@ -9,28 +9,30 @@ SUFFIX="-$PLATFORM"
 
 cd "${0%/*}"; CONF_DIR=$(pwd)
 d="../rootfs$SUFFIX"; cd "$d" || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
-cd ../../..; BB_DIR="$(pwd)/busybox-1.18.5"
-if [ "$PLATFORM" = S7 ]; then CC_DIR="$(pwd)/Saturn7/cross-compiler"
-else CC_DIR="$(pwd)/cross-compiler-mipsel"; fi
+cd ../../..; BB_dir=busybox-1.18.5; BB_DIR="$(pwd)/$BB_dir"
+if [ "$PLATFORM" = S7 ]; then CC_dir=Saturn7/cross-compiler; CC_DIR="$(pwd)/$CC_dir"
+else CC_dir=cross-compiler-mipsel; CC_DIR="$(pwd)/$CC_dir"; fi
 
 echo 'Note: Busybox Settings->Build Options->Cross Compiler prefix'
-if [ "$PLATFORM" = S7 ]; then echo "	../Saturn7/cross-compiler/bin/mipsel-linux-"
-else echo "	../${CC_DIR##*/}/bin/mipsel-"; fi
+echo "	../$CC_dir/bin/mipsel-"
 
 # download, extract
-if [ ! -d "$BB_DIR" ]; then
-	dir=busybox-1.18.5; tar=$dir.tar.bz2
-	read -n1 -p "Press Y to download and extract $tar..." r; echo; [ "$r" = Y ] || exit
+dir=$BB_dir
+if [ ! -d "$dir" ]; then
+	tar=$dir.tar.bz2
+	read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
 	[ -f "$tar" ] || { wget "http://www.busybox.net/downloads/$tar" || exit 3; }
 	tar -xvjf "$tar"
 	exit
 fi
 if [ "$PLATFORM" != S7 ]; then
-	if [ ! -d "$CC_DIR" ]; then
-		dir=cross-compiler-mipsel; tar=$dir.tar.bz2
-		read -n1 -p "Press Y to download and extract $tar..." r; echo; [ "$r" = Y ] || exit
+	dir=$CC_dir
+	if [ ! -d "$dir" ]; then
+		tar=$dir.tar.bz2
+		read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
 		[ -f "$tar" ] || { wget "http://www.uclibc.org/downloads/binaries/0.9.30.1/$tar" || exit 4; }
 		tar -xvjf "$tar"
+		exit
 	fi
 fi
 
@@ -51,6 +53,6 @@ make menuconfig
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press Y to install..." r; echo; [ "$r" = Y ] || exit
+read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 make CONFIG_PREFIX="$INST_DIR" install
 cd $INST_DIR; svn revert trunk/rootfs/bin/kill trunk/rootfs/bin/watch
