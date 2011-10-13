@@ -38,11 +38,11 @@ fi
 CC_BIN="$CC_DIR/bin"
 [ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 11; }
 export PATH="$CC_BIN:$PATH"
+export FUSE_CFLAGS="-I${SRC_DIR%/*}/fuse-2.8.6/include -D_FILE_OFFSET_BITS=64"
+export FUSE_LIBS="-L${SRC_DIR%/*}/fuse-2.8.6/lib/.libs -lfuse -pthread -ldl"
 
 # config, build
 cd "$SRC_DIR"
-export FUSE_LIBS="-L${SRC_DIR%/*}/fuse-2.8.6/lib/.libs -lfuse -pthread -ldl"
-export FUSE_CFLAGS="-I${SRC_DIR%/*}/fuse-2.8.6/include -D_FILE_OFFSET_BITS=64"
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift || { make clean
 	if [ "$PLATFORM" = S7 ]; then
