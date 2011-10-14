@@ -1,3 +1,4 @@
+#!/bin/sh
 # /etc/profile: system-wide .profile file for the Bourne shells
 
 echo "Processing /etc/profile ..."
@@ -74,7 +75,16 @@ export HOME=/mnt/lg/user/root
 
 . /etc/init.d/rcS-lginit-env; # LG: env
 
+after=/lg/user/extroot; # Note: create a sym.link to USB extroot directory
+path=/bin:/sbin:/usr/bin:/usr/sbin; pathl=/usr/local/bin
+lib=/lib:/usr/lib; libl=/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+export PATH="$path:$pathl:$after${path//:/:$after}"
+export LD_LIBRARY_PATH="$lib:$libl:$after${lib//:/:$after}"
+unset after path pathl lib libl
+
 alias mounts='cat /proc/mounts'
+alias dropc='echo 3 > /proc/sys/vm/drop_caches; free'
+
 if [ -z "$TMUX" ]; then
 	if [ -z "$TERM" ] || [ "$TERM" = vt100 ]; then
 		alias tmux='TERM=linux tmux'
@@ -83,9 +93,21 @@ if [ -z "$TMUX" ]; then
 		alias tma='tmux attach-session'
 	fi
 fi
-MODEL=$(echo /lg/user/model.*); export MODEL="${MODEL#*model.}"
-alias Rdpass='p="d '"${MODEL}"'elqjrm"; f=/tmp/openrelease.in; [ -e $f ] && echo "$p" > $f || tmux send -t RELEASE "$p" C-M'
+
+alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d; rm -r *; tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
+alias Rstart='/etc/init.d/release start'
+
+MODEL=`echo /mnt/lg/user/model.*`; export MODEL=${MODEL#*model.}
+alias Rdpass='M=`echo /mnt/lg/user/model.*`; M=${M#*model.}; P="d ${M}elqjrm"; \
+	f=/tmp/openrelease.in; [ -e $f ] && { echo; echo "$P"; } > $f || tmux send -t RELEASE C-M "$P" C-M'
+alias Revent='f=/tmp/openrelease.in; [ -e $f ] && echo -n x > $f || tmux send -t RELEASE x'
+alias Rdevnt='M=`echo /mnt/lg/user/model.*`; M=${M#*model.}; P="d ${M}elqjrm"; \
+	f=/tmp/openrelease.in; [ -e $f ] && { echo; echo "$P"; } > $f || tmux send -t RELEASE C-M "$P" C-M \
+	sleep 0.2; [ -e $f ] && echo -n x > $f || tmux send -t RELEASE x'
+
+alias Rgame='C="call UI_CONTENTSLINK_CreateWindow"; \
+	f=/tmp/openrelease.in; [ -e $f ] && { echo; echo "$C"; } > $f || tmux send -t RELEASE C-M "$C" C-M'
 alias Rtail='tail -n+1 -F /tmp/RELEASE.out /tmp/openrelease.out /tmp/openrelease.log'
 alias Ropen='(F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F&); trap "pkill -f \"tail -F $F\"; exit" INT; cat >/tmp/openrelease.in)'
 
-[ -f /lg/cmn_data/profile ] && . /lg/cmn_data/profile
+[ -f /mnt/lg/cmn_data/profile ] && . /mnt/lg/cmn_data/profile
