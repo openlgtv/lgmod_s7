@@ -29,7 +29,6 @@ if [ -f "$BOOTMOD" ]; then
 fi
 
 [ "$RCS_SYSLOG" = 1 ] && [ -f /sbin/syslogd ] && syslogd -C16 > /dev/kmsg 2>&1; # redirect is ok?
-[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1; # redirect is ok?
 
 [ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
 . /etc/init.d/rcS-lginit; # LG: mount
