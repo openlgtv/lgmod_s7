@@ -29,6 +29,7 @@ if [ -f "$BOOTMOD" ]; then
 fi
 
 [ "$RCS_SYSLOG" = 1 ] && [ -f /sbin/syslogd ] && syslogd -C16 > /dev/kmsg 2>&1; # redirect is ok?
+[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1; # redirect is ok?
 
 [ -f "$RUN-init" ] && { echo "rcS-exec: Found $RUN-init" > /dev/kmsg; . "$RUN-init"; }
 . /etc/init.d/rcS-lginit; # LG: mount
@@ -48,6 +49,7 @@ if [ -z "$RCS_NOREL" ] && [ "$RCS_CRASHDOG" != 0 ]; then
 
 if [ -z "$RCS_NOREL" ]; then
 	err=''; . /etc/init.d/release boot || err=$?
+	[ "$err" = 222 ] && err=''; # =0 - for release configuration - custom script
 	if [ -z "$err" ]; then
 		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 		[ "$r" -lt 2 ] && err=1; fi

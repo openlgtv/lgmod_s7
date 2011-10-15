@@ -53,23 +53,24 @@ RELCFG() {
 }
 
 PREPARE() {
-	if [ -n "$Rtmux" ]; then
-		if [ -f /sbin/modprobe ]; then
-			modprobe /lib/modules/pty.ko ||
-				{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
-		elif ! insmod /lib/modules/pty.ko; then
-			lsmod | grep -q '^pty ' ||
-				{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+	[ -d /sys/module/pty ] ||
+		if [ -n "$Rtmux" ]; then
+			if [ -f /sbin/modprobe ]; then
+				modprobe /lib/modules/pty.ko ||
+					{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+			elif ! insmod /lib/modules/pty.ko; then
+				lsmod | grep -q '^pty ' ||
+					{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+			fi
+		elif [ -n "$Ropen" ]; then
+			if [ -f /sbin/modprobe ]; then
+				modprobe /lib/modules/pty.ko ||
+					{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
+			elif ! insmod /lib/modules/pty.ko; then
+				lsmod | grep -q '^pty ' ||
+					{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
+			fi
 		fi
-	elif [ -n "$Ropen" ]; then
-		if [ -f /sbin/modprobe ]; then
-			modprobe /lib/modules/pty.ko ||
-				{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
-		elif ! insmod /lib/modules/pty.ko; then
-			lsmod | grep -q '^pty ' ||
-				{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
-		fi
-	fi
 	if [ -n "$Rtmux" ]; then
 		. /etc/init.d/rcS-devrw ||
 			{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux

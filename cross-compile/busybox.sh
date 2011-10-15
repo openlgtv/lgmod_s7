@@ -55,4 +55,4 @@ make menuconfig
 [ "$1" = noinstall ] && exit
 read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 make CONFIG_PREFIX="$INST_DIR" install
-cd $INST_DIR; svn revert trunk/rootfs/bin/kill trunk/rootfs/bin/watch
+cd $INST_DIR; svn revert bin/kill; svn revert bin/watch

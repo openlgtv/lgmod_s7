@@ -48,15 +48,23 @@ cd "$K_DIR"
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift
 [ "$1" = clean ] && { shift; make clean; }
-[ "$1" = noconfig ] || cp -ax "$CONF_DIR/.config" ./
+if [ "$1" = flashcfg ]; then FLASH=1; cp "$CONF_DIR/flash.config" ./.config
+else FLASH=''; [ "$1" = noconfig ] || cp "$CONF_DIR/.config" ./; fi
 make menuconfig
-[ "$1" = noconfig ] && shift || cp -ax ./.config "$CONF_DIR/"
+if [ "$1" = flashcfg ]; then shift; cp -ax ./.config "$CONF_DIR/flash.config"
+else [ "$1" = noconfig ] && shift || cp -ax ./.config "$CONF_DIR/"; fi
 [ "$1" = nomake ] && shift || make
 [ "$1" = nomodules ] && shift || make modules
 
 # install
 [ "$1" = noinstall ] && exit
 read -n1 -p "Press Y to install in $INST_DIR2 and $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
+if [ -n "$FLASH" ]; then
+	f=uImage; [ -f $f ] && {
+		osize=`stat -c%s $f`; o4096=$(( $osize / 4096 * 4096 ))
+		[ "$osize" != "$o4096" ] && omore=$(( o4096 + 4096 - osize )) || omore=0
+		{ cat $f; for i in `seq $omore`; do printf "\xff"; done; } > "$INST_DIR2/../${f}_flash"
+	}; exit; fi
 make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules" modules_install
 
 # install in rootfs
@@ -65,4 +73,4 @@ d="$INST_DIR/lib/modules/"
 mv cdc_ether.ko cdc_subset.ko gl620a.ko kaweth.ko mcs7830.ko net1080.ko plusb.ko zaurus.ko "$d"
 mv cifs.ko ext2.ko ext3.ko jbd.ko lockd.ko nfs.ko sunrpc.ko "$d"
 mv cdrom.ko fuse.ko isofs.ko rndis_host.ko sr_mod.ko "$d"
-mv uinput.ko input-core.ko evdev.ko "$d"
+mv uinput.ko evdev.ko hid.ko usbhid.ko "$d"; f=input-core.ko; [ -f $f ] && mv $f "$d"

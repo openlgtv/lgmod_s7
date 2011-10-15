@@ -11,8 +11,9 @@ START() {
 		echo 'dropbear: help: Add your pub key to /mnt/lg/user/root/.ssh/authorized_keys'
 		return 1; }
 	. /etc/init.d/rcS-devrw
-	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
-	$modprobe /lib/modules/pty.ko > /dev/null 2>&1
+	[ -d /sys/module/pty ] || {
+		[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+		$modprobe /lib/modules/pty.ko > /dev/null 2>&1; }
 	f=$CFG_DIR/ssh; [ -f $f ] && dropbear $(cat $f) || dropbear
 }
 

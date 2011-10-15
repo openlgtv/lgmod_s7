@@ -94,7 +94,7 @@ if [ -z "$TMUX" ]; then
 	fi
 fi
 
-alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d; rm -r *; tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
+alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r * && tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
 alias Rstart='/etc/init.d/release start'
 
 MODEL=`echo /mnt/lg/user/model.*`; export MODEL=${MODEL#*model.}
