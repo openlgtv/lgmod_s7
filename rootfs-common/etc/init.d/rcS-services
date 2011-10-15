@@ -1,6 +1,6 @@
 #!/bin/sh
 # Source code released under GPL License
-# rcS for Saturn6/Saturn7 by mmm4m5m
+# rcS for Saturn6/Saturn7 by mmm4m5m, djpety
 
 [ -n "$1" ] && sleep "$1"
 
