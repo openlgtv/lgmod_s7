@@ -26,7 +26,7 @@ for i in telnetd dropbear ntpd httpd ftpd djmount; do
 	. /etc/init.d/$i boot; #&
 done
 
-[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1; # redirect is ok?
+[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1
 
 
 [ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for Drive1
