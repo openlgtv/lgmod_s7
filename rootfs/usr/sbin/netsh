@@ -1,0 +1,409 @@
+#!/bin/sh
+# Network Configuration Manager for LGMOD
+# Created by djpety (c)2011
+# v1.0
+NETSHVER="v1.0"
+NETSH_ETHSTART="/usr/sbin/eth-start"
+NETSH_WLANSTART="/usr/sbin/wlan-start"
+NETSH_WLANCONF="/etc/wireless-config"
+
+NETSH_HIDDENAP=0
+
+
+# Global functions
+main()
+{
+	echo "======================================="
+	echo "Network Configuration Manager $NETSHVER"
+	echo "======================================="
+	echo
+	echo "Select the type of the network below:"
+	echo
+	echo "${boldon}[1]${boldoff} USB-to-Ethernet"
+	echo "${boldon}[2]${boldoff} Wireless"
+	echo
+	echo "${yellowf}${boldon}[0]${boldoff} Exit${reset}"
+	echo
+	echo -n "Choose a number: "; read nsh_ntype
+
+	case "$nsh_ntype" in
+	0)
+		exit 0
+	;;
+	1)
+		eth_main
+	;;
+	2)
+		wlan_main
+	;;
+	*)
+		main
+	esac
+	exit 0
+}
+
+toLower() {
+	echo $1 | tr "[:upper:]" "[:lower:]"
+}
+toUpper() {
+	echo $1 | tr "[:lower:]" "[:upper:]" 
+} 
+
+initializeANSI()
+{
+  esc=""
+
+  blackf="${esc}[30m";   redf="${esc}[31m";    greenf="${esc}[32m"
+  yellowf="${esc}[33m"   bluef="${esc}[34m";   purplef="${esc}[35m"
+  cyanf="${esc}[36m";    whitef="${esc}[37m"
+  
+  blackb="${esc}[40m";   redb="${esc}[41m";    greenb="${esc}[42m"
+  yellowb="${esc}[43m"   blueb="${esc}[44m";   purpleb="${esc}[45m"
+  cyanb="${esc}[46m";    whiteb="${esc}[47m"
+
+  boldon="${esc}[1m";    boldoff="${esc}[22m"
+  italicson="${esc}[3m"; italicsoff="${esc}[23m"
+  ulon="${esc}[4m";      uloff="${esc}[24m"
+  invon="${esc}[7m";     invoff="${esc}[27m"
+
+  reset="${esc}[0m"
+}
+
+
+# Ethernet functions
+eth_main()
+{
+	NSH_ETHS="`get_eths`"
+	if [ -n "$NSH_ETHS" ]; then
+		echo
+		echo "Select the correct ethernet adapter below:"
+		echo
+		i=1
+		IFS=$'\n'; for line in $NSH_ETHS; do 
+			echo "${boldon}[$i]${boldoff} $line";
+			i=`expr $i + 1`
+		done
+		echo
+		echo "${yellowf}${boldon}[0]${boldoff} Main menu${reset}"
+		echo
+		echo -n "Choose a number: "; read nsh_adapter
+		echo
+		if [ "$nsh_adapter" -lt $i ]; then
+			if [ "$nsh_adapter" -gt 0 ]; then
+				echo "..."
+			else
+				main
+			fi
+		else
+			eth_main
+		fi
+	else
+		echo
+		echo ${redf}"There is no ethernet adapter!"${reset}
+		echo
+		main
+	fi
+}
+
+get_eths()
+{
+	egrep 'eth[0-9]:' /proc/net/dev | sed 's/\([a-z0-9)]\):.*/\1/;s/^[ ]*//'
+}
+
+# Wireless functions
+wlan_main()
+{
+	NSH_WLANS="`get_wlans`"
+	if [ -n "$NSH_WLANS" ]; then
+		echo
+		echo "Select the correct wireless adapter below:"
+		echo
+		i=1
+		IFS=$'\n'; for line in $NSH_WLANS; do 
+			echo "${boldon}[$i]${boldoff} $line";
+			i=`expr $i + 1`
+		done
+		echo
+		echo "${yellowf}${boldon}[0]${boldoff} Main menu${reset}"
+		echo
+		echo -n "Choose a number: "; read nsh_adapter
+		echo
+		if [ "$nsh_adapter" -lt $i ]; then
+			if [ "$nsh_adapter" -gt 0 ]; then
+				nshif=`echo "$NSH_WLANS" | head -n $nsh_adapter | tail -n 1 | tr -d '\n'`
+				echo "Selected interface: ${boldon}$nshif${boldoff}"
+				wlan_setup $nshif
+				
+			else
+				main
+			fi
+		else
+			wlan_main
+		fi
+	else
+		echo
+		echo ${redf}"There is no wireless adapter!"${reset}
+		echo
+		main
+	fi
+}
+
+wlan_setup()
+{
+	NSHIF="$1"
+	echo "Scanning for wireless access points..."
+	sleep 0.2
+	ifconfig $NSHIF up
+	NSHAPS="`wlan_parse $NSHIF`"
+	if [ -n "$NSH_WLANS" ]; then
+		echo
+		echo "Select an access point below:"
+		echo
+		i=1
+		IFS=$'\n'; for line in $NSHAPS; do
+			#$line=`echo "$line" | sed 's/(.*) /\1/g' | tr -d '"' | tr -d '\n'`
+			echo -n "${boldon}[$i]${boldoff} "
+			printf "%-32s" `echo -n "$line" | sed 's/ .*/\1/g' | tr -d '"'`
+			echo -n " ${blueb}${invon}[Encryption: "
+			printf "%-4s" `echo -n "$line" | awk -F' ' '{ if($4 != "") print $4; else print $3; }' | tr -d '\n'`
+			echo -n " - Strenght: "
+			printf "%3d" `echo -n "$line" | awk -F' ' '{ print $2 }' | tr -d '\n'`
+			echo "%]${invoff}${reset}"
+			i=`expr $i + 1`
+		done
+		echo "${boldon}[$i]${boldoff} Other access point"
+		echo
+		echo "${yellowf}${boldon}[0]${boldoff} Back${reset}"
+		echo
+		echo -n "Choose a number: "; read nsh_ap
+		echo
+		if ! [ "$nsh_ap" -gt $i ]; then
+			if [ "$nsh_ap" == $i ]; then
+				unset NSHAPS
+				NSHAPS=""
+				while [ -z "$nshtmp_ssid" ]; do
+				echo -n "Enter SSID: "; read nshtmp_ssid
+				echo
+				done
+				while [ -z "$nshtmp_enc" ] || [ "$nshtmp_enc" -lt 1 ] || [ "$nshtmp_enc" -gt 4 ]; do
+					if [ -n "$nshtmp_enc" ]; then
+						echo ${yellowf}"Choose from the list!"${reset} 
+					fi
+				echo "Select encryption: "
+				echo
+				echo "${boldon}[1]${boldoff} WEP"
+				echo "${boldon}[2]${boldoff} WPA"
+				echo "${boldon}[3]${boldoff} WPA2"
+				echo "${boldon}[4]${boldoff} No encryption"
+				echo
+				echo -n "Choose a number: "; read nshtmp_enc
+				echo
+				done
+				nsh_ap=1
+				NETSH_HIDDENAP=1
+				case "$nshtmp_enc" in
+				1)
+					NSHAPS="$nshtmp_ssid 0 on WEP"
+				;;
+				2)
+					NSHAPS="$nshtmp_ssid 0 on WPA"
+				;;
+				3)
+					NSHAPS="$nshtmp_ssid 0 on WPA2"
+				;;
+				*)
+					NSHAPS="$nshtmp_ssid 0 off"
+				;;
+				esac
+			fi	
+			if [ "$nsh_ap" -gt 0 ]; then
+				nshap=`echo "$NSHAPS" | head -n $nsh_ap | tail -n 1 | tr -d '\n'`
+				nsh_apname=`echo "$nshap" | sed 's/ .*/\1/g' | tr -d '"'`
+				nsh_apencr=`echo "$nshap" | awk -F' ' '{ print $3 }' | tr -d '\n'`
+				nsh_apenct=`echo "$nshap" | awk -F' ' '{ print $4 }' | tr -d '\n'`
+				echo "Selected access point: $nsh_apname"
+				echo
+				
+				case "$nsh_apencr" in
+				'on')
+					case "$nsh_apenct" in
+					'WPA2')
+						while [ -z "$nsh_wpa2pass" ] || [ $(echo -n "$nsh_wpa2pass" | wc -c) -lt 8 ] || [ $(echo -n "$nsh_wpa2pass" | wc -c) -gt 63 ]; do
+							if [ -n "$nsh_wpa2pass" ]; then
+								echo ${yellowf}"The key length must be between 8 and 63!"${reset} 
+							fi
+							echo -n "Enter WPA2-PSK key [8-63 characters]: "; read nsh_wpa2pass
+							echo
+						done
+						
+						echo "Generating Wireless Startup script for encrypted network..."
+						NETSH_CNFK=`wpa_passphrase "$nsh_apname" "$nsh_wpa2pass" | egrep 'ssid=|psk=[a-z0-9]'`
+						
+						echo "ctrl_interface=/var/run/wpa_supplicant" > $NETSH_WLANCONF
+						echo "ap_scan=1" >> $NETSH_WLANCONF
+						echo "network={" >> $NETSH_WLANCONF
+						echo "	proto=RSN" >> $NETSH_WLANCONF
+						if [ "$NETSH_HIDDENAP" == 1 ]; then
+							echo "	scan_ssid=1" >> $NETSH_WLANCONF
+						fi
+						echo "$NETSH_CNFK" >> $NETSH_WLANCONF
+						echo "}" >> $NETSH_WLANCONF
+						
+						wlan_genstart $NSHIF $NETSH_WLANCONF > $NETSH_WLANSTART
+						
+						wlan_final						
+					;;
+					'WPA')
+						while [ -z "$nsh_wpapass" ] || [ $(echo -n "$nsh_wpapass" | wc -c) -lt 8 ] || [ $(echo -n "$nsh_wpapass" | wc -c) -gt 63 ]; do
+							if [ -n "$nsh_wpapass" ]; then
+								echo ${yellowf}"The key length must be between 8 and 63!"${reset} 
+							fi
+							echo -n "Enter WPA-PSK key [8-63 characters]: "; read nsh_wpapass
+							echo
+						done
+						
+						echo "Generating Wireless Startup script for encrypted network..."
+						NETSH_CNFK=`wpa_passphrase "$nsh_apname" "$nsh_wpapass" | egrep 'ssid=|psk=[a-z0-9]'`
+						
+						echo "ctrl_interface=/var/run/wpa_supplicant" > $NETSH_WLANCONF
+						echo "ap_scan=1" >> $NETSH_WLANCONF
+						echo "network={" >> $NETSH_WLANCONF
+						echo "	proto=WPA" >> $NETSH_WLANCONF
+						if [ "$NETSH_HIDDENAP" == 1 ]; then
+							echo "	scan_ssid=1" >> $NETSH_WLANCONF
+						fi
+						echo "$NETSH_CNFK" >> $NETSH_WLANCONF
+						echo "}" >> $NETSH_WLANCONF
+						
+						wlan_genstart $NSHIF $NETSH_WLANCONF > $NETSH_WLANSTART
+						
+						wlan_final	
+					;;
+					'WEP')
+						while [ -z "$nsh_wepindex" ] || [ "$nsh_wepindex" -lt 1 ] || [ "$nsh_wepindex" -gt 4 ]; do
+							if [ -n "$nsh_wepindex" ]; then
+								echo ${yellowf}"The WEP key index must be between 1 and 4!"${reset} 
+							fi
+							echo -n "Enter WEP key index [1-4]: "; read nsh_wepindex
+							echo
+						done
+						while [ -z "$nsh_wepkey" ]; do
+							echo -n "Enter WEP key: "; read nsh_wepkey
+							echo
+						done
+						while [ -z "$nsh_wepkeyt" ] || [ "$nsh_wepkeyt" -lt 1 ] || [ "$nsh_wepkeyt" -gt 2 ]; do
+							if [ -n "$nsh_wepkeyt" ]; then
+								echo ${yellowf}"Choose from the list!"${reset} 
+							fi
+							echo "Select the type of the WEP key: "
+							echo
+							echo "${boldon}[1]${boldoff} ASCII key"
+							echo "${boldon}[2]${boldoff} Hexadecimal key"
+							echo
+							echo -n "Choose a number: "; read nsh_wepkeyt
+							echo
+						done
+						
+						echo "Generating Wireless Startup script for encrypted network..."
+						nsh_wepindex=`expr "${nsh_wepindex}" - 1`
+						echo "ctrl_interface=/var/run/wpa_supplicant" > $NETSH_WLANCONF
+						echo "ap_scan=1" >> $NETSH_WLANCONF
+						echo "network={" >> $NETSH_WLANCONF
+						echo "	ssid=\"$nsh_apname\"" >> $NETSH_WLANCONF
+						if [ "$NETSH_HIDDENAP" == 1 ]; then
+							echo "	scan_ssid=1" >> $NETSH_WLANCONF
+						fi
+						echo "	key_mgmt=NONE" >> $NETSH_WLANCONF
+						if [ "$nsh_wepkeyt" == 1 ]; then
+							echo "	wep_key$nsh_wepindex=\"$nsh_wepkey\"" >> $NETSH_WLANCONF
+						else
+							echo "	wep_key$nsh_wepindex=$nsh_wepkey" >> $NETSH_WLANCONF
+						fi						
+						echo "	wep_tx_keyidx=$nsh_wepindex" >> $NETSH_WLANCONF
+						echo "}" >> $NETSH_WLANCONF
+						
+						wlan_genstart $NSHIF $NETSH_WLANCONF > $NETSH_WLANSTART
+						
+						wlan_final	
+					;;
+					esac
+					
+				;;
+				'off')
+					echo "Generating Wireless Startup script for non-encrypted network..."
+					
+					echo "ctrl_interface=/var/run/wpa_supplicant" > $NETSH_WLANCONF
+					echo "ap_scan=1" >> $NETSH_WLANCONF
+					echo "network={" >> $NETSH_WLANCONF
+					echo "	ssid=\"$nsh_apname\"" >> $NETSH_WLANCONF
+					if [ "$NETSH_HIDDENAP" == 1 ]; then
+						echo "	scan_ssid=1" >> $NETSH_WLANCONF
+					fi
+					echo "	key_mgmt=NONE" >> $NETSH_WLANCONF
+					echo "}" >> $NETSH_WLANCONF
+					
+					wlan_genstart $NSHIF $NETSH_WLANCONF > $NETSH_WLANSTART
+					
+					wlan_final
+				;;				
+				esac
+				
+			else
+				wlan_main
+			fi
+		else
+			wlan_setup $NSHIF
+		fi
+	else
+		echo
+		echo ${redf}"There is no wireless access point!"${reset}
+		echo
+		wlan_main
+	fi
+}
+
+wlan_genstart()
+{
+	echo "#!/bin/sh"
+	echo "# Wireless Network Startup script"
+	echo "# Generated by Network Configuration Manager for LGMOD"
+	echo "# $NETSHVER"
+	echo "killall -q -s 9 udhcpc -i $1"
+	echo "killall -q -s 9 wpa_supplicant -B -Dwext -i$1"
+	echo "ifconfig $1 down &> /dev/null"
+	echo "ifconfig $1 up &> /dev/null"
+	echo "if ! [ \"\`basename \$0\`\" == \"wlan-stop\" ]; then"
+	echo "	echo \"wireless: Starting up wireless network on ${boldon}${1}${boldoff}\""
+	echo "	wpa_supplicant -B -Dwext -i$1 -c$2 &> /dev/null"
+	echo "	udhcpc -i $1 &> /dev/null"
+	echo "fi"
+}
+
+wlan_final()
+{
+	chmod 755 $NETSH_WLANSTART
+	echo "${greenf}Wireless Startup script is successfully generated.${reset}"
+	echo "You can start network by execute ${boldon}\"$NETSH_WLANSTART\"${boldoff}"
+	echo -n "Do you want to start it now? ${boldon}[Y/N]${boldoff}: "; read nsh_run
+	if [ "$(toUpper $nsh_run)" == "Y" ]; then
+		$NETSH_WLANSTART
+	fi
+	exit 0
+}
+
+wlan_parse()
+{
+	#echo "$1" | egrep 'ESSID:|Encryption key:' | sed 's/[a-zA-Z0-9 ]*\:\(.*\)/\1/;s/^[ ]*//' | tr "\"\n" "\"|"
+	iwlist wlan0 scan | awk -F '[ :=]+' '/ESS/{ printf "%s ", $3; wpa2="false"; wpa="false"; } /Qual/{ printf  "%d ", substr($3,1,3) } /Encr/{ encr=sprintf("%s",$4); printf "%s ", encr; } /IE: WPA Version/{ if(encr == "on") wpa="true"; } /IE: IEEE 802.11i\/WPA2 Version/{ if(encr == "on") wpa2="true"; } /Bit Rates/{ if(wpa2 == "true"){ printf("%s", "WPA2"); } else if(wpa == "true") { printf("%s", "WPA"); } else if(encr == "on") { printf("%s", "WEP"); } print ""}'
+}
+
+get_wlans()
+{
+	egrep '[a-z0-9]:' /proc/net/wireless | sed 's/\([a-z0-9)]\):.*/\1/;s/^[ ]*//'
+}
+
+#start main
+initializeANSI
+main
+
+exit 0

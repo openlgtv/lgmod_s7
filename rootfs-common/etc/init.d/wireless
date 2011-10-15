@@ -1,0 +1,46 @@
+#!/bin/sh
+# http://openlgtv.org.ru - LGMOD
+# Copyright 2009 Vuk
+# Copyright 2010 Arno1
+# Copyright 2011 lprot, mmm4m5m
+
+STARTUP_DIR="/usr/sbin"
+
+START() {
+	
+	if [ -e "$STARTUP_DIR/wlan-start" ]; then
+		"$STARTUP_DIR/wlan-start"
+	else
+		echo "wireless: Use netsh to generate wireless configuration!"
+	fi
+}
+
+boot() {
+	{
+	START "$@"
+	} > /dev/kmsg 2>&1
+}
+
+start() {
+	START "$@"
+}
+
+stop() {
+	if [ -e "$STARTUP_DIR/wlan-stop" ]; then
+		"$STARTUP_DIR/wlan-stop"
+	else
+		echo "wireless: Use netsh to generate wireless configuration!"
+	fi
+}
+
+restart() {
+	stop "$@"; START "$@"
+}
+
+case "$1" in
+	boot)		boot "$@";;
+	start)		start "$@";;
+	stop)		stop "$@";;
+	restart)	restart "$@";;
+	*)			echo "Usage: $0 start|stop|restart [nodhcp]"; exit 1
+esac

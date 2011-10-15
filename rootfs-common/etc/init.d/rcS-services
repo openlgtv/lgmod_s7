@@ -7,6 +7,8 @@
 r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
+# Hotplug wrapper
+echo "/usr/sbin/hotplug" > /proc/sys/kernel/hotplug
 
 . /etc/init.d/module boot; #&
 
@@ -17,6 +19,7 @@ else
 fi
 
 . /etc/init.d/network boot
+. /etc/init.d/wireless boot
 
 for i in telnetd dropbear ntpd httpd ftpd djmount; do
 	# TODO: use sym.links /etc/rc.d/[SK]*
