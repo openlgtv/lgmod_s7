@@ -374,7 +374,10 @@ wlan_genstart()
 	echo "ifconfig $1 up &> /dev/null"
 	echo "if ! [ \"\`basename \$0\`\" == \"wlan-stop\" ]; then"
 	echo "	echo \"wireless: Starting up wireless network on ${boldon}${1}${boldoff}\""
+	echo "	mkdir -p /tmp/var/run/wpa_supplicant &> /dev/null"
+	echo "	echo \"wireless: Connecting to access point...\""
 	echo "	wpa_supplicant -B -Dwext -i$1 -c$2 &> /dev/null"
+	echo "	echo \"wireless: Configuring network via DHCP...\""
 	echo "	udhcpc -i $1 &> /dev/null"
 	echo "fi"
 }
