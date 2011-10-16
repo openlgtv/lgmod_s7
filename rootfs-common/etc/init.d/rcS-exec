@@ -38,6 +38,7 @@ if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 	[ -f /etc/init.d/rcS-nvram ] && . /etc/init.d/rcS-nvram
 fi
 
+[ -f /usr/sbin/hotplug ] && echo /usr/sbin/hotplug > /proc/sys/kernel/hotplug; # hotplug wrapper
 setsid sh /etc/init.d/rcS-services "$RCS_DELAY" &
 
 

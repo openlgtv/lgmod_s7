@@ -2,12 +2,29 @@
 # Hotplug wrapper for LGMOD
 # Created by djpety (c)2011
 # v1.0
-HOTPLUG_FW_DIR=/lib/firmware
+HOTPLUG_FW_DIRS='/mnt/lg/user/firmware /mnt/lg/user/extroot/lib/firmware /lib/firmware'
 
 if [ "$ACTION" == "add"  ] && [ "$SUBSYSTEM" == "firmware" ]; then
-	echo 1 > /sys/$DEVPATH/loading
-	gzip -d -c $HOTPLUG_FW_DIR/$FIRMWARE.gz > /sys/$DEVPATH/data
-	echo 0 > /sys/$DEVPATH/loading
-else
-	/bin/hotplug "$@"
+	echo "hotplug: $ACTION $SUBSYSTEM $FIRMWARE $DEVPATH ($@)" > /dev/kmsg
+	CMD='cat'
+	for i in $HOTPLUG_FW_DIRS; do
+		FW="$i/$FIRMWARE"; [ -f "$FW" ] && break
+		[ -f "$FW.gz" ] && { FW="$FW.gz"; CMD='gzip -d -c'; break; }
+	done
+	if [ -f "$FW" ]; then
+		if echo 1 > /sys/$DEVPATH/loading &&
+			$CMD $FW > /sys/$DEVPATH/data; then
+			echo 0 > /sys/$DEVPATH/loading
+			echo "hotplug: Done: $ACTION $SUBSYSTEM $FIRMWARE" > /dev/kmsg
+			exit 0; # skip LG hotplug?
+		else
+			echo 0 > /sys/$DEVPATH/loading
+			echo "hotplug: Error $? ($ACTION $SUBSYSTEM $FIRMWARE)" > /dev/kmsg
+			#exit 1; # skip LG hotplug?
+		fi
+	else
+		echo "hotplug: Error: $FIRMWARE not found." > /dev/kmsg
+	fi
 fi
+
+/bin/hotplug "$@"

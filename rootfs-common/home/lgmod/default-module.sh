@@ -10,11 +10,6 @@ if [ ! -d /mnt/lg/lginit ]; then # S6 (or S7 with custom kernel)
 	$modprobe asix.ko
 fi
 
-# Ralink based wireless support (Rt2x00, Rt2500, Rt73)
-$modprobe rt2x00usb.ko
-#$modprobe rt2500usb.ko # It crashed with 148f:2573 !
-$modprobe rt73usb.ko
-
 # MCS7830 network chipset module
 $modprobe mcs7830.ko
 #$modprobe mcs7830-lprot.ko
@@ -39,6 +34,11 @@ $modprobe cifs.ko
 #$modprobe sunrpc.ko
 #$modprobe lockd.ko
 #$modprobe nfs.ko
+
+# Ralink based wireless support (Rt2x00, Rt2500, Rt73)
+#$modprobe rt2x00usb.ko
+#$modprobe rt2500usb.ko # It crashed with 148f:2573 !
+#$modprobe rt73usb.ko
 
 # USB2Serial and mini_fo modules
 #$modprobe usbserial.ko
