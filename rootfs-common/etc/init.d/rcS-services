@@ -19,13 +19,15 @@ fi
 . /etc/init.d/network boot
 [ -f /etc/init.d/wireless ] && . /etc/init.d/wireless boot
 
-for i in telnetd dropbear ntpd httpd ftpd djmount; do
+# services from rootfs (network/wireless is started)
+for i in telnetd ntpd dropbear; do
 	# TODO: use sym.links /etc/rc.d/[SK]*
 	. /etc/init.d/$i boot; #&
 done
 
-[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1
 
+# DirectDB things - before netcast (before killall stagecraft)
+[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1
 
 [ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for Drive1
 . /etc/init.d/mount boot
@@ -34,6 +36,14 @@ done
 		[ -f /etc/init.d/netcast ] && . /etc/init.d/netcast boot
 	fi
 
+
+# services from extroot (usb1/Drive1 is available, ext3/nfs/cifs is mounted)
+for i in httpd ftpd djmount; do
+	# TODO: use sym.links /etc/rc.d/[SK]*
+	. /etc/init.d/$i boot; #&
+done
+
+# auto_start.sh and 'auto update' LGMOD config from USB
 for i in lgmod; do
 	. /etc/init.d/$i boot
 done
