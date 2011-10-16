@@ -1,0 +1,59 @@
+diff -ru org/compat-wireless-3.0-2/drivers/net/wireless/ath/ath5k/led.c new/compat-wireless-3.0-2/drivers/net/wireless/ath/ath5k/led.c
+--- org/compat-wireless-3.0-2/drivers/net/wireless/ath/ath5k/led.c	2011-10-16 11:00:09.000000000 +0300
++++ new/compat-wireless-3.0-2/drivers/net/wireless/ath/ath5k/led.c	2011-10-16 10:59:18.000000000 +0300
+@@ -170,11 +170,11 @@
+ 	if (!sc->pdev)
+ 		return 0;
+ 
+-#ifdef CONFIG_ATHEROS_AR231X
++//#ifdef CONFIG_ATHEROS_AR231X
+ 	match = NULL;
+-#else
+-	match = pci_match_id(&ath5k_led_devices[0], pdev);
+-#endif
++//#else
++//	match = pci_match_id(&ath5k_led_devices[0], pdev);
++//#endif
+ 	if (match) {
+ 		__set_bit(ATH_STAT_LEDSOFT, sc->status);
+ 		sc->led_pin = ATH_PIN(match->driver_data);
+diff -ru org/compat-wireless-3.0-2/drivers/net/wireless/b43/b43.h new/compat-wireless-3.0-2/drivers/net/wireless/b43/b43.h
+--- org/compat-wireless-3.0-2/drivers/net/wireless/b43/b43.h	2011-10-16 11:00:11.000000000 +0300
++++ new/compat-wireless-3.0-2/drivers/net/wireless/b43/b43.h	2011-10-09 15:20:11.000000000 +0300
+@@ -902,6 +902,7 @@
+ 	ssb_write32(dev->sdev, offset, value);
+ }
+ 
++#ifdef CONFIG_SSB_BLOCKIO
+ static inline void b43_block_read(struct b43_wldev *dev, void *buffer,
+ 				 size_t count, u16 offset, u8 reg_width)
+ {
+@@ -913,6 +914,16 @@
+ {
+ 	ssb_block_write(dev->sdev, buffer, count, offset, reg_width);
+ }
++#else
++static inline void b43_block_read(struct b43_wldev *dev, void *buffer,
++				 size_t count, u16 offset, u8 reg_width)
++{
++}
++static inline void b43_block_write(struct b43_wldev *dev, const void *buffer,
++				   size_t count, u16 offset, u8 reg_width)
++{
++}
++#endif /* CONFIG_SSB_BLOCKIO */
+ 
+ static inline bool b43_using_pio_transfers(struct b43_wldev *dev)
+ {
+diff -ru org/compat-wireless-3.0-2/include/linux/compat-2.6.27.h new/compat-wireless-3.0-2/include/linux/compat-2.6.27.h
+--- org/compat-wireless-3.0-2/include/linux/compat-2.6.27.h	2011-10-16 11:00:14.000000000 +0300
++++ new/compat-wireless-3.0-2/include/linux/compat-2.6.27.h	2011-10-13 09:03:39.000000000 +0300
+@@ -66,6 +66,8 @@
+ #define netif_addr_lock_bh(dev)
+ #define netif_addr_unlock_bh(dev)
+ 
++#define __WARN(foo) dump_stack()
++
+ /*
+  * To port this properly we'd have to port warn_slowpath_null(),
+  * which I'm lazy to do so just do a regular print for now. If you

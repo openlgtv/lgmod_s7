@@ -1,4 +1,6 @@
 #!/bin/bash
+# Source code released under GPL License
+# cross-compile scripts for Saturn6/Saturn7 by mmm4m5m
 
 PLATFORM=S7; #PLATFORM=''
 [ "$1" = S6 ] && { shift; PLATFORM=S6; }
@@ -33,12 +35,13 @@ fi
 # environment, config
 CC_BIN="$CC_DIR/bin"
 [ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 11; }
+[ -d "$SRC_DIR" ] || { echo "ERROR: $SRC_DIR not found."; exit 12; }
 export PATH="$CC_BIN:$PATH"
+cd "$SRC_DIR"
 export DFB_CFLAGS="-I$CC_DFB/include -I$CC_DFB/lib -D_REENTRANT"
 export DFB_LIBS="-L${SRC_DIR%/*}/DirectFB-LG-usr_local_lib -ldirectfb -lfusion -ldirect -lpthread"
 
 # config, build
-cd "$SRC_DIR"
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift || { make clean
 	if [ "$PLATFORM" = S7 ]; then

@@ -1,4 +1,6 @@
 #!/bin/bash
+# Source code released under GPL License
+# cross-compile scripts for Saturn6/Saturn7 by mmm4m5m
 
 PLATFORM=S7; #PLATFORM=''
 [ "$1" = S6 ] && { shift; PLATFORM=S6; }
@@ -37,7 +39,9 @@ fi
 # environment, config
 CC_BIN="$CC_DIR/bin"
 [ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 11; }
+[ -d "$SRC_DIR" ] || { echo "ERROR: $SRC_DIR not found."; exit 12; }
 export PATH="$CC_BIN:$PATH"
+cd "$SRC_DIR"
 export FUSE_CFLAGS="-I${SRC_DIR%/*}/fuse-2.8.6/include -D_FILE_OFFSET_BITS=64"
 export FUSE_LIBS="-L${SRC_DIR%/*}/fuse-2.8.6/lib/.libs -lfuse -pthread -ldl"
 

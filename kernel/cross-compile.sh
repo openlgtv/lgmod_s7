@@ -1,4 +1,6 @@
 #!/bin/bash
+# Source code released under GPL License
+# cross-compile scripts for Saturn6/Saturn7 by mmm4m5m
 
 SUFFIX=''; # TODO
 
@@ -63,14 +65,17 @@ if [ -n "$FLASH" ]; then
 	f=uImage; [ -f $f ] && {
 		osize=`stat -c%s $f`; o4096=$(( $osize / 4096 * 4096 ))
 		[ "$osize" != "$o4096" ] && omore=$(( o4096 + 4096 - osize )) || omore=0
-		{ cat $f; for i in `seq $omore`; do printf "\xff"; done; } > "$INST_DIR2/../${f}_flash"
+		{ cat $f; for i in `seq $omore`; do printf "\xff"; done; } > "$INST_DIR2/../lgmod_S7_$f"
 	}; exit; fi
 make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules" modules_install
 
 # install in rootfs
 cd "$INST_DIR2/lib/modules"
 d="$INST_DIR/lib/modules/"
-mv cdc_ether.ko cdc_subset.ko gl620a.ko kaweth.ko mcs7830.ko net1080.ko plusb.ko zaurus.ko "$d"
+mv cdc_ether.ko cdc_subset.ko gl620a.ko kaweth.ko net1080.ko plusb.ko zaurus.ko "$d"
 mv cifs.ko ext2.ko ext3.ko jbd.ko lockd.ko nfs.ko sunrpc.ko "$d"
 mv cdrom.ko fuse.ko isofs.ko rndis_host.ko sr_mod.ko "$d"
 mv uinput.ko evdev.ko hid.ko usbhid.ko "$d"; f=input-core.ko; [ -f $f ] && mv $f "$d"
+
+mv firmware_class.ko "${d}base/"; mv crc-itu-t.ko "$d"; mv led-class.ko "${d}leds/"
+mv rt2500usb.ko rt2x00lib.ko rt2x00usb.ko rt73usb.ko "${d}net/wireless/rt2x00/"
