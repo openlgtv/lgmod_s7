@@ -4,11 +4,11 @@
 # Copyright 2010 Arno1
 # Copyright 2011 lprot, mmm4m5m
 
-START() {
-	CFG_DIR="/mnt/lg/user/lgmod"
-	NETCONF=$CFG_DIR/network
-	DHCPCFG=$CFG_DIR/dhcp
+CFG_DIR="/mnt/lg/user/lgmod"
+NETCONF=$CFG_DIR/network
+DHCPCFG=$CFG_DIR/dhcp
 
+START() {
 	DHCP=''; [ ! -e $NETCONF -o -e $DHCPCFG ] && DHCP=1
 	[ "$2" = nodhcp ] && DHCP=''
 
@@ -43,7 +43,7 @@ START() {
 
 boot() {
 	{
-	START "$@"
+	[ -e $NETCONF -o -e $DHCPCFG ] && START "$@"
 	} > /dev/kmsg 2>&1
 }
 

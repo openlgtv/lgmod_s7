@@ -13,8 +13,9 @@ CHRR=/tmp/lgmod/Chroot
 if [ -n "$RCS_OVERLAY" ]; then
 	. /etc/init.d/rcS-tmpfs
 	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+	[ -d /sys/module/mini_fo ] ||
+		$modprobe /lib/modules/mini_fo.ko > $OUT 2>&1
 	if mkdir -p "$CHR" "$STO" > $OUT 2>&1 &&
-		$modprobe /lib/modules/mini_fo.ko > $OUT 2>&1 &&
 		mount -t mini_fo -o base=/,sto="$STO" Overlay "$CHR" > $OUT 2>&1 &&
 		mount -o bind $DIR "$CHR$DIR" > $OUT 2>&1; then
 		{ echo "rcS: chroot Overlay..."; mount -o bind /tmp "$CHR/tmp"

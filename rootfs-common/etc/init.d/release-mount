@@ -12,7 +12,8 @@ mountall() {
 			echo "release-mount: $1 $ARG $arg ..."
 			mount -t vfat -o iocharset=utf8,shortname=mixed,$ARG $arg ||
 				mount -t ntfs -o $ARG $arg ||
-				mount -t ext3 -o $ARG $arg ||
+				{ /etc/init.d/mount mods "release-mount: $1" ext3 &&
+					mount -t ext3 -o $ARG $arg; } ||
 				mount -o $ARG $arg
 		done
 	done

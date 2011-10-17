@@ -19,7 +19,8 @@ START() {
 	# Load modules with modules script
 	if [ -x $MODULES_SH ]; then
 		echo "module: $@ ${MODULES_SH##*/} ..."
-		cd /lib/modules; $MODULES_SH "$@"
+		[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+		cd /lib/modules; MODPROBE=$modprobe $MODULES_SH "$@"
 	fi
 }
 

@@ -6,9 +6,9 @@
 
 START() {
 	echo "telnetd: $@"
-	[ -d /sys/module/pty ] || {
-		[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
-		$modprobe /lib/modules/pty.ko > /dev/null 2>&1; }
+	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+	[ -d /sys/module/pty ] ||
+		$modprobe /lib/modules/pty.ko
 	/usr/sbin/telnetd -S -l /etc/auth.sh
 }
 

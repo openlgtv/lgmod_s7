@@ -23,6 +23,18 @@ wait() {
 	} > /dev/kmsg 2>&1
 }
 
+mods() { m=$2; # TODO: rcS-functions
+	if  [ $m = ext3 ]; then mods jbd || return 1
+	elif [ $m = nfs ]; then mods sunrpc && mods lockd || return 1; fi
+	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+	[ -d /sys/module/$m ] || {
+		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && { insmod $mf && return 0 || return 1; }
+		mf=/mnt/lg/user/extroot/$m.ko; [ -f $mf ] && { insmod $mf && return 0 || return 1; }
+		mf=/lib/modules/extroot/$m.ko; [ -f $mf ] && { $modprobe $mf && return 0 || return 1; }
+		mf=/lib/modules/$m.ko; [ -f $mf ] && { $modprobe $mf && return 0 || return 1; }
+		echo "$1 - $mod not found."; return 1; }
+}
+
 START() {
 	if [ -f $FS_MNT ]; then
 		cat $FS_MNT | while read ndrv; do
@@ -38,7 +50,8 @@ START() {
 			[ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
 			[ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
 			echo "mount: $1 $mnt_opt $src $dst ..."
-			mount -t "$fs_type" -o "$mnt_opt" "$src" "$dst"
+			mods "mount: $1" "$fs_type" &&
+				mount -t "$fs_type" -o "$mnt_opt" "$src" "$dst"
 		done
 	fi
 }
@@ -78,9 +91,10 @@ restart() {
 
 case "$1" in
 	wait)		wait "$@";;
+	mods)		mods "$@";;
 	boot)		boot "$@";;
 	start)		start "$@";;
 	stop)		stop "$@";;
 	restart)	restart "$@";;
-	*)			echo "Usage: $0 wait|start|stop|restart [-f|-r]"; exit 1
+	*)			echo "Usage: $0 start|stop|restart [-f|-r]"; exit 1
 esac

@@ -2,6 +2,8 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
+CFG_DIR="/mnt/lg/user/lgmod"
+
 START() {
 	echo "dropbear: $@"
 	[ ! -f /etc/dropbear/dropbear_rsa_host_key ] && [ ! -f /etc/dropbear/dropbear_dss_host_key ] && {
@@ -11,15 +13,13 @@ START() {
 		echo 'dropbear: help: Add your pub key to /mnt/lg/user/root/.ssh/authorized_keys'
 		return 1; }
 	. /etc/init.d/rcS-devrw
-	[ -d /sys/module/pty ] || {
-		[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
-		$modprobe /lib/modules/pty.ko > /dev/null 2>&1; }
+	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+	[ -d /sys/module/pty ] ||
+		$modprobe /lib/modules/pty.ko
 	f=$CFG_DIR/ssh; [ -f $f ] && dropbear $(cat $f) || dropbear
 }
 
 boot() {
-	CFG_DIR="/mnt/lg/user/lgmod"
-
 	{
 	# Launch SSH server
 	[ -f $CFG_DIR/ssh ] && START "$@"

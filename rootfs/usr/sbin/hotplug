@@ -2,29 +2,38 @@
 # Hotplug wrapper for LGMOD
 # Created by djpety (c)2011
 # v1.0
+
+# FW in extroot are checked before rootfs. FW in 'user' partition are with top priority
 HOTPLUG_FW_DIRS='/mnt/lg/user/firmware /mnt/lg/user/extroot/lib/firmware /lib/firmware'
 
-if [ "$ACTION" == "add"  ] && [ "$SUBSYSTEM" == "firmware" ]; then
+if [ "$ACTION" = "add"  ] && [ "$SUBSYSTEM" = "firmware" ]; then
 	echo "hotplug: $ACTION $SUBSYSTEM $FIRMWARE $DEVPATH ($@)" > /dev/kmsg
+
+	# Search FW file in FW dirs. File could be archived with gzip.
 	CMD='cat'
 	for i in $HOTPLUG_FW_DIRS; do
 		FW="$i/$FIRMWARE"; [ -f "$FW" ] && break
-		[ -f "$FW.gz" ] && { FW="$FW.gz"; CMD='gzip -d -c'; break; }
+		if [ -f "$FW.gz" ]; then
+			FW="$FW.gz"; CMD='gzip -d -c'; break
+		fi
 	done
+
 	if [ -f "$FW" ]; then
 		if echo 1 > /sys/$DEVPATH/loading &&
 			$CMD $FW > /sys/$DEVPATH/data; then
+			# Success - skip LG hotplug
 			echo 0 > /sys/$DEVPATH/loading
 			echo "hotplug: Done: $ACTION $SUBSYSTEM $FIRMWARE" > /dev/kmsg
-			exit 0; # skip LG hotplug?
 		else
+			# Something wrong - lets LG handle it
 			echo 0 > /sys/$DEVPATH/loading
 			echo "hotplug: Error $? ($ACTION $SUBSYSTEM $FIRMWARE)" > /dev/kmsg
-			#exit 1; # skip LG hotplug?
 		fi
 	else
+		# FW not found - lets LG hotplug handle it
 		echo "hotplug: Error: $FIRMWARE not found." > /dev/kmsg
 	fi
 fi
 
+# not handled - call LG hotplug
 /bin/hotplug "$@"

@@ -29,13 +29,13 @@ done
 # DirectDB things - before netcast (before killall stagecraft)
 [ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1
 
-[ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for Drive1
+[ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for /mnt/usb?/Drive?
+
 . /etc/init.d/mount boot
 [ -z "$NOREL" ] &&
 	if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 		[ -f /etc/init.d/netcast ] && . /etc/init.d/netcast boot
 	fi
-
 
 # services from extroot (usb1/Drive1 is available, ext3/nfs/cifs is mounted)
 for i in httpd ftpd djmount; do

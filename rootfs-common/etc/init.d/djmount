@@ -8,8 +8,10 @@ CFG_DIR="/mnt/lg/user/lgmod"
 
 START() {
 	echo "djmount: $@"
-	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
-	$modprobe /lib/modules/fuse.ko
+	#[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
+	#[ -d /sys/module/fuse ] ||
+	#	$modprobe /lib/modules/fuse.ko
+	/etc/init.d/mount mods "djmount: $1" fuse || return 1
 	if [ -n "$2" ]; then
 		djmount -f -o kernel_cache "$2" &
 	else
