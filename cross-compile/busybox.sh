@@ -13,6 +13,7 @@ cd "${0%/*}"; CONF_DIR=$(pwd)
 d="../rootfs$SUFFIX"; cd "$d" || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
 cd ../../..
 if [ "$PLATFORM" = S7 ]; then CC_dir=Saturn7/cross-compiler; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel-linux
+#else CC_dir=Saturn6/mipsel-gcc-4.1.2-uclibc-0.9.28.3-mips32; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel-linux; fi
 else CC_dir=cross-compiler-mipsel; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel; fi
 d=sources; mkdir -p $d; cd $d; SRC_dir=busybox-1.18.5; SRC_DIR="$(pwd)/$SRC_dir"
 
@@ -29,12 +30,14 @@ if [ ! -d "$dir" ]; then
 	exit
 fi
 if [ "$PLATFORM" != S7 ]; then
-	dir=$CC_dir
-	if [ ! -d "$dir" ]; then
-		tar=$dir.tar.bz2
+	if [ ! -d "$CC_DIR" ]; then
+		cd "${CC_DIR%/*}"
+		dir=$CC_dir; tar=$dir.tar.bz2
 		read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
+		#[ -f "$tar" ] || { wget "http://dl.dropbox.com/u/490148/LGLib/v2/$tar" || exit 4; }
 		[ -f "$tar" ] || { wget "http://www.uclibc.org/downloads/binaries/0.9.30.1/$tar" || exit 4; }
 		tar -xvjf "$tar"
+		cd "${SRC_DIR%/*}"
 		exit
 	fi
 fi
@@ -58,4 +61,8 @@ make menuconfig
 [ "$1" = noinstall ] && exit
 read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 make CONFIG_PREFIX="$INST_DIR" install
-cd $INST_DIR; svn revert bin/kill; svn revert bin/watch
+if [ "$PLATFORM" = S7 ]; then
+	cd $INST_DIR; svn revert bin/kill; svn revert bin/watch
+elif [ "$PLATFORM" = S6 ]; then
+	cd $INST_DIR; svn del bin/powertop
+fi

@@ -43,7 +43,8 @@ cd "$SRC_DIR"
 
 # install
 [ "$1" = noinstall ] && exit
+dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
 read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 d="$INST_DIR/usr/bin/"
 for i in haserl; do
-	f="$d$i"; cp -ax $i "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
+	f="$d$i"; cp -ax src/$i "$f"; dest "$f"; done

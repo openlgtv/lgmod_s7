@@ -44,9 +44,10 @@ cd "$SRC_DIR"
 
 # install
 [ "$1" = noinstall ] && exit
+dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
 read -n1 -p "Press Y to install in $INST_DIR2 and $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 d="$INST_DIR/lib/modules/compat/"; d2="$INST_DIR2/lib/modules/compat/"; mkdir -p "$d2"
 for i in `find . -type f | grep ko$`; do
-	f="$d2${i##*/}"; cp -ax "$i" "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"
+	f="$d2${i##*/}"; cp -ax "$i" "$f"; dest "$f"
 		#mv "$f" "$d"; # install in rootfs
 done

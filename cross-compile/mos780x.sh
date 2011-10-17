@@ -43,7 +43,8 @@ cd "$SRC_DIR"
 
 # install
 [ "$1" = noinstall ] && exit
+dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
 read -n1 -p "Press Y to install in $INST_DIR2 and $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 d="$INST_DIR/lib/modules/"; d2="$INST_DIR2/lib/modules/"; s='-asix.ko'; mkdir -p "$d2"
-i=mcs7830; f="$d2$i$s"; cp -ax $i.ko "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"
+i=mcs7830; f="$d2$i$s"; cp -ax $i.ko "$f"; dest "$f"
 	mv "$f" "$d"; # install in rootfs

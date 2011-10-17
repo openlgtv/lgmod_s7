@@ -25,6 +25,17 @@ echo 'Help: mknod: /dev/input/event[0123] c 13 6[4567]'
 echo 'Help: /usr/local/etc/directfbrc: remove "no-cursor"; add "cursor-update"; add "no-linux-input-grab"'
 echo 'Help: In orgm debug menu #14, select #2: "toggle VOSD", and set VOSD[4]=ON'
 
+#	mouse device
+#	crw-rw---- 10, 1 /dev/psaux
+#	lrw-rw---- 10, 1 /dev/mouse > psaux
+# single application core
+#	/dev/tty0 /dev/fb0
+#	crw-rw---- 29, 0 /dev/fb0
+#	crw-r-----  4, 0 /dev/tty0
+# multi application core
+#	crw-rw---- 29, 0 /dev/fb0
+#	crw-rw---- 29, 0 /dev/fusion/0
+
 # download, extract
 dir=$SRC_dir
 if [ ! -d "$dir" ]; then
@@ -54,14 +65,3 @@ cd "$SRC_DIR"
 [ "$1" = noinstall ] && exit
 read -n1 -p "Press Y to install in $INST_DIR2/usr/local ... " r; echo; [ "$r" = Y ] || exit
 make install DESTDIR="$INST_DIR2"
-
-#	mouse device
-#	crw-rw---- 10, 1 /dev/psaux
-#	lrw-rw---- 10, 1 /dev/mouse > psaux
-# single application core
-#	/dev/tty0 /dev/fb0
-#	crw-rw---- 29, 0 /dev/fb0
-#	crw-r-----  4, 0 /dev/tty0
-# multi application core
-#	crw-rw---- 29, 0 /dev/fb0
-#	crw-rw---- 29, 0 /dev/fusion/0

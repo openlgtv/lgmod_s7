@@ -38,15 +38,18 @@ cd "$SRC_DIR"
 [ "$1" = noclean ] && shift || { make clean
 	if [ "$PLATFORM" = S7 ]; then
 	     ./configure --host=$CC_PREF --disable-example --disable-mtab --prefix="$CC_DIR"
-	else ./configure --host=$CC_PREF --disable-example --prefix="$CC_DIR"; fi; }
+	else ./configure --host=$CC_PREF --disable-example --disable-mtab --prefix="$CC_DIR"; fi; }
 [ "$1" = nomake ] && shift || make
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
-d="$INST_DIR/usr/lib/"
-for i in lib/.libs/libfuse.so lib/.libs/libulockmgr.so; do
-	cp -ax $i* "$d"; "$CC_BIN/mipsel-linux-strip" --strip-unneeded "$d${i##*/}"*; ls -l "$d${i##*/}"*; done
-d="$INST_DIR/usr/bin/"
-for i in ulockmgr_server mount.fuse fusermount; do
-	f="$d$i"; cp -ax $i "$f"; "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$f"; ls -l "$f"; done
+dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
+if [ "$PLATFORM" = S7 ]; then
+	read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
+	d="$INST_DIR/usr/lib/"
+	for i in libfuse.so libulockmgr.so; do
+		cp -ax lib/.libs/$i* "$d"; dest "$d$i"*; done
+	d="$INST_DIR/usr/bin/"
+	for i in fusermount mount.fuse ulockmgr_server; do
+		f="$d$i"; cp -ax util/$i "$f"; dest "$f"; done
+fi

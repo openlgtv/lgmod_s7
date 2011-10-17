@@ -53,7 +53,10 @@ cd "$SRC_DIR"
 
 # install
 [ "$1" = noinstall ] && exit
-read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
-d="$INST_DIR/usr/lib/"
-for i in upnp/.libs/libupnp.so ixml/.libs/libixml.so threadutil/.libs/libthreadutil.so; do
-	cp -ax $i* "$d"; "$CC_BIN/mipsel-linux-strip" --strip-unneeded "$d${i##*/}"*; ls -l "$d${i##*/}"*; done
+dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
+if [ "$PLATFORM" = S7 ]; then
+	read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
+	d="$INST_DIR/usr/lib/"
+	for i in upnp/.libs/libupnp.so ixml/.libs/libixml.so threadutil/.libs/libthreadutil.so; do
+		cp -ax $i* "$d"; dest "$d${i##*/}"*; done
+fi
