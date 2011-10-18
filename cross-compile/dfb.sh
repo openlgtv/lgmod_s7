@@ -21,8 +21,8 @@ echo 'Note: Copy files from LG TV /usr/local/lib to:'
 echo "	$(cd ..; pwd)/DirectFB-LG-usr_local_lib"
 echo 'Help: This script install files in extroot. Extract and mount in /usr/local'
 echo 'Help: insmod: input-core.ko evdev.ko hid.ko usbhid.ko'
-echo 'Help: mknod: /dev/input/event[0123] c 13 6[4567]'
-echo 'Help: /usr/local/etc/directfbrc: remove "no-cursor"; add "cursor-update"; add "no-linux-input-grab"'
+#echo 'Done: mknod: /dev/input/event[0123] c 13 6[4567]'
+#echo 'Done: /usr/local/etc/directfbrc: remove "no-cursor"; add "cursor-update"; add "no-linux-input-grab"'
 echo 'Help: In orgm debug menu #14, select #2: "toggle VOSD", and set VOSD[4]=ON'
 
 #	mouse device

@@ -8,8 +8,9 @@
 RCS_SYSLOG=1; # 1=enable
 RCS_NOREL=''
 RCS_NOREL_ONCE=''
-RCS_DELAY=15; # seconds delay before services
 RCS_CRASHDOG=''; # ''=default; 0=disable; 1=enable/enforce
+RCS_HOTPLUG=1; # 1=enable
+RCS_DELAY=15; # seconds delay before services
 RUN=/mnt/lg/user/lgmod/init/rcS; BOOTMOD=/mnt/lg/user/lgmod/boot
 
 export HOME=/mnt/lg/user/root
@@ -20,6 +21,7 @@ export HOME=/mnt/lg/user/root
 { mkdir -p /tmp/var/log /tmp/var/run/tmux; f='/var/run/utmp /var/log/wtmp'
 	touch /var/log/lastlog $f; chmod 0664 $f
 	[ -f /bin/chown ] && chown :utmp $f; } > /dev/kmsg 2>&1
+
 
 
 if [ -f "$BOOTMOD" ]; then
@@ -38,21 +40,31 @@ if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 	[ -f /etc/init.d/rcS-nvram ] && . /etc/init.d/rcS-nvram
 fi
 
-[ -f /usr/sbin/hotplug ] && echo /usr/sbin/hotplug > /proc/sys/kernel/hotplug; # hotplug wrapper
-setsid sh /etc/init.d/rcS-services "$RCS_DELAY" &
 
-
-[ -n "$RCS_BREAK_CTRL_C" ] && { echo 'Note: Press "exit" to continue...'; sh; }
 
 if [ -z "$RCS_NOREL" ] && [ "$RCS_CRASHDOG" != 0 ]; then
 	. /etc/init.d/rcS-crashdog check "$RCS_CRASHDOG" || RCS_NOREL=1; fi
 
+[ "$RCS_HOTPLUG" = 1 ] && [ -f /usr/sbin/hotplug ] &&
+	echo /usr/sbin/hotplug > /proc/sys/kernel/hotplug; # hotplug wrapper
+
+[ -z "$RCS_NOREL" ] || RCS_DELAY=0
+setsid sh /etc/init.d/rcS-services "$RCS_DELAY" &
+
+[ -n "$RCS_BREAK_CTRL_C" ] && { echo 'Note: Press "exit" to continue...'; sh; }
+
+
+
 if [ -z "$RCS_NOREL" ]; then
+	[ "$RCS_CRASHDOG" != 0 ] && . /etc/init.d/rcS-crashdog start "$RCS_CRASHDOG"
+
 	err=''; . /etc/init.d/release boot || err=$?
 	[ "$err" = 222 ] && err=''; # =0 - for release configuration - custom script
+
 	if [ -z "$err" ]; then
 		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 		[ "$r" -lt 2 ] && err=1; fi
+
 	[ -n "$err" ] && {
 		echo "rcS-exec: Error $err ($Mode)" > /dev/kmsg
 		. /etc/init.d/rcS-crashdog error

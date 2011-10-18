@@ -18,7 +18,8 @@ RELMOD=/mnt/lg/user/lgmod/release
 
 wait() {
 	{
-	sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
+	[ -d /usr/local/etc ] && dfb || sleep 5
+	r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 	[ "$r" -lt 2 ] && { echo "release: $1 - not started ($r)"; return 1; }
 	} > /dev/kmsg 2>&1
 	. /etc/init.d/mount wait && {
@@ -27,6 +28,16 @@ wait() {
 			[ -f /etc/init.d/netcast ] && . /etc/init.d/netcast start
 		fi
 		} > /dev/kmsg 2>&1
+}
+
+dfb() {
+	# DirectDB things - edit file before start stagecraft
+	f=/usr/local/etc/directfbrc; ok=''
+	for i in 1 2 3 4 5 6 7; do
+		sleep 1; [ -f $f ] || continue
+		sed -i -e 's/^no-cursor$/cursor-updates\nno-linux-input-grab/' $f &&
+			{ echo 'release: DFB - edit rc OK'; [ -n "$ok" ] && break; ok=1; }
+	done
 }
 
 RELCFG() {
@@ -93,6 +104,7 @@ boot() {
 	[ -f "$RELMOD" ] && { echo "release: Found $RELMOD" > /dev/kmsg; . "$RELMOD" "$@" || return $?; }
 	{
 	START "$@"
+	[ -d /usr/local/etc ] && /etc/init.d/release dfb &
 	} > /dev/kmsg 2>&1
 	. /etc/init.d/rcS-release run "$MODE" || return $?; # LG: RELEASE
 }
@@ -117,8 +129,9 @@ replace() {
 
 case "$1" in
 	wait)		wait "$@";;
+	dfb)		dfb "$@";;
 	boot)		boot "$@";;
 	start)		start "$@";;
 	replace)	replace "$@";;
-	*)			echo "Usage: $0 wait|start|replace [MODE] [CRAMFS]"; exit 1
+	*)			echo "Usage: $0 wait|dfb|start|replace [MODE] [CRAMFS]"; exit 1
 esac

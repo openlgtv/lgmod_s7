@@ -97,7 +97,7 @@ fi
 alias Dfb='d=/mnt/lg/user/extroot && (cd $d && d=usr/local && mount -o bind $d /$d)'
 alias Extdfb='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r *; \
 	tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz && d=usr/local && cp -r /$d usr/ && \
-	f=$d/etc/directfbrc && sed -i -e "/no-cursor/d" $f && { echo cursor-updates; echo no-linux-input-grab; } >> $f)'
+	f=$d/etc/directfbrc && sed -i -e "s/no-cursor/cursor-updates\nno-linux-input-grab/" $f)'
 
 alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r *; \
 	tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'

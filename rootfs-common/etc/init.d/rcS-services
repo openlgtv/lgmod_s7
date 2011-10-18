@@ -2,10 +2,11 @@
 # Source code released under GPL License
 # rcS for Saturn6/Saturn7 by mmm4m5m, djpety
 
-[ -n "$1" ] && sleep "$1"
+[ -n "$1" ] && { echo "rcS-services: $1" > /dev/kmsg; sleep "$1"; }
 
 r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
+
 
 
 . /etc/init.d/module boot; #&
@@ -26,8 +27,6 @@ for i in telnetd ntpd dropbear; do
 done
 
 
-# DirectDB things - before netcast (before killall stagecraft)
-[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s 2>&1
 
 [ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for /mnt/usb?/Drive?
 

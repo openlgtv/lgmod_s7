@@ -26,6 +26,10 @@ START() {
 
 boot() {
 	{
+	# TODO: move to hotplug - only if keyboard is available!
+	# DirectDB things - before killall stagecraft
+	#[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s
+
 	START "$@"
 	} > /dev/kmsg 2>&1
 }
