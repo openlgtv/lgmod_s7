@@ -94,13 +94,11 @@ if [ -z "$TMUX" ]; then
 	fi
 fi
 
-alias Dfb='d=/mnt/lg/user/extroot && (cd $d && d=usr/local && mount -o bind $d /$d)'
-alias Extdfb='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r *; \
-	tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz && d=usr/local && cp -r /$d usr/ && \
-	f=$d/etc/directfbrc && sed -i -e "s/no-cursor/cursor-updates\nno-linux-input-grab/" $f)'
+alias Dfb='(cd /mnt/lg/user/extroot && d=usr/local && mount -o bind $d /$d)'
+alias Extdfb='(cd /mnt/lg/user/extroot || exit; rm -r *; tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz && \
+	d=usr/local && cp -r /$d usr/ && f=$d/etc/directfbrc && sed -i -e "s/no-cursor/cursor-updates\nno-linux-input-grab/" $f)'
 
-alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r *; \
-	tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
+alias Exroot='(cd /mnt/lg/user/extroot || exit; rm -r *; tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
 alias Rstart='/etc/init.d/release start'
 
 MODEL=`echo /mnt/lg/user/model.*`; export MODEL=${MODEL#*model.}
