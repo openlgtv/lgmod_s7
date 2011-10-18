@@ -56,11 +56,11 @@ if [ "$ACTION" = add ] && [ "$SUBSYSTEM" = firmware ]; then
 #elif [ "$ACTION" = add ] && [ -n "$DEVPATH_BLKSD" ]; then
 elif [ -n "$DEVPATH_BLKSD"  ]; then
 	echo "hotplug($$): New USB partition: $DEVPATH_BLKSD ($@)" > /dev/kmsg
-	env | sed -e 's/^/hotplug($$): /' > /dev/kmsg
+	env | sed -e "s/^/hotplug($$): /" > /dev/kmsg
 
 elif [ -n "$HOTPLUG_LOGGING" ]; then
 	echo "hotplug($$): START: $@" > /dev/kmsg
-	env | sed -e 's/^/hotplug($$): /' > /dev/kmsg
+	env | sed -e "s/^/hotplug($$): /" > /dev/kmsg
 	echo "hotplug($$): LG hotplug" > /dev/kmsg
 
 fi
