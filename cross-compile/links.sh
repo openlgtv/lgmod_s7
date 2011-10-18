@@ -54,6 +54,6 @@ export CC=$CC_PREF-gcc
 [ "$1" = noinstall ] && exit
 dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
 read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
-d="$INST_DIR/usr/bin/"
+d="$INST_DIR2/usr/bin/"
 for i in links; do
 	f="$d$i"; cp -ax $i "$f"; dest "$f"; done
