@@ -11,7 +11,7 @@ START() {
 	if [ -e "$STARTUP_DIR/wlan-start" ]; then
 		"$STARTUP_DIR/wlan-start"
 	else
-		echo "wireless: Use netsh to generate wireless configuration!"
+		echo 'wireless: help: Use "netsh" to generate wireless configuration!'
 	fi
 }
 

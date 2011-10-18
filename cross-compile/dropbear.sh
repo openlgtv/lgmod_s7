@@ -63,11 +63,8 @@ export CFLAGS="-ffunction-sections -fdata-sections"
 [ "$1" = noinstall ] && exit
 dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
 read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
-d="$INST_DIR/usr/sbin/"
-for i in dropbear scp; do
-	f="$d$i"; cp -ax $i "$f"; dest "$f"; done
 d="$INST_DIR/usr/bin/"
-for i in dbclient dropbearkey; do
+for i in dropbear dbclient dropbearkey scp; do
 	f="$d$i"; cp -ax $i "$f"; dest "$f"; done
 d="$INST_DIR/usr/lib/dropbear/"
 for i in dropbearconvert; do

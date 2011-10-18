@@ -99,7 +99,7 @@ alias Extdfb='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r *; \
 	tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz && d=usr/local && cp -r /$d usr/ && \
 	f=$d/etc/directfbrc && sed -i -e "/no-cursor/d" $f && { echo cursor-updates; echo no-linux-input-grab; } >> $f)'
 
-alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r * && \
+alias Exroot='d=/mnt/lg/user/extroot; [ -d $d/ ] && (cd $d && rm -r *; \
 	tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
 alias Rstart='/etc/init.d/release start'
 

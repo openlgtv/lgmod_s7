@@ -23,16 +23,18 @@ wait() {
 	} > /dev/kmsg 2>&1
 }
 
-mods() { m=$2; # TODO: rcS-functions
-	if  [ $m = ext3 ]; then mods jbd || return 1
-	elif [ $m = nfs ]; then mods sunrpc && mods lockd || return 1; fi
+mods() { local modprobe mf m=$2; # TODO: rcS-functions
+	if  [ $m = ext3 ];   then mods "$1 $m" jbd || return 1
+	elif [ $m = nfs ];   then mods "$1 $m" lockd || return 1
+	elif [ $m = lockd ]; then mods "$1 $m" sunrpc || return 1
+	fi
 	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
 	[ -d /sys/module/$m ] || {
 		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && { insmod $mf && return 0 || return 1; }
 		mf=/mnt/lg/user/extroot/$m.ko; [ -f $mf ] && { insmod $mf && return 0 || return 1; }
 		mf=/lib/modules/extroot/$m.ko; [ -f $mf ] && { $modprobe $mf && return 0 || return 1; }
 		mf=/lib/modules/$m.ko; [ -f $mf ] && { $modprobe $mf && return 0 || return 1; }
-		echo "$1 - $mod not found."; return 1; }
+		echo "$1 - $m not found."; return 1; }
 }
 
 START() {
@@ -43,6 +45,7 @@ START() {
 			fs_type="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			src="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			dst="${ndrv%%#*}"; ndrv="${ndrv#*#}"
+			[ -d "$dst" ] || continue
 			opt="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			uname="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			pass="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
@@ -77,6 +80,7 @@ stop() {
 			fs_type="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			src="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			dst="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
+			[ -d "$dst" ] || continue
 			D=$(stat -c%D $dst/.. $dst); n=$'\n'
 			[ "${D%%$n*}" = "${D#*$n}" ] && continue
 			echo "mount: $1 $ARG $dst ..."
