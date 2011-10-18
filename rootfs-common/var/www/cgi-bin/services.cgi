@@ -21,12 +21,18 @@ done
 echo '</table>'
 ?></form></div></div>
 
-<div class="post"><div class="posthead">Processes - long (as axl)</div><div class="posttext">
-<pre><? ps axl 2>&1 ?></pre>
-</div></div>
-
-<div class="post"><div class="posthead">Processes - tree (ps axf)</div><div class="posttext">
-<pre><? ps axf 2>&1 ?></pre>
+<div class="post"><div class="posthead">Processes</div><div class="posttext">
+<?
+echo -n '<pre>'
+if [ -h /bin/ps ]; then
+	ps w
+else
+	ps axl 2>&1
+	echo -n '</pre><br><pre>'
+	ps axf 2>&1
+fi
+echo '</pre>'
+?>
 </div></div>
 
 </div></div>

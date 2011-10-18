@@ -19,8 +19,19 @@ START() {
 	# Load modules with modules script
 	if [ -x $MODULES_SH ]; then
 		echo "module: $@ ${MODULES_SH##*/} ..."
-		[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
-		cd /lib/modules; MODPROBE=$modprobe $MODULES_SH "$@"
+		if [ ! -d /mnt/lg/lginit ]; then # S6
+			# what is the best way to handle old module.sh file (path were included)
+			(__INSMOD__=`which insmod`
+			insmod() {
+				local mf m="${1#/modules/}"; mf="/lib$1"; shift
+				if [ -f "$mf" ]; then
+					"$__INSMOD__" "$mf" "$@"
+				else modprobe "${m%.ko}" "$@"; fi
+			}
+			cd /lib/modules;  . $MODULES_SH "$@")
+		else
+			(cd /lib/modules; . $MODULES_SH "$@")
+		fi
 	fi
 }
 
