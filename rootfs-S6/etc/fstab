@@ -1,0 +1,11 @@
+#<device>         <mount pt>    	<file system>  <options>  <dump>  <pass>
+proc				/proc				proc		defaults	0		0
+#ramfs				/lgsw				ramfs		rw			0		0
+#ramfs				/tmp				ramfs		rw			0		0
+sysfs				/sys				sysfs		defaults	0		0
+usbfs				/proc/bus/usb		usbfs		defaults	0		0
+/dev/mtdblock4		/mnt/lg/model		jffs2		defaults	0		0
+/dev/mtdblock5		/mnt/lg/res/emanual	squashfs	defaults	0		0
+/dev/mtdblock6		/mnt/lg/res/ezcal	squashfs	defaults	0		0
+/dev/mtdblock9		/mnt/lg/res/lgres	squashfs	defaults	0		0
+
