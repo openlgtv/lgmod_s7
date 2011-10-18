@@ -337,11 +337,11 @@ if [ -n "$install" ]; then
 			if $busybox tty > /dev/null; then $busybox sh; else
 				bb=$($busybox realpath $busybox); pty="${bb%/bin/busybox}/lib/modules/pty.ko"
 				echo '#!'"$bb sh"$'\n'"exec $busybox sh" > /tmp/auth.sh; chmod +x /tmp/auth.sh
-				$busybox modprobe "$pty" 2>/dev/null; $busybox telnetd -l /tmp/auth.sh -p 1023
+				$busybox insmod "$pty" 2>/dev/null; $busybox telnetd -l /tmp/auth.sh -p 1023
 				echo "INFO: telnetd started at port 1023: $busybox"
 			fi
 		elif ! tty > /dev/null; then
-			modprobe /lib/modules/pty.ko; telnetd -p 1023
+			insmod /lib/modules/pty.ko; telnetd -p 1023
 			echo 'INFO: telnetd started at port 1023: chroot'
 		else sh; fi; exit $err
 	else
