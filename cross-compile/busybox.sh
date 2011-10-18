@@ -62,7 +62,7 @@ make menuconfig
 read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
 make CONFIG_PREFIX="$INST_DIR" install
 if [ "$PLATFORM" = S7 ]; then
-	cd $INST_DIR; svn revert bin/kill; svn revert bin/watch; svn revert usr/bin/kbd_mode
+	cd $INST_DIR; svn revert bin/kill; svn revert bin/watch; rm usr/bin/kbd_mode
 elif [ "$PLATFORM" = S6 ]; then
-	cd $INST_DIR; svn revert bin/powertop
+	cd $INST_DIR; rm bin/powertop
 fi
