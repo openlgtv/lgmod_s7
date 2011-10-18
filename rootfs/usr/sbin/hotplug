@@ -3,11 +3,28 @@
 # Created by djpety (c)2011
 # v1.0
 
+#HOTPLUG_LOGGING=1
+
 # FW in extroot are checked before rootfs. FW in 'user' partition are with top priority
 HOTPLUG_FW_DIRS='/mnt/lg/user/firmware /mnt/lg/user/extroot/lib/firmware /lib/firmware'
 
-if [ "$ACTION" = "add"  ] && [ "$SUBSYSTEM" = "firmware" ]; then
-	echo "hotplug: $ACTION $SUBSYSTEM $FIRMWARE $DEVPATH ($@)" > /dev/kmsg
+# For USB drives: DEVPATH_BLOCK=/dev/sd? and DEVPATH_BLKSD=/dev/sd??
+DEVPATH_BLOCK="${DEVPATH#/block/sd}"; DEVPATH_BLKSD=''
+if [ "$DEVPATH_BLOCK" != "$DEVPATH" ]; then
+	sd="${DEVPATH_BLOCK%/*}"
+	[ "${DEVPATH_BLOCK}" = "$sd" ] || DEVPATH_BLKSD="/dev/${DEVPATH_BLOCK##*/}"
+	DEVPATH_BLOCK="/dev/sd$sd"
+else
+	DEVPATH_BLOCK=''
+fi
+
+if [ "$ACTION" = add ] && [ "$SUBSYSTEM" = firmware ]; then
+	echo "hotplug($$): $ACTION $SUBSYSTEM $FIRMWARE $DEVPATH ($@)" > /dev/kmsg
+	l=`cat /sys/$DEVPATH/loading`
+	if [ "$l" = 1 ]; then
+		echo "hotplug($$): loading..." > /dev/kmsg
+		exit 1
+	fi
 
 	# Search FW file in FW dirs. File could be archived with gzip.
 	CMD='cat'
@@ -23,17 +40,31 @@ if [ "$ACTION" = "add"  ] && [ "$SUBSYSTEM" = "firmware" ]; then
 			$CMD $FW > /sys/$DEVPATH/data; then
 			# Success - skip LG hotplug
 			echo 0 > /sys/$DEVPATH/loading
-			echo "hotplug: Done: $ACTION $SUBSYSTEM $FIRMWARE" > /dev/kmsg
+			echo "hotplug($$): Done: $ACTION $SUBSYSTEM $FIRMWARE" > /dev/kmsg
+			exit 0
 		else
 			# Something wrong - lets LG handle it
 			echo 0 > /sys/$DEVPATH/loading
-			echo "hotplug: Error $? ($ACTION $SUBSYSTEM $FIRMWARE)" > /dev/kmsg
+			echo "hotplug($$): Error $? ($ACTION $SUBSYSTEM $FIRMWARE)" > /dev/kmsg
 		fi
 	else
 		# FW not found - lets LG hotplug handle it
-		echo "hotplug: Error: $FIRMWARE not found." > /dev/kmsg
+		echo "hotplug($$): Error: $FIRMWARE not found." > /dev/kmsg
 	fi
+
+
+#elif [ "$ACTION" = add ] && [ -n "$DEVPATH_BLKSD" ]; then
+elif [ -n "$DEVPATH_BLKSD"  ]; then
+	echo "hotplug($$): New USB partition: $DEVPATH_BLKSD ($@)" > /dev/kmsg
+	env | sed -e 's/^/hotplug($$): /' > /dev/kmsg
+
+elif [ -n "$HOTPLUG_LOGGING" ]; then
+	echo "hotplug($$): START: $@" > /dev/kmsg
+	env | sed -e 's/^/hotplug($$): /' > /dev/kmsg
+	echo "hotplug($$): LG hotplug" > /dev/kmsg
+
 fi
 
 # not handled - call LG hotplug
 /bin/hotplug "$@"
+[ -n "$HOTPLUG_LOGGING" ] && echo "hotplug($$): END" > /dev/kmsg
