@@ -25,8 +25,8 @@ START() {
 				local m="${1#/modules/}"
 				if [ "$m" = "$1" ]; then # not old module.sh
 					/sbin/insmod "$@"
-				elif [ -f "/lib$1" ]; then # old module.sh
-					shift; /sbin/insmod "/lib$1" "$@"
+				elif [ -f "/lib/$1" ]; then # old module.sh
+					shift; /sbin/insmod "/lib/$1" "$@"
 				else modprobe "${m%.ko}" "$@"; fi
 			}; cd /lib/modules;  . $MODULES_SH "$@")
 		else
