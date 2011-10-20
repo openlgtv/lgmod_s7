@@ -28,13 +28,10 @@ mods() { local modprobe mf m=$2; # TODO: rcS-functions
 	elif [ $m = nfs ];   then mods "$1 $m" lockd || return 1
 	elif [ $m = lockd ]; then mods "$1 $m" sunrpc || return 1
 	fi
-	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
 	[ -d /sys/module/$m ] || {
-		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && { insmod $mf && return 0 || return 1; }
-		mf=/mnt/lg/user/extroot/$m.ko; [ -f $mf ] && { insmod $mf && return 0 || return 1; }
-		mf=/lib/modules/extroot/$m.ko; [ -f $mf ] && { $modprobe $mf && return 0 || return 1; }
-		mf=/lib/modules/$m.ko; [ -f $mf ] && { $modprobe $mf && return 0 || return 1; }
-		echo "$1 - $m not found."; return 1; }
+		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && insmod $mf && return 0
+		mf=/mnt/lg/user/extroot/$m.ko; [ -f $mf ] && insmod $mf && return 0
+		modprobe $m; }
 }
 
 START() {

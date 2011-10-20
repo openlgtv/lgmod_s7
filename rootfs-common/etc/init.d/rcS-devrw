@@ -8,9 +8,8 @@ d=/dev
 if ! touch $d/test-rw > /dev/null 2>&1; then
 	mkdir -p "$TFS$d"
 
-	[ -f /sbin/modprobe ] && modprobe=modprobe || modprobe=insmod
 	[ -d /sys/module/mini_fo ] ||
-		$modprobe /lib/modules/mini_fo.ko
+		insmod /lib/modules/2.6.26/mini_fo.ko
 	[ -d /sys/module/mini_fo ] &&
 		mount -t mini_fo -o base="$d",sto="$TFS$d" "mini$d" "$d" &&
 		{ return 0; exit 0; }

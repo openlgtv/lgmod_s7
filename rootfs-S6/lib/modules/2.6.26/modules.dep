@@ -1,0 +1,31 @@
+mii.ko:
+cdc_subset.ko:
+extroot/catc.ko:
+extroot/cdrom.ko:
+extroot/isofs.ko:
+extroot/fuse.ko:
+extroot/nfs.ko: extroot/lockd.ko extroot/sunrpc.ko
+extroot/cifs.ko:
+extroot/sr_mod.ko: extroot/cdrom.ko
+extroot/usbserial.ko:
+extroot/lockd.ko: extroot/sunrpc.ko
+extroot/ftdi_sio.ko: extroot/usbserial.ko
+extroot/sunrpc.ko:
+extroot/pl2303.ko: extroot/usbserial.ko
+dm9601.ko:
+ext2.ko:
+asix.ko:
+ext3.ko: jbd.ko
+jbd.ko:
+rtl8150.ko:
+mcs7830.ko:
+pegasus.ko:
+gl620a.ko:
+plusb.ko:
+rndis_host.ko: cdc_ether.ko
+net1080.ko:
+zaurus.ko: cdc_ether.ko
+pty.ko:
+mini_fo.ko:
+kaweth.ko:
+cdc_ether.ko:

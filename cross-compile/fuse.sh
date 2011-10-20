@@ -37,8 +37,8 @@ cd "$SRC_DIR"
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift || { make clean
 	if [ "$PLATFORM" = S7 ]; then
-	     ./configure --host=$CC_PREF --disable-example --disable-mtab --prefix="$CC_DIR"
-	else ./configure --host=$CC_PREF --disable-example --disable-mtab --prefix="$CC_DIR"; fi; }
+	     ./configure --host=$CC_PREF --disable-example --disable-mtab
+	else ./configure --host=$CC_PREF --disable-example --disable-mtab; fi; }
 [ "$1" = nomake ] && shift || make
 
 # install

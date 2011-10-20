@@ -47,7 +47,6 @@ export LITE_LIBS="-L${SRC_DIR%/*}/LiTE-0.8.10/lite/.libs -llite"
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift || { make clean
 	if [ "$PLATFORM" = S7 ]; then
-	     #PKG_CONFIG_LIBDIR="$PKG_CFG" PKG_CONFIG_PATH="$PKG_CFG"
 	     ./configure --host=$CC_PREF; #CFLAGS="-static"
 	else ./configure --host=$CC_PREF; CFLAGS="-static"; fi; }
 [ "$1" = nomake ] && shift || make

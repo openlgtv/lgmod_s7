@@ -50,7 +50,7 @@ cd "$SRC_DIR"
 [ "$1" = noinstall ] && exit
 dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
 read -n1 -p "Press Y to install in $INST_DIR2 and $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
-d="$INST_DIR/lib/modules/"; d2="$INST_DIR2/lib/modules/"; s='-lgmod.ko'; mkdir -p "$d2"
+d="$INST_DIR/lib/modules/2.6.26/"; d2="$INST_DIR2/lib/modules/"; s='-lgmod.ko'; mkdir -p "$d2"
 i=asix;    f="$d2$i$s"; cp -ax $i.ko "$f"; dest "$f"
 	#mv "$f" "$d"; # install in rootfs
 i=dm9601;  f="$d2$i$s"; cp -ax $i.ko "$f"; dest "$f"

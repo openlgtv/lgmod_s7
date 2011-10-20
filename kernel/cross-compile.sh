@@ -71,11 +71,24 @@ make INSTALL_MOD_STRIP=--strip-unneeded INSTALL_MOD_DIR="$INST_DIR2/lib/modules"
 
 # install in rootfs
 cd "$INST_DIR2/lib/modules"
-d="$INST_DIR/lib/modules/"
-mv cdc_ether.ko cdc_subset.ko gl620a.ko kaweth.ko net1080.ko plusb.ko zaurus.ko "$d"
-mv cifs.ko ext2.ko ext3.ko jbd.ko lockd.ko nfs.ko sunrpc.ko "$d"
-mv cdrom.ko fuse.ko isofs.ko rndis_host.ko sr_mod.ko "$d"
-mv uinput.ko evdev.ko hid.ko usbhid.ko "$d"; f=input-core.ko; [ -f $f ] && mv $f "$d"
+d="$INST_DIR/lib/modules/2.6.26/"
+for i in cdc_ether.ko cdc_subset.ko gl620a.ko kaweth.ko net1080.ko plusb.ko zaurus.ko rndis_host.ko \
+	uinput.ko evdev.ko hid.ko usbhid.ko input-core.ko \
+	crc-itu-t.ko firmware_class.ko led-class.ko; do
+	mv $i "$d"; ls -l "$d$i"; done
+for i in rt2500usb.ko rt2x00lib.ko rt2x00usb.ko rt73usb.ko zd1211rw.ko; do
+	mv $i "${d}wireless/"; ls -l "${d}wireless/$i"; done
+for i in ext2.ko jbd.ko ext3.ko; do
+	mv $i "$d"; ls -l "$d$i"; done
+for i in cifs.ko sunrpc.ko lockd.ko nfs.ko \
+	fuse.ko isofs.ko cdrom.ko sr_mod.ko; do
+	mv $i "$d"; ls -l "$d$i"; done
 
-mv firmware_class.ko "${d}base/"; mv crc-itu-t.ko "$d"; mv led-class.ko "${d}leds/"
-mv rt2500usb.ko rt2x00lib.ko rt2x00usb.ko rt73usb.ko "${d}net/wireless/rt2x00/"
+# create modules.dep - TODO
+#if [ -f "$K_DIR/System.map" ]; then
+#	cd "$INST_DIR"; d=lib/modules; v=2.6.26; D=$d/$v
+#	rm $D/extroot; ln -s ../../../../extroot/$d $D/extroot
+#	depmod -n -e -F "$K_DIR/System.map" -C <(echo search .) -b . $v > ../../depmod.out
+#	svn revert $D/extroot || { rm $D/extroot; ln -s /mnt/lg/user/extroot/$d $D/extroot; }
+#	cat ../../depmod.out | grep '\.ko:' > $D/modules.dep
+#fi

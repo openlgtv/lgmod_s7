@@ -19,19 +19,24 @@ START() {
 	# Load modules with modules script
 	if [ -x $MODULES_SH ]; then
 		echo "module: $@ ${MODULES_SH##*/} ..."
+		(
+		cd /lib/modules/2.6.26; CONV_MODSH=''
 		if [ ! -d /mnt/lg/lginit ]; then # S6
-			# what is the best way to handle old module.sh file (path were included)
-			(insmod() {
-				local m="${1#/modules/}"
+			# file path were included in old module.sh
+			insmod() {
+				local mf m="${1#/modules/}"; mf="/lib/modules/2.6.26/$m"
 				if [ "$m" = "$1" ]; then # not old module.sh
 					/sbin/insmod "$@"
-				elif [ -f "/lib/$1" ]; then # old module.sh
-					shift; /sbin/insmod "/lib/$1" "$@"
-				else modprobe "${m%.ko}" "$@"; fi
-			}; cd /lib/modules;  . $MODULES_SH "$@")
-		else
-			(  cd /lib/modules; . $MODULES_SH "$@")
+				else
+					CONV_MODSH=1
+					if [ -f "$mf" ]; then # old module.sh
+						shift; /sbin/insmod "$mf" "$@"
+					else modprobe "${m%.ko}" "$@"; fi
+				fi; }
 		fi
+		. $MODULES_SH "$@"
+		[ -n "$CONV_MODSH" ] && { sed -i -e 's#[ \t]/modules/# #g' $MODULES_SH; sync; }
+		)
 	fi
 }
 
