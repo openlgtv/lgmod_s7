@@ -56,11 +56,17 @@ RELCFG() {
 	#		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
 	#fi
 
-	#cfg=/mnt/lg/cmn_data/openrelease_keymap.cfg
-	#if [ ! -f $cfg ]; then
-	#	echo "release: Default ${cfg##*/} ..."
-	#	cp -a /etc/openrelease/default-${cfg##*/} $cfg; sync
-	#fi
+	cfg=/mnt/lg/cmn_data/openrelease.cfg
+	if [ ! -f $cfg ]; then
+		echo "release: Default ${cfg##*/} ..."
+		cp -a /etc/openrelease/default-${cfg##*/} $cfg; sync
+	fi
+
+	cfg=/mnt/lg/cmn_data/openrelease_keymap.cfg
+	if [ ! -f $cfg ]; then
+		echo "release: Default ${cfg##*/} ..."
+		cp -a /etc/openrelease/default-${cfg##*/} $cfg; sync
+	fi
 }
 
 PREPARE() {
