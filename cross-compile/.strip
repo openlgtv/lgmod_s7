@@ -1,0 +1,7 @@
+#!/bin/bash
+"$CC_STRIP" "$@"
+for i in "$@"; do
+	[ -f "$i" ] || continue
+	file "$i" && ls -l "$i"
+done
+echo >/dev/null; # exit 0

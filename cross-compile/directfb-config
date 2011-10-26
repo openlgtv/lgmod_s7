@@ -1,0 +1,5 @@
+#!/bin/bash
+[ "$1" = '--version' ] && echo 1.2.7
+[ "$1" = '--cflags' ] && echo "$DIRECTFB_CFLAGS"
+[ "$1" = '--libs' ] && echo "$DIRECTFB_LIBS"
+true

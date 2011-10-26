@@ -15,8 +15,10 @@ d="../../extroot$SUFFIX"; cd "$d"; INST_DIR2=$(pwd)
 cd ../..
 if [ "$PLATFORM" = S7 ]; then CC_DIR="$(pwd)/Saturn7/cross-compiler"; CC_PREF=mipsel-linux
 else CC_DIR="$(pwd)/cross-compiler-mipsel"; CC_PREF=mipsel; fi
+
 if [ "$PLATFORM" = S7 ]; then K_DIR="$(pwd)/Saturn7/GP2_M_CO_FI_2010/kernel_src/kernel/linux-2.6.26-saturn7"
 else K_DIR="$(pwd)/Saturn6/GP1_M_CO_FI_2010/kernel_src/kernel/linux-2.6.26-saturn6"; fi
+
 d=sources; mkdir -p $d; cd $d; SRC_dir=s6_s7_modules; SRC_DIR="$(pwd)/$SRC_dir"; SUB_DIRS='pty mini_fo'
 
 # download, extract
@@ -38,7 +40,7 @@ cd "$SRC_DIR"
 # config, build
 [ "$1" = bash ] && { bash; exit; }
 [ "$1" = noclean ] && shift || {
-	make clean
+	make clean; #distclean
 	for i in $SUB_DIRS; do
 		(cd $i; make clean ); done; }
 [ "$1" = nomake ] && shift || {

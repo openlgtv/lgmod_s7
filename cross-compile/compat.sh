@@ -15,8 +15,10 @@ d="../../extroot$SUFFIX"; cd "$d"; INST_DIR2=$(pwd)
 cd ../..
 if [ "$PLATFORM" = S7 ]; then CC_DIR="$(pwd)/Saturn7/cross-compiler"; CC_PREF=mipsel-linux
 else CC_DIR="$(pwd)/cross-compiler-mipsel"; CC_PREF=mipsel; fi
+
 if [ "$PLATFORM" = S7 ]; then K_DIR="$(pwd)/Saturn7/GP2_M_CO_FI_2010/kernel_src/kernel/linux-2.6.26-saturn7"
 else K_DIR="$(pwd)/Saturn6/GP1_M_CO_FI_2010/kernel_src/kernel/linux-2.6.26-saturn6"; fi
+
 d=sources; mkdir -p $d; cd $d; SRC_dir=compat-wireless-3.0-2; SRC_DIR="$(pwd)/$SRC_dir"
 
 # download, extract
@@ -39,7 +41,7 @@ cd "$SRC_DIR"
 
 # config, build
 [ "$1" = bash ] && { bash; exit; }
-[ "$1" = noclean ] && shift || make "KLIB=$K_DIR" "KLIB_BUILD=$K_DIR" clean
+[ "$1" = noclean ] && shift || make "KLIB=$K_DIR" "KLIB_BUILD=$K_DIR" clean; #distclean
 [ "$1" = nomake ] && shift || make "KLIB=$K_DIR" "KLIB_BUILD=$K_DIR"
 
 # install

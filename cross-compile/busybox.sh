@@ -15,10 +15,11 @@ cd ../../..
 if [ "$PLATFORM" = S7 ]; then CC_dir=Saturn7/cross-compiler; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel-linux
 #else CC_dir=Saturn6/mipsel-gcc-4.1.2-uclibc-0.9.28.3-mips32; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel-linux; fi
 else CC_dir=cross-compiler-mipsel; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel; fi
-d=sources; mkdir -p $d; cd $d; SRC_dir=busybox-1.18.5; SRC_DIR="$(pwd)/$SRC_dir"
 
 echo 'Note: Busybox Settings->Build Options->Cross Compiler prefix'
-echo "	../../$CC_dir/bin/$CC_PREF-"
+echo "	../$CC_dir/bin/$CC_PREF-"
+
+d=sources; mkdir -p $d; cd $d; SRC_dir=busybox-1.18.5; SRC_DIR="$(pwd)/$SRC_dir"
 
 # download, extract
 dir=$SRC_dir
@@ -51,7 +52,7 @@ cd "$SRC_DIR"
 
 # config, build
 [ "$1" = bash ] && { bash; exit; }
-[ "$1" = noclean ] && shift || make clean
+[ "$1" = noclean ] && shift || make clean; #distclean
 [ "$1" = noconfig ] || cp "$CONF_DIR/busybox$SUFFIX.config" ./.config
 make menuconfig
 [ "$1" = noconfig ] && shift || cp -ax ./.config "$CONF_DIR/busybox$SUFFIX.config"

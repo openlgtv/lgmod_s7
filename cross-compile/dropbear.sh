@@ -2,70 +2,34 @@
 # Source code released under GPL License
 # cross-compile scripts for Saturn6/Saturn7 by mmm4m5m
 
-PLATFORM=S7; #PLATFORM=''
-[ "$1" = S6 ] && { shift; PLATFORM=S6; }
-[ "$1" = S7 ] && { shift; PLATFORM=S7; }
-[ -z "$PLATFORM" ] && { echo "ERROR: $1=<S6|S7>"; exit 1; }
-SUFFIX="-$PLATFORM"
-[ "$PLATFORM" = S7 ] && SUFFIX=''; # TODO rootfs-S7
-
-cd "${0%/*}"; CONF_DIR=$(pwd)
-d="../rootfs$SUFFIX"; cd "$d" || { echo "ERROR: $d not found."; exit 1; }; INST_DIR=$(pwd)
-cd ../../..
-if [ "$PLATFORM" = S7 ]; then CC_DIR="$(pwd)/Saturn7/cross-compiler"; CC_PREF=mipsel-linux
-else CC_dir=cross-compiler-mipsel; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel; fi
-d=sources; mkdir -p $d; cd $d; SRC_dir=dropbear-0.53.1; SRC_DIR="$(pwd)/$SRC_dir"
-
-# S7 binary files size:
-#	229380 usr/sbin/dropbear
-#	37800  usr/sbin/scp
-#	221160 usr/bin/dbclient
-#	90084  usr/bin/dropbearkey
-#	85152  usr/lib/dropbear/dropbearconvert
-# S7 binary files size: --disable-zlib --disable-pam --disable-utmpx --disable-wtmpx --disable-openpty
-#	total -24 bytes
-# S7 binary files size: --disable-zlib --disable-pam --disable-utmpx --disable-wtmpx --disable-pututline --disable-pututxline --disable-utmp --disable-wtmp --disable-lastlog --disable-syslog --disable-shadow --disable-openpty --disable-loginfunc --disable-largefile
-#	225052 usr/sbin/dropbear
-#	37592  usr/sbin/scp
-#	216792 usr/bin/dbclient
-#	85116  usr/lib/dropbear/dropbearconvert
+. "${0%/*}/.functions.sh"; # first line (do not pass cmd line params)
+[ "$PLATFORM" != S7 ] || note zlib
 
 # download, extract
-dir=$SRC_dir
-if [ ! -d "$dir" ]; then
-	tar=$dir.tar.bz2
-	read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
-	[ -f "$tar" ] || { wget "http://matt.ucc.asn.au/dropbear/releases/$tar" || exit 3; }
-	tar -xjf "$tar"
-	exit
-fi
+get 'http://sourceforge.net/projects/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
+DIRZ="$(pwd)"
+get_db() { sed -i -e 's!^\(#define \(ENABLE_X11FWD\|INETD_MODE\|DROPBEAR_TWOFISH\|DROPBEAR_MD5_HMAC\|DO_HOST_LOOKUP\|DO_MOTD\)\)!//\1!' options.h; }
+get 'http://matt.ucc.asn.au/dropbear/releases/dropbear-0.53.1.tar.gz' run=get_db
 
-# environment, config
-CC_BIN="$CC_DIR/bin"
-[ -d "$CC_BIN" ] || { echo "ERROR: $CC_BIN not found."; exit 11; }
-[ -d "$SRC_DIR" ] || { echo "ERROR: $SRC_DIR not found."; exit 12; }
-export PATH="$CC_BIN:$PATH"
-cd "$SRC_DIR"
-export LDFLAGS=-Wl,--gc-sections
-export CFLAGS="-ffunction-sections -fdata-sections"
+# config, build, install
+Make() { make PROGRAMS="scp dbclient dropbear dropbearkey dropbearconvert"; }
+if [ "$PLATFORM" != S7 ]; then Configure() { ./configure "$@" --disable-zlib; }
+else export CFLAGS+=" -I$DIRZ"; export LIBS+=" -L$ZLIB_DIR -lz"
+	#Make() { make MULTI=1 PROGRAMS="dbclient dropbear dropbearkey scp dropbearconvert"; }
+	#Install() { INST_dest "$1/usr/bin/" dropbearmulti; }
+fi; build CONF+=size inst='root dest usr/bin/ scp dbclient dropbear dropbearkey dropbearconvert' "$@"; # always respect cmd line params
 
-# config, build
-[ "$1" = bash ] && { bash; exit; }
-[ "$1" = noclean ] && shift || { make clean
-	if [ "$PLATFORM" = S7 ]; then
-	     ./configure --host=$CC_PREF
-	else ./configure --host=$CC_PREF; fi; }
-[ "$1" = nomake ] && shift || {
-	if [ "$PLATFORM" = S7 ]; then make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"; # STATIC=1
-	else make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"; fi; }
-
-# install
-[ "$1" = noinstall ] && exit
-dest() { for i in "$@"; do "$CC_BIN/$CC_PREF-strip" --strip-unneeded "$i"; file "$i"; ls -l "$i"; done; }
-read -n1 -p "Press Y to install in $INST_DIR ... " r; echo; [ "$r" = Y ] || exit
-d="$INST_DIR/usr/bin/"
-for i in dropbear dbclient dropbearkey scp; do
-	f="$d$i"; cp -ax $i "$f"; dest "$f"; done
-d="$INST_DIR/usr/lib/dropbear/"
-for i in dropbearconvert; do
-	f="$d$i"; cp -ax $i "$f"; dest "$f"; done
+# with current options
+#-rwxr-xr-x 1 rcon rcon  37800 Oct 26 12:25 usr/bin/scp
+#-rwxr-xr-x 1 rcon rcon 212448 Oct 26 12:25 usr/bin/dbclient
+#-rwxr-xr-x 1 rcon rcon 216384 Oct 26 12:25 usr/bin/dropbear
+#-rwxr-xr-x 1 rcon rcon  85752 Oct 26 12:25 usr/bin/dropbearkey
+#-rwxr-xr-x 1 rcon rcon  84916 Oct 26 12:25 usr/bin/dropbearconvert
+# if multi
+#-rwxr-xr-x 1 rcon rcon 301280 Oct 26 15:46 usr/bin/dropbearmulti
+# debian-mipsel binaries
+#usr/bin/scp is not from dropbear package
+#-rwxr-xr-x 1 rcon rcon 221152 Oct 26 10:21 usr/bin/dbclient
+#-rwxr-xr-x 1 rcon rcon 229364 Oct 26 10:21 usr/bin/dropbear
+#-rwxr-xr-x 1 rcon rcon  90084 Oct 26 10:21 usr/bin/dropbearkey
+#-rwxr-xr-x 1 rcon rcon  85152 Oct 26 10:21 usr/bin/dropbearconvert
