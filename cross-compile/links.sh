@@ -16,6 +16,6 @@ DIRJ="$(pwd)"
 get 'http://links.twibright.com/download/links-2.3.tar.gz'
 
 # config, build, install
-Configure() { CPPFLAGS+=" -I$DIRZ -I$DIRP -I$DIRJ" LIBS+=" -L$DFB_DIR -lz -lpng -ljpeg" \
+Configure() { CPPFLAGS="$CPPFLAGS -I$DIRZ -I$DIRP -I$DIRJ" LIBS="$LIBS -L$DFB_DIR -lz -lpng -ljpeg" \
 	./configure "$@" --enable-graphics; }
 build CONF+='gcc DFB' inst='ext strip make install-exec' "$@"; # always respect cmd line params

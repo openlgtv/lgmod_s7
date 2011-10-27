@@ -53,6 +53,7 @@ paths() {
 	SRC_DIR="$(pwd)/sources"
 	DFB_DIR="$SRC_DIR/DirectFB-LG-usr_local_lib"
 	ZLIB_DIR="$SRC_DIR/DirectFB-LG-usr_local_lib"
+	SDL_DIR="$SRC_DIR/SDL-1.2.14"
 
 	if [ "$PLATFORM" = S7 ]; then
 		CC_dir=Saturn7/cross-compiler; CC_DIR="$(pwd)/$CC_dir"; CC_PREF=mipsel-linux
@@ -109,6 +110,7 @@ get() {
 		if   [ "$act" = .tar.gz ];  then tar -xzf "$tar"
 		elif [ "$act" = .tar.bz2 ]; then tar -xjf "$tar"
 		elif [ "$act" = .zip ];     then unzip "$tar"
+		elif [ "$act" = zip ];     then unzip "$tar" -d "$dir"
 		else echo "ERROR: Unknown 'get' action: $act"; exit 1
 		fi
 
@@ -120,10 +122,17 @@ get() {
 
 
 # config, build, install
+CONF_SDL() {
+	local d=$CONF_DIR/sdl-config
+	SDL_CONFIG="$d" PATH="$CONF_DIR:$PATH" CONF_sdl "$@"
+}
+CONF_sdl() {
+	SDL_CFLAGS="$SDL_CFLAGS -I$SDL_DIR/include" SDL_LIBS="$SDL_LIBS -L$SDL_DIR/build/.libs -lSDL $DIRECTFB_LIBS" \
+		CONFIGURE "$@"
+}
 CONF_DFB() {
 	# old trick './configure' (distclean required by 'tempfile' always new file name)
-	#f=`tempfile`; export DIRECTFBCONFIG="$f"; export DIRECTFB_CONFIG="$f"; chmod +x "$f"
-	#{ echo '#!/bin/sh'; echo '[ "$1" = "--version" ] && echo 1.2.7'; } > "$f"
+	#d=`tempfile`; chmod +x "$d"; { echo '#!/bin/sh'; echo '[ "$1" = "--version" ] && echo 1.2.7'; } > "$d"
 	# new trick
 	local d=$CONF_DIR/directfb-config
 	DIRECTFBCONFIG="$d" DIRECTFB_CONFIG="$d" PATH="$CONF_DIR:$PATH" \
@@ -132,18 +141,19 @@ CONF_DFB() {
 	#rm -f $DIRECTFBCONFIG
 }
 CONF_dfb() {
-	DIRECTFB_CFLAGS+=" -I$CC_DFB/include -I$CC_DFB/lib -D_REENTRANT" \
-	DIRECTFB_LIBS+=" -L$DFB_DIR -ldirectfb -lfusion -ldirect -lpthread" \
+	#? -I$CC_DFB/lib
+	DIRECTFB_CFLAGS="$DIRECTFB_CFLAGS -I$CC_DFB/include -D_REENTRANT" \
+	DIRECTFB_LIBS="$DIRECTFB_LIBS -L$DFB_DIR -ldirectfb -lfusion -ldirect -lpthread -lz" \
 		CONFIGURE "$@"
 }
 CONF_gcc() {
 	CC=$CC_PREF-gcc CONFIGURE "$@"
 }
 CONF_static() {
-	CFLAGS+=" -static" LDFLAGS+=" -all-static" CONFIGURE "$@"
+	CFLAGS="$CFLAGS -static" LDFLAGS="$LDFLAGS -all-static" CONFIGURE "$@"
 }
 CONF_size() {
-	CFLAGS+=" -Os -W -Wall" CONFIGURE "$@"
+	CFLAGS="$CFLAGS -Os -W -Wall" CONFIGURE "$@"
 }
 CONF_host() {
 	CONFIGURE --host=$CC_PREF "$@"

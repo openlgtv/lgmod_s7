@@ -14,7 +14,7 @@ get 'http://matt.ucc.asn.au/dropbear/releases/dropbear-0.53.1.tar.gz' run=get_db
 # config, build, install
 Make() { make PROGRAMS="scp dbclient dropbear dropbearkey dropbearconvert"; }
 if [ "$PLATFORM" != S7 ]; then Configure() { ./configure "$@" --disable-zlib; }
-else export CFLAGS+=" -I$DIRZ"; export LIBS+=" -L$ZLIB_DIR -lz"
+else Configure() { CFLAGS="$CFLAGS -I$DIRZ"; LIBS="$LIBS -L$ZLIB_DIR -lz" ./configure "$@"; }
 	#Make() { make MULTI=1 PROGRAMS="dbclient dropbear dropbearkey scp dropbearconvert"; }
 	#Install() { INST_dest "$1/usr/bin/" dropbearmulti; }
 fi; build CONF+=size inst='root dest usr/bin/ scp dbclient dropbear dropbearkey dropbearconvert' "$@"; # always respect cmd line params

@@ -11,6 +11,6 @@ DIRL="$(pwd)"
 get 'http://directfb.org/downloads/Programs/DFBTerm-0.8.15.tar.gz'
 
 # config, build, install
-Configure() { LITE_CFLAGS+=" -I$DIRL -DLITEFONTDIR="'\"${datarootdir}/fonts/truetype\"' \
-	LITE_LIBS+=" -L$DIRL/lite/.libs -llite" ./configure "$@"; }
+Configure() { LITE_CFLAGS="$LITE_CFLAGS -I$DIRL -DLITEFONTDIR="'\"${datarootdir}/fonts/truetype\"' \
+	LITE_LIBS="$LITE_LIBS -L$DIRL/lite/.libs -llite" ./configure "$@"; }
 build CONF+=dfb inst='ext make install' "$@"; # always respect cmd line params
