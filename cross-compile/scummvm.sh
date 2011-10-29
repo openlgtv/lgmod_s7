@@ -4,10 +4,14 @@
 
 . "${0%/*}/.functions.sh"; # first line (do not pass cmd line params)
 note dfb
+echo 'Help: download extract and run: scummvm -enull lure'
+echo 'Help: http://sourceforge.net/projects/scummvm/scummvm/extras/Lure%20of%20the%20Temptress/lure-1.1.zip'
+echo 'Help: https://raw.github.com/scummvm/scummvm/v1.3.1/dists/engine-data/lure.dat'
+#?http://sourceforge.net/projects/scummvm/scummvm/demos/agos/elvira1-dos-ni-demo-en.zip
 
 # download, extract
 get_sc() { sed -i -e 's/_host_alias=""/_host_alias='"$CC_PREF/" configure; }
-get 'http://kent.dl.sourceforge.net/project/scummvm/scummvm/1.3.1/scummvm-1.3.1.tar.bz2' run=get_sc
+get 'http://sourceforge.net/projects/scummvm/scummvm/1.3.1/scummvm-1.3.1.tar.bz2' run=get_sc
 
 # config, build, install
 Configure() { CPPFLAGS="$CPPFLAGS $SDL_CFLAGS" LIBS="$LIBS $SDL_LIBS" ./configure --disable-debug --enable-release "$@"; }
