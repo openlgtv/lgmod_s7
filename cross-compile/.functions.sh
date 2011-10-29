@@ -84,7 +84,8 @@ note() {
 
 # download and extract
 get() {
-	local i r url="$1"; local tar="${url##*/}" act='' dir='' run=''; shift
+	local CC=''; [ "$1" = CC ] && { CC=1; shift; }
+	local i d r url="$1"; local tar="${url##*/}" act='' dir='' run=''; shift
 	for i in "$@"; do
 		[ "${i#tar=}" != "$i" ] && tar="${i#tar=}"
 		[ "${i#act=}" != "$i" ] && act="${i#act=}"
@@ -95,28 +96,34 @@ get() {
 	if [ -z "$act" ]; then
 		d=''
 		if   [ "$tar" != "${tar%.tar.gz}" ];  then act=.tar.gz;  d="${tar%.tar.gz}"
+		elif [ "$tar" != "${tar%.tgz}" ];     then act=.tgz;     d="${tar%.tgz}"
 		elif [ "$tar" != "${tar%.tar.bz2}" ]; then act=.tar.bz2; d="${tar%.tar.bz2}"
 		elif [ "$tar" != "${tar%.zip}"    ];  then act=.zip;     d="${tar%.zip}"
 		fi
 		[ -z "$dir" ] && dir="$d"
+	elif [ -z "$dir" ]; then
+		if [ "$act" = svn ]; then dir="$tar"
+		fi
 	fi
 	[ -z "$dir" ] && dir="${tar%%.*}"
 
-	CD "$SRC_DIR" || exit $?
+	[ -n "$CC" ] || CD "$SRC_DIR" || exit $?
 	if [ ! -d "$dir" ]; then
-		read -n1 -p "Press Y to download and extract $tar ... " r; echo; [ "$r" = Y ] || exit
-		[ -f "$tar" ] || { wget "$url" || exit 3; }
+		read -n1 -p "Press Y to download/extract/checkout $tar ... " r; echo; [ "$r" = Y ] || exit 90
+		if [ "$act" = svn ]; then svn co "$tar" "$dir" || exit $?
+		else [ -f "$tar" ] || { wget "$url" -O - > "$tar" || exit $?; }; fi
 
-		if   [ "$act" = .tar.gz ];  then tar -xzf "$tar"
-		elif [ "$act" = .tar.bz2 ]; then tar -xjf "$tar"
-		elif [ "$act" = .zip ];     then unzip "$tar"
-		elif [ "$act" = zip ];     then unzip "$tar" -d "$dir"
-		else echo "ERROR: Unknown 'get' action: $act"; exit 1
+		if   [ "$act" = .tar.gz ];  then tar -xzf "$tar" || exit $?
+		elif [ "$act" = .tar.bz2 ]; then tar -xjf "$tar" || exit $?
+		elif [ "$act" = .zip ];     then unzip "$tar" || exit $?
+		elif [ "$act" = zip ];     then unzip "$tar" -d "$dir" || exit $?
+		elif [ "$act" = svn ];     then :;
+		else echo "ERROR: Unknown 'get' action: $act"; exit 2
 		fi
 
 		CD "$dir" || exit $?
 		[ -n "$run" ] && $run
-		exit
+		exit 99
 	else CD "$dir" || exit $?; fi
 }
 
@@ -180,7 +187,8 @@ CONFIGURE() {
 INST_one() {
 	local src="$1" dst="$2"; [ "$dst" != "${dst%%/}" ] && dst="$dst${src##*/}"
 	[ -d "$dst" ] && { dst="$dst/${src##*/}"; echo "Note: cp -ax $src $dst"; }
-	cp -ax "$src" "$dst" || exit 1
+	mkdir -p "${dst%/*}" || exit $?
+	cp -ax "$src" "$dst" || exit $?
 	#"$CC_BIN/$CC_PREF-strip" --strip-unneeded "$dst"
 	#file "$dst" && ls -l "$dst"
 	CC_STRIP="$CC_STRIP" "$CONF_DIR/.strip" --strip-unneeded "$dst"
@@ -189,10 +197,10 @@ INST_dest() {
 	local i dst="$1"; shift; for i in "$@"; do INST_one "$i" "$dst"; done
 }
 INST_src_dst() {
-	local DST="$1"; INST_one "$2" "$DST/$3" || exit 1; shift 3
+	local DST="$1"; INST_one "$2" "$DST/$3" || exit $?; shift 3
 	[ $# = 0 ] ||
 		if [ $# -gt 1 ]; then INST_src_dst "$DST" "$@"
-		else echo "ERROR: No destination for source file: $1 ($pwd)"; exit 1; fi
+		else echo "ERROR: No destination for source file: $1 ($pwd)"; exit 3; fi
 }
 INST_make() {
 	make DESTDIR="$1" "$@"
@@ -203,38 +211,40 @@ INST_strip() {
 }
 
 build() {
-	local t r bash='' help='' clean=1 distclean='' cfg='' menu='' conf=1 make=1 install='' inst=''
+	local t r bash='' help='' clean=1 distclean='' conf=1 make=1 install='' inst=''; CFG=''; modules=''; # not local
 	CONF='host'; #size; #[ "$PLATFORM" != S7 ] && CONF="$CONF static"; # CONF chain
 	for i in "$@"; do
-		[ "$i" = bash ]  && bash=1;  [ "$i" = nobash ]  && bash=''
-		[ "$i" = help ]  && help=1;  [ "$i" = nohelp ]  && help=''
-		[ "$i" = clean ] && clean=1; [ "$i" = noclean ] && clean=''
-		[ "$i" = distclean ]  && distclean=1;  [ "$i" = nodistclean ]  && distclean=''
-		[ "$i" = cfg ]   && cfg=1;   [ "$i" = nocfg ]   && cfg=''
-		[ "$i" = menu ]  && menu=1;  [ "$i" = nomenu ]  && menu=''
-		[ "$i" = conf ]  && conf=1;  [ "$i" = noconf ]  && conf=''
-		[ "$i" = make ]  && make=1;  [ "$i" = nomake ]  && make=''
-		[ "$i" = install ]  && install=1;  [ "$i" = noinstall ]  && install=0
+		[ "$i" = bash ]    && bash=1;    [ "$i" = nobash ]    && bash=''
+		[ "$i" = help ]    && help=1;    [ "$i" = nohelp ]    && help=''
+		[ "$i" = clean ]   && clean=1;   [ "$i" = noclean ]   && clean=''
+		[ "$i" = distclean ] && distclean=1; [ "$i" = nodistclean ] && distclean=''
+		[ "$i" = CFG ]     && CFG=1;     [ "$i" = NOCFG ]     && CFG=''
+		[ "$i" = conf ]    && conf=1;    [ "$i" = noconf ]    && conf=''
+		[ "$i" = make ]    && make=1;    [ "$i" = nomake ]    && make=''
+		[ "$i" = modules ] && modules=1; [ "$i" = nomodules ] && modules=''
+		[ "$i" = install ] && install=1; [ "$i" = noinstall ] && install=0
 		[ "${i#inst=}" != "$i" ] && inst="${i#inst=}"
 		[ "${i#CONF+=}" != "$i" ] && CONF="$CONF ${i#CONF+=}"
 		[ "${i#CONF=}" != "$i" ] && CONF="${i#CONF=}"
 	done
 
-	[ -n "$bash" ] && { bash; exit; }
-	[ -n "$help" ] && { ./configure --help; exit; }
+	[ -n "$bash" ] && { bash; exit 91; }
+	[ -n "$help" ] && { ./configure --help; exit 92; }
 
 	[ -n "$clean" ] && {
-		make clean
-		[ -n "$distclean" ] && make distclean
+		t=`type -t Clean`
+		if [ "$t" = 'function' ]; then Clean "$distclean"
+		else make clean; [ -n "$distclean" ] && make distclean
+		fi
 	}
 
-	#[ -n "$cfg" ] &&
-	#[ -n "$menu" ] && make menuconfig
-
 	[ -n "$conf" ] && { CONFIGURE || exit $?; }
-	[ -n "$make" ] && { t=`type -t Make`
+	[ -n "$make" ] && {
+		t=`type -t Make`
 		if [ "$t" = 'function' ]; then Make || exit $?
-		else make || exit $?; fi; }
+		else make || exit $?
+		fi
+	}
 
 	if [ "$install" != 0 ]; then
 		if [ -z "$install" ]; then
@@ -258,7 +268,7 @@ build() {
 		elif [ "$mode" = make ] && [ -n "$strip" ]; then INST_strip "$dst" $inst || exit $?
 		elif [ "$mode" = src_dst ]; then INST_src_dst "$dst" $inst || exit $?
 		elif [ "$mode" = dest ]; then INST_dest "$dst/${inst%% *}" ${inst#* } || exit $?
-		else echo 'ERROR: Install method/function not defined.'; exit 1
+		else echo 'ERROR: Install method/function not defined.'; exit 4
 		fi
 	fi
 }
@@ -269,9 +279,11 @@ if [ -z "$PLATFORM" ]; then
 	platform "$@"; ex=$?
 	[ $ex -lt 100 ] && shift $ex || exit $ex
 	paths
-	CD "$CC_BIN" || exit $?
+	[ "$1" = CC ] && shift ||
+		{ CD "$CC_BIN" || exit $?; }
 	export PATH="$CC_BIN:$PATH"
-	CD "$SRC_DIR" || exit $?
+	mkdir -p "$SRC_DIR" &&
+		CD "$SRC_DIR" || exit $?
 
 	# next steps: per script
 	#note

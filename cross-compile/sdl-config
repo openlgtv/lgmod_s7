@@ -1,0 +1,5 @@
+#!/bin/bash
+[ "$1" = '--version' ] && echo 1.2.14
+[ "$1" = '--cflags' ] && echo "$SDL_CFLAGS"
+[ "$1" = '--libs' ] && echo "$SDL_LIBS"
+true
