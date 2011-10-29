@@ -51,8 +51,8 @@ paths() {
 
 	CD .. || exit $?; # now PWD=lgmod_s7/.. ('lgmod_s7' from svn)
 	SRC_DIR="$(pwd)/sources"
-	DFB_DIR="$SRC_DIR/DirectFB-LG-usr_local_lib"
-	ZLIB_DIR="$SRC_DIR/DirectFB-LG-usr_local_lib"
+	DFB_DIR="$SRC_DIR/DirectFB-LG-usr_local_lib"; ZLIB_DIR="$DFB_DIR"; PNG_DIR="$DFB_DIR"
+		CC_ZLIB="$SRC_DIR/zlib-1.2.3"; CC_PNG="$SRC_DIR/libpng-1.2.29"
 	SDL_DIR="$SRC_DIR/SDL-1.2.14"
 
 	if [ "$PLATFORM" = S7 ]; then
@@ -130,7 +130,7 @@ get() {
 
 # config, build, install
 CONF_SDL() {
-	local d=$CONF_DIR/sdl-config
+	local d="$CONF_DIR/sdl-config"
 	SDL_CONFIG="$d" PATH="$CONF_DIR:$PATH" CONF_sdl "$@"
 }
 CONF_sdl() {
@@ -141,7 +141,7 @@ CONF_DFB() {
 	# old trick './configure' (distclean required by 'tempfile' always new file name)
 	#d=`tempfile`; chmod +x "$d"; { echo '#!/bin/sh'; echo '[ "$1" = "--version" ] && echo 1.2.7'; } > "$d"
 	# new trick
-	local d=$CONF_DIR/directfb-config
+	local d="$CONF_DIR/directfb-config"
 	DIRECTFBCONFIG="$d" DIRECTFB_CONFIG="$d" PATH="$CONF_DIR:$PATH" \
 		CONF_dfb "$@"
 	# old trick './configure' (cleanup)
@@ -151,6 +151,14 @@ CONF_dfb() {
 	#? -I$CC_DFB/lib
 	DIRECTFB_CFLAGS="$DIRECTFB_CFLAGS -I$CC_DFB/include -D_REENTRANT" \
 	DIRECTFB_LIBS="$DIRECTFB_LIBS -L$DFB_DIR -ldirectfb -lfusion -ldirect -lpthread -lz" \
+		CONFIGURE "$@"
+}
+CONF_png() {
+	PNG_CFLAGS="$PNG_CFLAGS -I$CC_PNG $ZLIB_CFLAGS" PNG_LIBS="$PNG_LIBS -L$PNG_DIR -lpng $ZLIB_LIBS" \
+		CONFIGURE "$@"
+}
+CONF_zlib() {
+	ZLIB_CFLAGS="$ZLIB_CFLAGS -I$CC_ZLIB" ZLIB_LIBS="$ZLIB_LIBS -L$ZLIB_DIR -lz" \
 		CONFIGURE "$@"
 }
 CONF_gcc() {

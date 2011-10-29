@@ -20,6 +20,24 @@ if [ "$PLATFORM" = S7 ]; then
 		ln -s GP2_M_CO_FI_2010/kernel_src/kernel/linux-2.6.26-saturn7 ../../../../ || exit $?; }
 	get CC 'http://www.lg.com/global/support/opensource/opensource-file-download.jsp?OPENSOURCE_FILE_NAME=GP2_M_CO_FI_2010.tar.gz&OPENSOURCE_ORIGINAL_NAME=opensourceGLZ%2FGP2_M_CO_FI_2010.tar.gz' \
 		tar=GP2_M_CO_FI_2010.tar.gz.zip dir=GP2_M_CO_FI_2010 act=zip run=get_k
+	# Note:
+	#$ Saturn7/cross-compiler/bin/mipsel-linux-gcc -print-search-dirs
+	#install
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/mipsel-lg-linux-gnu/4.3.2/
+	#programs
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../libexec/gcc/mipsel-lg-linux-gnu/4.3.2/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../libexec/gcc/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/mipsel-lg-linux-gnu/4.3.2/../../../../mipsel-lg-linux-gnu/bin/mipsel-lg-linux-gnu/4.3.2/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/mipsel-lg-linux-gnu/4.3.2/../../../../mipsel-lg-linux-gnu/bin/
+	#libraries
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/mipsel-lg-linux-gnu/4.3.2/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/mipsel-lg-linux-gnu/4.3.2/../../../../mipsel-lg-linux-gnu/lib/mipsel-lg-linux-gnu/4.3.2/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../lib/gcc/mipsel-lg-linux-gnu/4.3.2/../../../../mipsel-lg-linux-gnu/lib/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../mipsel-lg-linux-gnu//sys-root/lib/mipsel-lg-linux-gnu/4.3.2/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../mipsel-lg-linux-gnu//sys-root/lib/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../mipsel-lg-linux-gnu//sys-root/usr/lib/mipsel-lg-linux-gnu/4.3.2/
+	#/home/LG32LD465/Saturn7/GP2_MSTAR/gp2-s7-mipsel-lg-gcc-4.3.2-glibc-2.9-nptl/bin/../mipsel-lg-linux-gnu//sys-root/usr/lib/
 else
 	echo 'TODO'; exit 13; # TODO: S6
 fi; CD "$K_DIR" || exit $?

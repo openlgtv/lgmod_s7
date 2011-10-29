@@ -112,7 +112,7 @@ get_qr() { sed -i -e 's/\(register\)\( tmp \)/\1 int\2/' -e 's/\(static\)\( colo
 get 'http://www.libsdl.org/projects/qrash/src/qrash-1.0.tar.gz'; #run=get_qr
 
 # config, build, install
-Configure() { CXX="$CC_PREF-c++" CPPFLAGS="$CFLAGS -I$DIRZ -fpermissive" ./configure "$@"; }
+Configure() { CXX="$CC_PREF-c++" CPPFLAGS="$CPPFLAGS -I$DIRZ -fpermissive" ./configure "$@"; }
 build CONF+='gcc dfb SDL' noinstall inst='ext dest usr/local/bin/ qrash' "$@"; # always respect cmd line params
 
 ); echo; echo; (
@@ -126,7 +126,7 @@ get_hel() { #?sed -i -e 's/^\(.*configure:1432\)/if true; #\1/' configure
 get 'http://www.libsdl.org/projects/HElliZER/src/HElliZER-1.0.tar.gz'; #run=get_hel
 
 # config, build, install
-Configure() { CXX="$CC_PREF-c++" CPPFLAGS="$CFLAGS -fpermissive" ./configure "$@"; }
+Configure() { CXX="$CC_PREF-c++" CPPFLAGS="$CPPFLAGS -fpermissive" ./configure "$@"; }
 build CONF+='gcc dfb SDL' noinstall inst='ext dest usr/local/bin/ HElliZER' "$@"; # always respect cmd line params
 
 
