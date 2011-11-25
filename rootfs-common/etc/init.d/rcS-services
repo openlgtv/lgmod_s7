@@ -8,7 +8,7 @@ r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
 # environment for services - check /etc/profile (not for RELEASE - outside rcS-lginit-env)
-[ -f /etc/TZ ] && export TZ='cat /etc/TZ'
+[ -f /etc/TZ ] && export TZ=`cat /etc/TZ`
 
 
 

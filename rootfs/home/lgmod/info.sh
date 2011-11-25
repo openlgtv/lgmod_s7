@@ -5,6 +5,7 @@
 # modify with care - script is used by install.sh
 
 VER=10011; # version of info file (file syntax)
+wget=/mnt/lg/user/extroot/usr/bin/wget
 MODEL=`echo /mnt/lg/user/model.*`
 [ -f "$MODEL" ] && MODEL="${MODEL#*model.}" || MODEL=''
 
@@ -162,6 +163,9 @@ INFO_ALL() {
 	INFO_CHROOT_B
 }
 
+
+[ "$part" != root ] && echo "NOTE: Create info file (1 min, $infofile) ..."
+
 echo "$VER $MODEL: $@" > "$infofile" || { echo "Error: Info file failed: $infofile"; exit 19; }
 INFO "INFO: `date`"
 if   [ "$part" = root ];   then INFO_ROOT
@@ -172,11 +176,18 @@ INFO "INFO: `date`"; DROP; sync
 [ $err = 0 ] || echo "Error($err): Info file failed: $infofile"
 [ "$part" != root ] && [ $err = 0 ] && echo "Done: Info file: $infofile"
 
-if [ "$part" = paste ]; then
+
+if [ "$part" = paste ] && [ -f $wget ]; then
 	name="$MODEL"; [ -z "$name" ] && name=`hostname`; [ -z "$name" ] && name='NA'
-	echo -n "name=$name&type=23&description=/tmp/OpenLGTV-info-file.txt&expiry=1+month&s=Submit+Post&content=" > "$wgetfile" &&
-		cat "$infofile" | sed -e 's|%|%25|g' -e 's|&|%26|g' -e 's|+|%2b|g' -e 's| |+|g' >> "$wgetfile"
-		wget -O - --tires=5 --timeout=60 --post-file="$wgetfile" \
-			'http://pastebin.ca/quiet-paste.php?api=GO2sUUgKHm5v4WAAXooevnRBoI0bdGhc' &> /tmp/info-file.pbin &&
-		cat /tmp/info-file.pbin
+
+	#URL='http://pastebin.ca/quiet-paste.php?api=GO2sUUgKHm5v4WAAXooevnRBoI0bdGhc'; # type=23 - bash (?)
+	#echo -n "name=$name&type=23&description=/tmp/OpenLGTV-info-file.txt&expiry=1+month&s=Submit+Post&content=" > "$wgetfile" || exit
+
+	URL='http://pastebin.com/api_public.php'; # paste_format=1 - none
+	echo -n "paste_name=$name&paste_format=1&paste_expire_date=1M&paste_private=1&paste_code="
+
+	cat "$infofile" | sed -e 's|%|%25|g' -e 's|&|%26|g' -e 's|+|%2b|g' -e 's| |+|g' >> "$wgetfile" &&
+		$wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL"
+	echo 'NOTE: To share your info file, please find the link below:'
+	cat /tmp/info-file.pbin; echo
 fi

@@ -52,7 +52,6 @@ RELEASE_MAGIC='0x464C457F'
 
 # info
 if [ -n "$info" ]; then
-	echo "NOTE: Create info file (1 min, $infofile) ..."
 	/home/lgmod/info.sh chroot "$infofile"
 fi
 

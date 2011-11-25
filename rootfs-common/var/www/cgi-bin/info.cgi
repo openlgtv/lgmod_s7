@@ -25,7 +25,10 @@ content-type: text/html
 </div></div>
 
 <div class="post"><div class="posthead">Network</div><div class="posttext">
-<pre><? /sbin/ifconfig -a 2>&1; echo; /sbin/route 2>&1; echo; cat /etc/resolv.conf 2>&1 ?></pre>
+<pre><?
+/sbin/ifconfig -a 2>&1; cat /etc/resolv.conf 2>&1
+echo; /sbin/route 2>&1; echo; netstat -putanee
+?></pre>
 </div></div>
 
 <div class="post"><div class="posthead">Network drives</div><div class="posttext">
