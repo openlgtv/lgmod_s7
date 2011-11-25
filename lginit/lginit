@@ -52,7 +52,7 @@ if [ -n "$LGI_CHROOT" ] && [ -b "$DEV" ]; then
 					exec chroot "$CHR" sh $DIR/lginit-overlay "$LGI_OVERLAY" "$LGINIT" chroot
 					{ echo "lginit: Error $?"
 					umount "$CHR$USB" "$CHR$CHR" "$CHR/tmp"; } > $OUT 2>&1
-				fi; { umount "$CHR$DIR"; umount "$CHR" && rm -rf "$CHR"; } > $OUT 2>&1
+				fi; { umount "$CHR$DIR"; umount "$CHR" && sleep 1 && rm -rf "$CHR"; } > $OUT 2>&1
 			else echo "lginit: Error chroot $SQF" > $OUT
 			fi; umount "$USB" > $OUT 2>&1
 fi; fi; fi

@@ -2,8 +2,19 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
-F=mtd10_nvram.gz
+f=/mnt/lg/user/mtd10_nvram_auto.gz; F=mtd10_nvram.gz
 {
+if [ -f $f ]; then
+	h=$(hexdump -n64 -e'"%_c"' /dev/mtd10)
+	if [ "$h" = $'377*' ]; then
+		echo "rcS-nvram: $f > mtd10" && gzip -d -c $f > /dev/mtd10; # restore nvram
+	else
+		# if not empty show in log - small sleep added for kmsg (?)
+		hexdump /dev/mtd10  -vn64 -e'32 "%4_c" "\n"' && sleep 0.1 &&
+		hexdump /dev/mtd10  -vn128 -s384 -e'32 "%4_c" "\n"' && sleep 0.1
+	fi
+fi
+
 for f in /mnt/lg/cmn_data /mnt/lg/user; do
 	[ -f $f/$F ] && continue; # TODO: force new backup if...???
 

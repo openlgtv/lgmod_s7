@@ -17,6 +17,7 @@ Click "Tools" to configure http password to this site and advanced configuration
 Click "Services" to start/stop services, to see all processes.<br>
 Click "Remote" to remote control your TV.<br>
 Click "RELEASE" to use RELEASE application (careful!).<br>
+Click "FM" to use File Manager by xeros.<br>
 <br>
 Most features require USB Hub & USB Stick constantly plugged.
 </div></div>

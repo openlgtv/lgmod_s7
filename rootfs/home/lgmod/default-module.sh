@@ -14,7 +14,7 @@ modprobe rt73usb
 # CIFS/Samba filesystem module with max buffer size 127Kbyte
 #modprobe cifs; # CIFSMaxBufSize=130048
 
-# Input
+# Input modules
 #modprobe input-core
 #modprobe evdev
 #modprobe uinput

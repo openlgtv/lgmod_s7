@@ -75,6 +75,9 @@ export HOME=/mnt/lg/user/root
 
 . /etc/init.d/rcS-lginit-env; # LG: env
 
+# not for RELEASE - outside rcS-lginit-env (check /etc/init.d/rcS-services)
+[ -f /etc/TZ ] && export TZ='cat /etc/TZ'
+
 after=/lg/user/extroot; # Note: create a sym.link to USB extroot directory
 path=/bin:/sbin:/usr/bin:/usr/sbin; pathl=/usr/local/bin
 lib=/lib:/usr/lib; libl=/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
@@ -83,7 +86,7 @@ export LD_LIBRARY_PATH="$lib:$libl:$after${lib//:/:$after}"
 unset after path pathl lib libl
 
 alias mounts='cat /proc/mounts'
-alias dropc='echo 3 > /proc/sys/vm/drop_caches; free'
+alias dropc='echo 3 > /proc/sys/vm/drop_caches && free'
 
 if [ -z "$TMUX" ]; then
 	if [ -z "$TERM" ] || [ "$TERM" = vt100 ]; then
@@ -94,24 +97,44 @@ if [ -z "$TMUX" ]; then
 	fi
 fi
 
-alias Dfb='(cd /mnt/lg/user/extroot && d=usr/local && mount -o bind $d /$d)'
-alias Extdfb='(cd /mnt/lg/user/extroot || exit; rm -r *; tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz && \
-	d=usr/local && cp -r /$d usr/ && f=$d/etc/directfbrc && sed -i -e "s/no-cursor/cursor-updates\nno-linux-input-grab/" $f)'
+alias Dfb='mount -o bind /mnt/lg/user/extroot/usr/local /usr/local'
+Extdfb() {
+	local i D d=/mnt/lg/user/extroot; rm -r $d/*
+	(cd $d/ && tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz || exit
+		D=/usr/local; f=$d$D/etc/directfbrc
+		for i in `find $D \! -type d`; do [ -e $d$i ] && mv $d$i $d$i~; cp -a $i $d$i; done
+		sed -i -e 's/no-cursor/cursor-updates\nno-linux-input-grab/' $f)
+}
 
-alias Exroot='(cd /mnt/lg/user/extroot || exit; rm -r *; tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)'
+Exroot() {
+	local d=/mnt/lg/user/extroot; rm -r $d/*
+	(cd $d/ && tar xzvf /mnt/usb1/Drive1/LG_DTV/lgmod_S7_extroot.tar.gz)
+}
+
+MODEL=`echo /mnt/lg/user/model.*`
+[ -f "$MODEL" ] && export MODEL="${MODEL#*model.}" || MODEL=''
+
 alias Rstart='/etc/init.d/release start'
+Rtell() {
+	local f=/tmp/openrelease.in C="$1"; shift
+	if [ -e $f ]; then echo -n "$C" > $f
+	else tmux send -t RELEASE "$@"; fi
+}
 
-MODEL=`echo /mnt/lg/user/model.*`; export MODEL=${MODEL#*model.}
-alias Rdpass='M=`echo /mnt/lg/user/model.*`; M=${M#*model.}; P="d ${M}elqjrm"; \
-	f=/tmp/openrelease.in; [ -e $f ] && { echo; echo "$P"; } > $f || tmux send -t RELEASE C-M "$P" C-M'
-alias Revent='f=/tmp/openrelease.in; [ -e $f ] && echo -n x > $f || tmux send -t RELEASE x'
-alias Rdevnt='M=`echo /mnt/lg/user/model.*`; M=${M#*model.}; P="d ${M}elqjrm"; \
-	f=/tmp/openrelease.in; [ -e $f ] && { echo; echo "$P"; } > $f || tmux send -t RELEASE C-M "$P" C-M \
-	sleep 0.2; [ -e $f ] && echo -n x > $f || tmux send -t RELEASE x'
+Rdpass() {
+	[ -n "$MODEL" ] || return; local C="d ${MODEL}elqjrm"
+	Rtell "`echo`$C`echo`" C-M "$C" C-M
+}
+Revent() {
+	[ -n "$MODEL" ] || return; local C="d ${MODEL}elqjrm"
+	Rtell "`echo`$C`echo`" C-M "$C" C-M; sleep 0.2; Rtell x x
+}
 
-alias Rgame='C="call UI_CONTENTSLINK_CreateWindow"; \
-	f=/tmp/openrelease.in; [ -e $f ] && { echo; echo "$C"; } > $f || tmux send -t RELEASE C-M "$C" C-M'
+alias Rgame='C="call UI_CONTENTSLINK_CreateWindow"; Rtell "`echo`$C`echo`" C-M "$C" C-M'
 alias Rtail='tail -n+1 -F /tmp/RELEASE.out /tmp/openrelease.out /tmp/openrelease.log'
-alias Ropen='(F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F&); trap "pkill -f \"tail -F $F\"; exit" INT; cat >/tmp/openrelease.in)'
+Ropen() {
+	local F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F &)
+	(trap "pkill -f \"tail -F $F\"; exit" INT; cat >/tmp/openrelease.in)
+}
 
 [ -f /mnt/lg/cmn_data/profile ] && . /mnt/lg/cmn_data/profile

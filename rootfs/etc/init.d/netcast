@@ -17,6 +17,10 @@ START() {
 			if [ "${D%%$n*}" = "${D#*$n}" ]; then
 				echo "netcast: $1 bind $arg/contents"
 				mount -o bind "$arg/contents" /mnt/addon/contents
+
+				# DirectDB things - TODO: move to hotplug (if keyboard available)
+				which kbd_mode && kbd_mode -s
+
 				killall stagecraft
 			fi
 			break 2
@@ -26,10 +30,6 @@ START() {
 
 boot() {
 	{
-	# TODO: move to hotplug - only if keyboard is available!
-	# DirectDB things - before killall stagecraft
-	#[ -f /usr/bin/kbd_mode ] && /usr/bin/kbd_mode -s
-
 	START "$@"
 	} > /dev/kmsg 2>&1
 }
