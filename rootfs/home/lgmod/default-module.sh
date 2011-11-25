@@ -1,5 +1,5 @@
 #!/bin/sh
-#modprobe mii.ko; # ?
+#modprobe mii; # ?
 f=usbnet;  [ -d /sys/module/$f ] || modprobe $f; # Core network modules
 f=pegasus; [ -d /sys/module/$f ] || modprobe $f; # Pegasus network chipset module
 f=asix;    [ -d /sys/module/$f ] || modprobe $f; # Asix network chipset module
@@ -13,6 +13,13 @@ modprobe rt73usb
 
 # CIFS/Samba filesystem module with max buffer size 127Kbyte
 #modprobe cifs; # CIFSMaxBufSize=130048
+
+# Input
+#modprobe input-core
+#modprobe evdev
+#modprobe uinput
+#modprobe hid
+#modprobe usbhid
 
 # CDROM filesystem modules
 #modprobe cdrom

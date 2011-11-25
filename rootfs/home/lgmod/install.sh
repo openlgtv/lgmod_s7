@@ -4,8 +4,7 @@
 # Rewriten for Saturn7 by mmm4m5m
 
 # defaults
-workdir=''; busybox=/tmp/install-root/bin/busybox
-lginitmd5=1e6ee0f4d9d08f920c406c2173f855a3
+workdir=''; busybox=/tmp/install-root/bin/busybox; lginitmd5=''; lginit=''
 info=1; cmagic=1; dvrchk=1
 kill=1; backup_kill=''
 backup=1; update_backup=1
@@ -15,20 +14,21 @@ install=''; update=''; lginitonly=''; dryrun=''; dryerr=''
 
 # command line
 for i in "$@"; do
-	[ "${i#workdir=}" != "$i" ] && workdir="${i#workdir=}"
-	[ "${i#busybox=}" != "$i" ] && busybox="${i#busybox=}"
+	[ "${i#workdir=}" != "$i" ]   && workdir="${i#workdir=}"
+	[ "${i#busybox=}" != "$i" ]   && busybox="${i#busybox=}"
 	[ "${i#lginitmd5=}" != "$i" ] && lginitmd5="${i#lginitmd5=}"
-	[ "$i" = info ]     && info=1;    [ "$i" = noinfo ]    && info=''
-	[ "$i" = cmagic ]   && cmagic=1;  [ "$i" = nocmagic ]  && cmagic=''
-	[ "$i" = dvrchk ]   && dvrchk=1;  [ "$i" = nodvrchk ]  && dvrchk=''
-	[ "$i" = kill ]     && kill=1;    [ "$i" = nokill ]    && kill=''
-	[ "$i" = kill ]     && backup_kill=1
-	[ "$i" = backup ]   && backup=1;  [ "$i" = nobackup ]  && backup=''
-	[ "$i" = nobackup ] && update_backup=''
-	[ "$i" = install ]  && install=1; [ "$i" = noinstall ] && install=''
-	#[ "$i" = update ]   && update=1;  [ "$i" = noupdate ]  && update=''
-	[ "$i" = lginitonly ]  && { install=1; lginitonly=1; }
-	[ "$i" = dryrun ]   && dryrun=1;  [ "$i" = dryerr ]    && dryerr=1
+	[ "${i#lginit=}" != "$i" ]    && lginit="${i#lginit=}"
+	[ "$i" = info ]       && info=1;    [ "$i" = noinfo ]    && info=''
+	[ "$i" = cmagic ]     && cmagic=1;  [ "$i" = nocmagic ]  && cmagic=''
+	[ "$i" = dvrchk ]     && dvrchk=1;  [ "$i" = nodvrchk ]  && dvrchk=''
+	[ "$i" = kill ]       && kill=1;    [ "$i" = nokill ]    && kill=''
+	[ "$i" = kill ]       && backup_kill=1
+	[ "$i" = backup ]     && backup=1;  [ "$i" = nobackup ]  && backup=''
+	[ "$i" = nobackup ]   && update_backup=''
+	[ "$i" = install ]    && install=1; [ "$i" = noinstall ] && install=''
+	#[ "$i" = update ]    && update=1;  [ "$i" = noupdate ]  && update=''
+	[ "$i" = lginitonly ] && { install=1; lginitonly=1; }
+	[ "$i" = dryrun ]     && dryrun=1;  [ "$i" = dryerr ]    && dryerr=1
 done; [ -n "$dryrun$dryerr" ] && TEST_ECHO=echo || TEST_ECHO=''
 [ -n "$workdir" ] && cd "$workdir"
 
@@ -37,7 +37,8 @@ date=$(date '+%Y%m%d-%H%M%S')
 infofile="backup-$date-info.txt"
 bkpdir="backup-$date"
 rootfs=$(echo lgmod_S7_*.sqfs)
-lginit=mtd4_lg-init.sqfs
+lginitA=mtd4_lginitA.sqfs; lginitB=mtd4_lginitB.sqfs
+lginitAmd5=1e6ee0f4d9d08f920c406c2173f855a3; lginitBmd5=bb43933fb79dd2077151df09ab67f893
 required_free_ram=10000
 KILL='addon_mgr stagecraft udhcpc ntpd tcpsvd djmount'
 	# LG: addon_mgr stagecraft
@@ -55,13 +56,14 @@ err=0
 # info
 if [ -n "$info" ]; then
 	echo "NOTE: Create info file (1 min, $infofile) ..."
-	echo "10010 $rootfs, $lginit, $PWD: $@" > "$infofile" || echo "Error: Info file failed"
+	echo "10011 $rootfs, $PWD: $@" > "$infofile" || echo "Error: Info file failed"
 fi
 if [ -n "$info" ]; then
 	err=0
 	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$#' cat /proc/mtd; cat /proc/mtd || err=11
-		echo -e '\n\n$# dump mtdinfo (/dev/mtd2)'; mtdinfo=$($busybox hexdump /dev/mtd2 -vs240 \
+		f=`grep -m1 mtdinfo /proc/mtd | cut -d: -f1`; [ "$f" = mtd2 ] || { err=17; echo "Error: LG BCM TV ($f?)" >&2; }
+		echo -e '\n\n$# dump mtdinfo (/dev/$f)'; mtdinfo=$($busybox hexdump /dev/$f -vs240 \
 			-e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"'| \
 			head -n`cat /proc/mtd|wc -l`) || err=13; echo "0:$mtdinfo"|head -n1;echo "$mtdinfo"|tail -n+2|grep '' -n
 		echo -e '\n\n$# dump the magic (/dev/mtd#)'; for i in $(cat /proc/mtd | grep '^mtd' | sed -e 's/:.*//' -e 's/^/\/dev\//'); do
@@ -83,27 +85,34 @@ if [ -n "$info" ]; then
 		echo -e '\n\n$#' cat /proc/filesystems; cat /proc/filesystems || err=11
 		echo -e '\n\n$#' export; export | sort || err=10
 		echo -e '\n\n$#' printenv; printenv | sort || err=12
-		echo -e '\n\n$#' ps axl; ps axl || err=12
-		echo -e '\n\n$#' ps axv; ps axv || err=12
+		echo -e '\n\n$#' ps axl; ps axl || { err=17; echo 'Warning: LG BCM TV (ps?)' >&2; }
+		echo -e '\n\n$#' ps axv; ps axv || { err=17; echo 'Warning: LG BCM TV (ps?)'; }
 		echo -e '\n\n$#' cat /proc/mounts; cat /proc/mounts || err=11
 		echo -e '\n\n$#' fdisk -l; fdisk -l $(cat /proc/mtd | grep '^mtd' | sed -e 's/:.*//' -e 's/^mtd/\/dev\/mtdblock/') | grep : || err=14
+		echo -e '\n\n$#' cat /proc/bus/usb/devices; cat /proc/bus/usb/devices || err=11
 		cat /tmp/install-info || err=11
 	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
 	{ echo -ne '\n\n#$#'" INFO($err): "; date
-		echo -e '\n\n$# dump RELEASE version'
+		echo -e '\n\n$# dump RELEASE version (fast)'
 		f=/mnt/lg/lgapp/RELEASE; b=10000; s=$(stat -c%s $f); s=$((s/b*8/17)); flag=''
 		dd bs=$b skip=$s count=300 if=$f 2>/dev/null|tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
-			grep '....'|grep -m2 -B1 -A5 swfarm || { err=19; flag=1; }
+			grep '....'|grep -m2 -B1 -A5 swfarm || flag=1
 		dd bs=$b skip=$((s+600)) count=300 if=$f 2>/dev/null|tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
-			grep '....'|grep -m2 -B1 -A10 swfarm || { err=19; flag=1; }
+			grep '....'|grep -m2 -B1 -A10 swfarm || flag=1
+	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
+	{ echo -ne '\n\n#$#'" INFO($err): "; date
+		echo -e '\n\n$# dump RELEASE version (full)'
 		if [ -n "$flag" ]; then cat $f|tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			grep '....'|grep -m2 -B1 -A10 swfarm || err=18; fi
 	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
 	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$# strings lginit (lg-init)'
-		f=/mnt/lg/lginit/lg-init; [ ! -f $f ] && { f=/mnt/lg/lginit/lginit; [ -f $f ] && md5sum $f; }
-		w=5;m=3;[ -f $f ] && cat $f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'|sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' \
-			-e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' -e's/  \+/ /g'| head -n70 || err=18
+		f=/mnt/lg/lginit/lg-init; [ -f $f ] || f=/mnt/lg/lginit/lginit
+		if [ -f $f ]; then md5sum $f
+			w=5;m=3;cat $f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'|sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' \
+			-e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' -e's/  \+/ /g'| head -n70 || err=18; fi
+	} >> "$infofile"; sync; echo 3 > /proc/sys/vm/drop_caches; sleep 1
+	{ echo -ne '\n\n#$#'" INFO($err): "; date
 		echo -e '\n\n$# strings boot (/dev/mtd1)'
 		s=7;w=5;m=3;cat /dev/mtd1 |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'|sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' \
 			-e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' -e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 || err=18
@@ -154,16 +163,18 @@ if [ -n "$install" ]; then
 	[ -f "$rootfs" ] || { err=25; echo "Error($err): File not found: $rootfs"; }
 	flash_eraseall --version | sed -e '2,$d' ||
 		{ err=26; echo "ERROR($err): 'flash_erasesall' something??!"; }
-	I=$(cat /proc/mtd | sed -e 's/:.*"\(.*\)"/\1/' -e 's/^mtd//' | grep -v ' \|0bbminfo\|1boot\|2mtdinfo\|5boot\|6crc32info\|8logo\|10nvram\|15kernel\|16lgapp\|20kernel\|22lgres' | sort -n) ||
+	I=$(cat /proc/mtd | sed -e 's/:.*"\(.*\)"/\1/' -e 's/^mtd//' | grep -v ' \|0bbminfo\|5boot\|6crc32info\|8logo\|15kernel\|16lgapp\|20kernel\|22lgres' | sort -n) ||
 		{ err=27; echo "ERROR($err): /proc/mtd (install)"; }
-	[ "$(echo ${I//mtd})" = '3rootfs 4lginit 7model 9cmndata 11user 12ezcal 13estream 14opsrclib 17lgres 18lgfont 19addon 21lgapp 23cert 24authcxt' ] ||
+	[ "$(echo ${I//mtd})" = '1boot 2mtdinfo 3rootfs 4lginit 7model 9cmndata 10nvram 11user 12ezcal 13estream 14opsrclib 17lgres 18lgfont 19addon 21lgapp 23cert 24authcxt' ] ||
 		{ err=27; echo "ERROR($err): TV partitions mismath"; }
 fi
-if [ -n "$install" ] && [ -z "$update" ] && [ -n "$lginitmd5" ]; then
-	if [ -f /mnt/lg/lginit/lginit ] && [ ! -f /mnt/lg/lginit/lg-init ]; then
-		md5cur=$(md5sum /mnt/lg/lginit/lginit) && [ "$lginitmd5" = "${md5cur%% *}" ] ||
-			{ err=28; echo "ERROR($err): md5 mismatch: /mnt/lg/lginit/lginit"; }
-	fi
+if [ -n "$install" ] && [ -z "$update" ] && [ -z "$lginit" ]; then
+	if [ -z "$lginitmd5" ]; then
+		f=/mnt/lg/lginit/lg-init; [ -f $f ] || f=/mnt/lg/lginit/lginit
+		[ -f $f ] && lginitmd5=`md5sum $f`; fi
+	if   [ "$lginitmd5" = "$lginitAmd5" ]; then lginit="$lginitA"
+	elif [ "$lginitmd5" = "$lginitBmd5" ]; then lginit="$lginitB"
+	else err=28; echo "ERROR($err): md5 mismatch: /mnt/lg/lginit/lginit"; fi
 fi
 [ $err != 0 ] && exit $err
 if [ -n "$install" ]; then
@@ -185,7 +196,7 @@ if [ -n "$backup" ] || [ -n "$update_backup" ]; then
 	I="${ROOTFS#/dev/}_rootfs ${LGINIT#/dev/}_lginit"
 fi
 if [ -n "$backup" ]; then
-	I=$(cat /proc/mtd | sed -e 's/:.*"\(.*\)"/_\1/' | grep -v ' ') ||
+	I=$(cat /proc/mtd | sed -e 's/:.*"\(.*\)"/_\1/' | grep -v ' \|erasesize') ||
 		{ err=33; echo "ERROR($err): /proc/mtd (backup)"; exit $err; }
 fi
 [ $err != 0 ] && exit $err

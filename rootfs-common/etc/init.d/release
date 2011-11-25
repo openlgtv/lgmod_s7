@@ -45,21 +45,25 @@ RELCFG() {
 		cfg=/mnt/lg/cmn_data/RELEASE.cfg; rdir=/mnt/lg/model; rcfg=$rdir/RELEASE.cfg
 		[ -f "$cfg" ] || sed -e 's/^\(eDebugMode,\).*$/\1EVENT/' "$rcfg" > "$cfg"
 		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
-		else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
+		else D=$(stat -c%D $rdir $rcfg); n=$'\n'
 			[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
 	fi
 
-	#f=openrelease_keymap.cfg; cfg=/mnt/lg/cmn_data/$f; rdir=/etc/openrelease; rcfg=$rdir/$f
-	#if [ -f "$cfg" ]; then
-	#	if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
-	#	else D=$(stat -c%D / $rdir $rcfg); n=$'\n'
-	#		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
-	#fi
+	# If exists - use file from /mnt/lg/cmn_data/ (check with 'stat' and mount-bind once)
+	f=libopenrelease.so; cfg=/mnt/lg/cmn_data/$f; rdir=/usr/lib; rcfg=$rdir/$f
+	if [ -f "$cfg" ]; then
+		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
+		else D=$(stat -c%D $rdir $rcfg); n=$'\n'
+			[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
+	fi
 
-	cfg=/mnt/lg/cmn_data/openrelease.cfg
-	if [ ! -f $cfg ]; then
-		echo "release: Default ${cfg##*/} ..."
-		cp -a /etc/openrelease/default-${cfg##*/} $cfg; sync
+	# Note: we can't apply future changes to customized cfg file
+	# Note: RELEASE startup variants depends of this cfg file (webui)
+	f=openrelease.cfg; cfg=/mnt/lg/cmn_data/$f; rdir=/etc/openrelease; rcfg=$rdir/$f
+	if [ -f "$cfg" ]; then
+		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
+		else D=$(stat -c%D $rdir $rcfg); n=$'\n'
+			[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$cfg" "$rcfg"; fi
 	fi
 
 	cfg=/mnt/lg/cmn_data/openrelease_keymap.cfg
