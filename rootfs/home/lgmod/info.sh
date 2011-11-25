@@ -184,9 +184,10 @@ if [ "$part" = paste ] && [ -f $wget ]; then
 	#echo -n "name=$name&type=23&description=/tmp/OpenLGTV-info-file.txt&expiry=1+month&s=Submit+Post&content=" > "$wgetfile" || exit
 
 	URL='http://pastebin.com/api_public.php'; # paste_format=1 - none
-	echo -n "paste_name=$name&paste_format=1&paste_expire_date=1M&paste_private=1&paste_code="
+	echo -n "paste_name=$name&paste_format=1&paste_expire_date=1M&paste_private=1&paste_code=" > "$wgetfile" || exit
 
 	cat "$infofile" | sed -e 's|%|%25|g' -e 's|&|%26|g' -e 's|+|%2b|g' -e 's| |+|g' >> "$wgetfile" &&
+		echo $wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL" &&
 		$wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL" &&
 		echo 'NOTE: To share your info file, please find the link below:'
 	cat /tmp/info-file.pbin; echo
