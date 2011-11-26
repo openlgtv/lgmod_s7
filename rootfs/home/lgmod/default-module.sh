@@ -15,11 +15,11 @@ modprobe rt73usb
 #modprobe cifs; # CIFSMaxBufSize=130048
 
 # Input modules
-#modprobe input-core
-#modprobe evdev
-#modprobe uinput
-#modprobe hid
-#modprobe usbhid
+modprobe input-core
+modprobe evdev
+modprobe uinput
+modprobe hid
+modprobe usbhid
 
 # CDROM filesystem modules
 #modprobe cdrom

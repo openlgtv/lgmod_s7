@@ -9,6 +9,6 @@ which $D || {
 	echo "$msg"; echo "$msg" > /dev/kmsg; exit 1; }
 
 # dfbscreen after kill to clean screen (better way?)
-if ! pgrep $D; then $D &
+if ! pgrep $D; then $D -c 'links google.com' &
 else killall $D; sleep 0.1; dfbscreen &
 fi

@@ -17,10 +17,6 @@ START() {
 			if [ "${D%%$n*}" = "${D#*$n}" ]; then
 				echo "netcast: $1 bind $arg/contents"
 				mount -o bind "$arg/contents" /mnt/addon/contents
-
-				# DirectDB things - TODO: move to hotplug (if keyboard available)
-				which kbd_mode && kbd_mode -s
-
 				killall stagecraft
 			fi
 			break 2
@@ -30,6 +26,14 @@ START() {
 
 boot() {
 	{
+	# DirectDB things - TODO: find a better place
+	rdir=/usr/local; dir=/mnt/lg/user/extroot$rdir
+	if [ ! -d $dir ]; then echo "netcast(DFB): $dir not found (extroot?)"
+	else D=''; #$(stat -c%D $rdir $rdir/bin); n=$'\n'
+		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$dir" "$rdir"; fi
+	# keyboard - TODO: move to hotplug (if available)
+	kbd_mode -s || echo "netcast(DFB): kbd_mode not found (extroot?)"
+
 	START "$@"
 	} > /dev/kmsg 2>&1
 }

@@ -1,5 +1,6 @@
 #!/bin/sh
-msg='key: kill stagecraft'
+msg='openrelease: key: kill stagecraft'
 echo "$msg"; echo "$msg" > /dev/kmsg
+D=stagecraft
 
-killall stagecraft
+killall $D

@@ -177,7 +177,8 @@ INFO "INFO: `date`"; DROP; sync
 [ "$part" != root ] && [ $err = 0 ] && echo "Done: Info file: $infofile"
 
 
-if [ "$part" = paste ] && [ -f $wget ]; then
+if [ "$part" = paste ]; then
+	[ ! -f $wget ] && echo "NOTE: $wget not found (extroot?)" && exit 1
 	name="$MODEL"; [ -z "$name" ] && name=`hostname`; [ -z "$name" ] && name='NA'
 
 	#URL='http://pastebin.ca/quiet-paste.php?api=GO2sUUgKHm5v4WAAXooevnRBoI0bdGhc'; # type=23 - bash (?)
