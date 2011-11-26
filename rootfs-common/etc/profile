@@ -130,7 +130,7 @@ Revent() {
 	Rtell "`echo`$C`echo`" C-M "$C" C-M; sleep 0.2; Rtell x x
 }
 
-alias Rgame='C="call UI_CONTENTSLINK_CreateWindow"; Rtell "`echo`$C`echo`" C-M "$C" C-M'
+#alias Rgame='C="call UI_CONTENTSLINK_CreateWindow"; Rtell "`echo`$C`echo`" C-M "$C" C-M'
 alias Rtail='tail -n+1 -F /tmp/RELEASE.out /tmp/openrelease.out /tmp/openrelease.log'
 Ropen() {
 	local F="/tmp/openrelease.log /tmp/openrelease.out"; (tail -F $F &)

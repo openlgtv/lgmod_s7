@@ -29,10 +29,11 @@ boot() {
 	# DirectDB things - TODO: find a better place
 	rdir=/usr/local; dir=/mnt/lg/user/extroot$rdir
 	if [ ! -d $dir ]; then echo "netcast(DFB): $dir not found (extroot?)"
-	else D=''; #$(stat -c%D $rdir $rdir/bin); n=$'\n'
-		[ "${D%%$n*}" = "${D#*$n}" ] && mount -o bind "$dir" "$rdir"; fi
+	else D=$'1\n0'; #$(stat -c%D $dir $rdir); n=$'\n'
+		[ "${D%%$n*}" = "${D#*$n}" ] || mount -o bind "$dir" "$rdir"; fi
 	# keyboard - TODO: move to hotplug (if available)
-	kbd_mode -s || echo "netcast(DFB): kbd_mode not found (extroot?)"
+	D=/mnt/lg/user/extroot/usr/bin/kbd_mode
+	[ -f $D ] && $D -s || echo "netcast(DFB): kbd_mode not found (extroot?)"
 
 	START "$@"
 	} > /dev/kmsg 2>&1

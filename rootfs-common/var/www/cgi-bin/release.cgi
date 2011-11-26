@@ -74,7 +74,7 @@ fi
 <input type="submit" name="cut" value="exit">
 <br>
 <b> pass:</b><input type="submit" name="cut" value="<? MODEL=$(echo /lg/user/model.*); MODEL="${MODEL#*model.}"; echo -n 'd '"${MODEL}"'elqjrm' ?>">_
-<b> games:</b><input type="submit" name="cut" value="call UI_CONTENTSLINK_CreateWindow">_
+<!-- <b> games:</b><input type="submit" name="cut" value="call UI_CONTENTSLINK_CreateWindow">_ -->
 </form><a name='goto_bottom'></a>
 </div></div>
 
