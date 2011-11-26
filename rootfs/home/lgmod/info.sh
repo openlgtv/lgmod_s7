@@ -181,9 +181,9 @@ if [ "$part" = paste ] && [ -f $wget ]; then
 	name="$MODEL"; [ -z "$name" ] && name=`hostname`; [ -z "$name" ] && name='NA'
 
 	#URL='http://pastebin.ca/quiet-paste.php?api=GO2sUUgKHm5v4WAAXooevnRBoI0bdGhc'; # type=23 - bash (?)
-	#echo -n "name=$name&type=23&description=/tmp/OpenLGTV-info-file.txt&expiry=1+month&s=Submit+Post&content=" > "$wgetfile" || exit
+	#echo -n "name=$name&type=&description=/tmp/OpenLGTV-info-file.txt&expiry=1+month&s=Submit+Post&content=" > "$wgetfile" || exit
 
-	URL='http://pastebin.com/api_public.php'; # paste_format=1 - none
+	URL='http://pastebin.com/api_public.php'; # paste_format=bash (?)
 	echo -n "paste_name=$name&paste_format=1&paste_expire_date=1M&paste_private=1&paste_code=" > "$wgetfile" || exit
 
 	cat "$infofile" | sed -e 's|%|%25|g' -e 's|&|%26|g' -e 's|+|%2b|g' -e 's| |+|g' >> "$wgetfile" &&
