@@ -97,6 +97,8 @@ mount -o noatime -t $SELTYP $dev $EXTMNT || EXIT 18 "mount -t $SELTYP $dev"
 
 
 # delete old, extract new extroot
+echo 3 > /proc/sys/vm/drop_caches
+
 if [ -d $EXTDEST ]; then
 	echo; echo "Select: Delete directory $dev/${EXTDEST##*/}"
 	echo 'Press <enter> to continue - no delete. Press "S" to stop'
@@ -121,6 +123,7 @@ fi
 
 # update config file and extroot sym.link
 echo
+
 if [ "`readlink -f $EXTLINK`" != $EXTDEST ]; then
 	rm -rf $EXTLINK && ln -s $EXTDEST $EXTLINK &&
 		echo 'Info: ln -s $EXTDEST $EXTLINK' ||
@@ -135,28 +138,29 @@ else echo "DONE: Config file not changed: $EXTCONF"; fi
 
 
 # LG DirectFB to extroot/usr/local
-#echo 3 > /proc/sys/vm/drop_caches
-D=/usr/local; d=$EXTDEST; F=$D/etc/directfbrc
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	D=/usr/local; d=$EXTDEST; F=$D/etc/directfbrc
 
-echo; echo "Select: Copy $D to $dev/${EXTDEST##*/} (DirectFB)"
-echo 'Press <enter> to continue and copy. Press "S" to stop'
-typ=''; read -p 'Select: "NO"? ' typ || EXIT 41; [ "$typ" = S ] && EXIT 1
-if [ "$typ" != NO ]; then
-	for i in `find $D \! -type d`; do
-		[ $i = $F ] && continue
-		[ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
-		cp -a $i $d$i && echo "cp -a $i $d$i" ||
-			echo "Error: cp -a $i $d$i"; #EXIT 42 "cp -a $i $d$i";
-	done
-fi
+	echo; echo "Select: Copy $D to $dev/${EXTDEST##*/} (DirectFB)"
+	echo 'Press <enter> to continue and copy. Press "S" to stop'
+	typ=''; read -p 'Select: "NO"? ' typ || EXIT 41; [ "$typ" = S ] && EXIT 1
+	if [ "$typ" != NO ]; then
+		for i in `find $D \! -type d`; do
+			[ $i = $F ] && continue
+			[ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
+			cp -a $i $d$i && echo "cp -a $i $d$i" ||
+				echo "Error: cp -a $i $d$i"; #EXIT 42 "cp -a $i $d$i";
+		done
+	fi
 
-echo; echo "Select: Modify $F and copy to $dev/${EXTDEST##*/} (DirectFB)"
-echo 'Press <enter> to continue and copy. Press "S" to stop'
-typ=''; read -p 'Select: "NO"? ' typ || EXIT 43; [ "$typ" = S ] && EXIT 1
-if [ "$typ" != NO ]; then
-	i=$F; [ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
-	sed -i -e 's/no-cursor/cursor-updates\nno-linux-input-grab/' $i &&
-		cp -a $i $d$i || EXIT 44 "sed & cp: $i $d$i"
+	echo; echo "Select: Modify $F and copy to $dev/${EXTDEST##*/} (DirectFB)"
+	echo 'Press <enter> to continue and copy. Press "S" to stop'
+	typ=''; read -p 'Select: "NO"? ' typ || EXIT 43; [ "$typ" = S ] && EXIT 1
+	if [ "$typ" != NO ]; then
+		i=$F; [ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
+		sed -i -e 's/no-cursor/cursor-updates\nno-linux-input-grab/' $i &&
+			cp -a $i $d$i || EXIT 44 "sed & cp: $i $d$i"
+	fi
 fi
 
 
