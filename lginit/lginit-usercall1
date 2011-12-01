@@ -25,8 +25,8 @@ call_and_wait() {
 
 ready() {
 	# is USB init ready?
-	added=$(dmesg | grep -q ' Adding user_initcall' | wc -l)
-	lines=$(dmesg | grep -q ' calling user_initcall ' | wc -l)
+	added=$(dmesg | grep ' Adding user_initcall' | wc -l)
+	lines=$(dmesg | grep ' calling user_initcall ' | wc -l)
 	[ "$lines" -ge "$added" ] || return 1
 	echo "$PREFIX Ready($added $lines)"
 }

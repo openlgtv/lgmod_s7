@@ -17,29 +17,36 @@ fi
 
 # find extroot device and mount ext2/3 partition
 EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
-EXTMNT=/tmp/lgmod/extroot; EXTDEST=$EXTMNT/extroot; EXTDEV=''; EXTYPE=''
+EXTMNT=/tmp/lgmod/extroot; EXTDEV=''; EXTYPE=''
+
 if [ ! -f $EXTCONF ]; then
-	echo "rcS-services: Warning: not found $EXTCONF" > /dev/kmsg
-elif [ ! -L $EXTLINK ] || [ "`readlink -f $EXTLINK" != $EXTDEST ]; then
-	echo "rcS-services: Warning: not a sym.link to $EXTDEST ($EXTLINK)" > /dev/kmsg
+	echo "rcS-services: Warning: not found: $EXTCONF" > /dev/kmsg
+elif [ ! -L $EXTLINK ]; then
+	echo "rcS-services: Warning: not a sym.link: $EXTLINK" > /dev/kmsg
 else
 	ID=`cat $EXTCONF`; EXTYPE="${ID%%:*}"; EXTDEV="${ID#*:}"; EXTDEV="${EXTDEV%%:*}"
+	[ "$EXTYPE" = ext3 ] && modprobe jbd
+	modprobe "$EXTYPE" && mkdir -p $EXTMNT || { EXTYPE=''; EXTDEV=''; }
+	[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] ||
+		echo "rcS-services: Error: invalid config: $EXTCONF" > /dev/kmsg
 fi
-if [ -z "$EXTDEV" ] || [ -z "$EXTYPE" ]; then
-	echo "rcS-services: Error: invalid config: $EXTCONF" > /dev/kmsg
-else
-	{ for i in /sys/block/sd?; do
-		dev=${i##*/}; [ -d $i ] && [ -d $i/$dev$EXTDEV ] || continue
+
+[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] && {
+	for i in /sys/block/sd?; do
+		dev=${i##*/}; [ -d $i ] && [ -d "$i/$dev$EXTDEV" ] || continue
 		id="`cat $i/device/vendor`"; id="`echo $id`"
 		id="$id:`cat $i/device/../../../../serial`"
 		id="$id:`cat $i/device/../../../../idVendor`"
 		id="$id:`cat $i/device/../../../../idProduct`"
-		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] || continue
-		mount -o noatime -t $EXTYPE /dev/$dev$EXTDEV $EXTMNT ||
-			echo "rcS-services: Error: extroot mount -t $EXTYPE /dev/$dev$EXTDEV"
+		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] || continue; dev="/dev/$dev$EXTDEV"
+
+		mount -o noatime -t "$EXTYPE" "$dev" $EXTMNT ||
+			echo "rcS-services: Error: extroot mount -t $EXTYPE $dev"
 		break
-	done; } > /dev/kmsg 2>&1
-fi
+	done
+	[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] ||
+		echo "rcS-services: Error: extroot device not found: $ID"
+	} > /dev/kmsg 2>&1
 
 . /etc/init.d/rcS-services-env
 

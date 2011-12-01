@@ -64,14 +64,14 @@ SELTYP="${SEL%%:*}"; SELDEV="${SEL#*:}"; SELDEV="${SELDEV%%:*}"
 D=$(stat -c%D $EXTMNT ${EXTMNT%/*}); n=$'\n'
 [ "${D%%$n*}" = "${D#*$n}" ] || umount $EXTMNT || EXIT 12 "umount $EXTMNT"
 
-[ $SELTYP = ext3 ] && modprobe jbd
-modprobe $SELTYP || EXIT 13 "modprobe $SELTYP"
+[ "$SELTYP" = ext3 ] && modprobe jbd
+modprobe "$SELTYP" || EXIT 13 "modprobe $SELTYP"
 
 
 # verify/find device, format and mount
 id=''; dev=''; NEW=''
 for i in /sys/block/sd?; do
-	dev=${i##*/}; [ -d $i ] && [ -d $i/$dev$SELDEV ] || continue
+	dev=${i##*/}; [ -d $i ] && [ -d "$i/$dev$SELDEV" ] || continue
 	id="`cat $i/device/vendor`"; id="`echo $id`"
 	id="$id:`cat $i/device/../../../../serial`"
 	id="$id:`cat $i/device/../../../../idVendor`"
@@ -84,16 +84,15 @@ for i in /sys/block/sd?; do
 	NEW=''; read -p 'Select: format - "YES"? ' NEW || EXIT 14; [ "$NEW" = S ] && EXIT 1
 	[ -z "$NEW" ] && break; [ "$NEW" = YES ] || break
 
-	grep "^$dev " /proc/mounts && 
-		{ umount $dev || EXIT 15 "umount $dev"; }
+	grep "^$dev " /proc/mounts &&  { umount "$dev" || EXIT 15 "umount $dev"; }
 
-	typ=''; [ $typ = ext3 ] && typ="$typ -j"; #-t $SELTYP
-	mke2fs -v -L EXTROOT $typ $dev || EXIT 16 "mke2fs $typ $dev"
+	typ=''; [ $SELTYP = ext3 ] && typ='-j'
+	mke2fs -v -L EXTROOT $typ "$dev" || EXIT 16 "mke2fs $typ $dev"
 	break
 done
 [ "$SEL" != "$SELTYP:$SELDEV:$id" ] && EXIT 17 "Device not found: $SEL"
 
-mount -o noatime -t $SELTYP $dev $EXTMNT || EXIT 18 "mount -t $SELTYP $dev"
+mount -o noatime -t "$SELTYP" "$dev" $EXTMNT || EXIT 18 "mount -t $SELTYP $dev"
 
 
 # delete old, extract new extroot

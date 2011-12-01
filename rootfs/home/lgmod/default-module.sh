@@ -1,9 +1,9 @@
 #!/bin/sh
 #modprobe mii; # ?
 f=usbnet;  [ -d /sys/module/$f ] || modprobe $f; # Core network modules
-f=pegasus; [ -d /sys/module/$f ] || modprobe $f-lgmod; # Pegasus network chipset module
-f=asix;    [ -d /sys/module/$f ] || modprobe $f-lgmod; # Asix network chipset module
-modprobe mcs7830-asix; # MCS7830 network chipset module
+#modprobe pegasus-lgmod; # Pegasus network chipset module
+#modprobe asix-lgmod;    # Asix network chipset module
+modprobe mcs7830-asix;  # MCS7830 network chipset module
 modprobe dm9601-lgmod;  # DM9601 network chipset module
 
 # Ralink based wireless support (Rt2x00, Rt2500, Rt73)
