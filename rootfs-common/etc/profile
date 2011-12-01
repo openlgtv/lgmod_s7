@@ -75,15 +75,7 @@ export HOME=/mnt/lg/user/root
 
 . /etc/init.d/rcS-lginit-env; # LG: env
 
-# not for RELEASE - outside rcS-lginit-env (check /etc/init.d/rcS-services)
-[ -f /etc/TZ ] && export TZ=`cat /etc/TZ`
-
-after=/lg/user/extroot; # Note: create a sym.link to USB extroot directory
-path=/bin:/sbin:/usr/bin:/usr/sbin; pathl=/usr/local/bin
-lib=/lib:/usr/lib; libl=/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
-export PATH="$path:$pathl:$after${path//:/:$after}"
-export LD_LIBRARY_PATH="$lib:$libl:$after${lib//:/:$after}"
-unset after path pathl lib libl
+. /etc/init.d/rcS-services-env
 
 alias mounts='cat /proc/mounts'
 alias dropc='echo 3 > /proc/sys/vm/drop_caches && free'

@@ -7,19 +7,45 @@
 r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
-# environment for services - check /etc/profile (not for RELEASE - outside rcS-lginit-env)
-[ -f /etc/TZ ] && export TZ=`cat /etc/TZ`
+
+
+if [ -z "$NOREL" ]; then
+	. /etc/init.d/rcS-usercall1 call_wait > /dev/kmsg 2>&1; # wait USB (extroot)
+else
+	. /etc/init.d/release-mount boot; # init USB (extroot)
+fi
+
+# find extroot device and mount ext2/3 partition
+EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
+EXTMNT=/tmp/lgmod/extroot; EXTDEST=$EXTMNT/extroot; EXTDEV=''; EXTYPE=''
+if [ ! -f $EXTCONF ]; then
+	echo "rcS-services: Warning: not found $EXTCONF" > /dev/kmsg
+elif [ ! -L $EXTLINK ] || [ "`readlink -f $EXTLINK" != $EXTDEST ]; then
+	echo "rcS-services: Warning: not a sym.link to $EXTDEST ($EXTLINK)" > /dev/kmsg
+else
+	ID=`cat $EXTCONF`; EXTYPE="${ID%%:*}"; EXTDEV="${ID#*:}"; EXTDEV="${EXTDEV%%:*}"
+fi
+if [ -z "$EXTDEV" ] || [ -z "$EXTYPE" ]; then
+	echo "rcS-services: Error: invalid config: $EXTCONF" > /dev/kmsg
+else
+	{ for i in /sys/block/sd?; do
+		dev=${i##*/}; [ -d $i ] && [ -d $i/$dev$EXTDEV ] || continue
+		id="`cat $i/device/vendor`"; id="`echo $id`"
+		id="$id:`cat $i/device/../../../../serial`"
+		id="$id:`cat $i/device/../../../../idVendor`"
+		id="$id:`cat $i/device/../../../../idProduct`"
+		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] || continue
+		mount -o noatime -t $EXTYPE /dev/$dev$EXTDEV $EXTMNT ||
+			echo "rcS-services: Error: extroot mount -t $EXTYPE /dev/$dev$EXTDEV"
+		break
+	done; } > /dev/kmsg 2>&1
+fi
+
+. /etc/init.d/rcS-services-env
 
 
 
 . /etc/init.d/module boot; #&
-
-if [ -z "$NOREL" ]; then
-	. /etc/init.d/rcS-usercall1 call_wait > /dev/kmsg 2>&1; # wait USB (network)
-else
-	. /etc/init.d/release-mount boot; # init USB (network)
-fi
-
 . /etc/init.d/network boot
 [ -f /etc/init.d/wireless ] && . /etc/init.d/wireless boot
 

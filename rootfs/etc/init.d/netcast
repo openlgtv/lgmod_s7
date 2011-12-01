@@ -31,8 +31,8 @@ boot() {
 	if [ ! -d $dir ]; then echo "netcast(DFB): $dir not found (extroot?)"
 	else D=$'1\n0'; #$(stat -c%D $dir $rdir); n=$'\n'
 		[ "${D%%$n*}" = "${D#*$n}" ] || mount -o bind "$dir" "$rdir"; fi
-	# keyboard - TODO: move to hotplug (if available)
-	D=/mnt/lg/user/extroot/usr/bin/kbd_mode
+	# keyboard - TODO: move to hotplug (if keyboard available)
+	D=/mnt/lg/user/extroot/usr/bin/kbd_mode; # busybox applet does not work
 	[ -f $D ] && $D -s || echo "netcast(DFB): kbd_mode not found (extroot?)"
 
 	START "$@"

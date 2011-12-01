@@ -39,7 +39,7 @@ if [ -n "$LGI_CHROOT" ] && [ -b "$DEV" ]; then
 	. $DIR/lginit-tmpfs
 	if mkdir -p "$USB" > $OUT 2>&1; then
 		echo "lginit: trying $DEV $SQF ..." > $OUT
-		. $DIR/lginit-usercall1 call_wait > $OUT 2>&1
+		. $DIR/lginit-usercall1 call_and_wait > $OUT 2>&1
 		if mount -t vfat -o iocharset=utf8,shortname=mixed,noatime "$DEV" "$USB" > $OUT 2>&1 ||
 			mount -t ntfs -o noatime "$DEV" "$USB" > $OUT 2>&1; then
 			if [ -f "$SQF" ]; then

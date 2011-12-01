@@ -1,0 +1,16 @@
+#!/bin/sh
+# Source code released under GPL License
+# Modified for Saturn6/Saturn7 by mmm4m5m
+
+# Description: used in rcS-services and profile
+
+# environment for services
+[ -f /etc/TZ ] && export TZ=`cat /etc/TZ`
+
+# services from extroot
+after=/lg/user/extroot; # Note: create a sym.link to USB extroot directory
+path=/bin:/sbin:/usr/bin:/usr/sbin; pathl=/usr/local/bin
+lib=/lib:/usr/lib; libl=/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
+export PATH="$path:$pathl:$after${path//:/:$after}"
+export LD_LIBRARY_PATH="$lib:$libl:$after${lib//:/:$after}"
+unset after path pathl lib libl

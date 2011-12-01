@@ -15,6 +15,7 @@ for i in /etc/init.d/??[^SK]*; do
 	echo "<tr><td><a href='?cmd=$i start'>start</a>&nbsp;</td><td><a href='?cmd=$i stop'>stop</a>&nbsp;"
 	echo "</td><td><a href='?cmd=$i restart'>restart</a>&nbsp;</td><td>&nbsp;<nobr>$I</nobr>&nbsp;&nbsp;</td><td><pre>"
 	if [ "$I" = release ]; then pgrep -fl '^/mnt/lg/lgapp/RELEASE'
+	elif [ "$I" = ftpd ]; then pgrep -fl 'ftpd'
 	else pgrep -fl "^\(/[a-z/]*/\)\?$I "; fi
 	echo '</pre></td></tr>'
 done

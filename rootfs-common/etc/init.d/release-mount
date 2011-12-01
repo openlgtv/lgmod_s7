@@ -35,14 +35,14 @@ START() {
 
 boot() {
 	{
-	. /etc/init.d/rcS-usercall1 call_wait
+	. /etc/init.d/rcS-usercall1 call_and_wait
 	START "$@"
 	} > /dev/kmsg 2>&1
 }
 
 start() {
 	pgrep -f '^/mnt/lg/lgapp/RELEASE ' && { echo 'release-mount: Already started'; return 1; }
-	. /etc/init.d/rcS-usercall1 call_and_wait
+	. /etc/init.d/rcS-usercall1 call_wait
 	START "$@"
 }
 

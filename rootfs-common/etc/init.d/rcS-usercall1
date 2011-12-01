@@ -18,7 +18,7 @@ wait() {
 	done
 	echo "$PREFIX Done($done $time $2 $3 $4)"
 }
-call_wait() {
+call_and_wait() {
 	# init USB and wait
 	call; wait "$@"
 }
@@ -36,7 +36,7 @@ called() {
 	[ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || return 0
 	dmesg | grep -q ' calling user_initcall ' || return 1
 }
-call_and_wait() {
+call_wait() {
 	# check if USB init started, else init USB; then wait for USB
 	if ! called; then call; wait "$@"
 	else ready || wait "$@"; fi
@@ -56,5 +56,5 @@ case "$1" in
 	call_wait)		call_wait "$@";;
 	call_and_wait)	call_and_wait "$@";;
 	wait_or_call)	wait_or_call "$@";;
-	*)			echo "Usage: $0 wait|call_wait|call_and_wait|wait_or_call"; exit 1
+	*)			echo "Usage: $0 wait|call_and_wait|call_wait|wait_or_call"; exit 1
 esac

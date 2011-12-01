@@ -4,6 +4,7 @@
 # v1.0
 
 #HOTPLUG_LOGGING=1
+#HOTPLUG_LOGGING=2
 
 # FW in extroot are checked before rootfs. FW in 'user' partition are with top priority
 HOTPLUG_FW_DIRS='/mnt/lg/user/firmware /mnt/lg/user/extroot/lib/firmware /lib/firmware'
@@ -58,7 +59,7 @@ elif [ -n "$HOTPLUG_LOGGING" ] && [ -n "$DEVPATH_BLKSD"  ]; then
 	echo "hotplug($$): New USB partition: $DEVPATH_BLKSD ($@)" > /dev/kmsg
 	env | sed -e "s/^/hotplug($$): /" > /dev/kmsg
 
-elif [ -n "$HOTPLUG_LOGGING" ]; then
+elif [ "$HOTPLUG_LOGGING" = 2 ]; then
 	echo "hotplug($$): START: $@" > /dev/kmsg
 	env | sed -e "s/^/hotplug($$): /" > /dev/kmsg
 	echo "hotplug($$): LG hotplug" > /dev/kmsg
@@ -67,4 +68,7 @@ fi
 
 # not handled - call LG hotplug
 /bin/hotplug "$@"
-[ -n "$HOTPLUG_LOGGING" ] && echo "hotplug($$): END" > /dev/kmsg
+
+if [ "$HOTPLUG_LOGGING" = 2 ]; then
+	echo "hotplug($$): END" > /dev/kmsg
+fi
