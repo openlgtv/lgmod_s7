@@ -7,6 +7,8 @@ EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
 EXTMNT=/tmp/lgmod/extroot; EXTDEST=$EXTMNT/extroot; EXTDEV=''; EXTYPE=''; ID=''
 
 EXIT() { sync; [ -n "$2" ] && echo "Error($1): $2"; exit "$1"; }
+echo "NOTE: stagecraft will be auto-stopped (and auto-started)"
+echo "	(umount /usr/local and update requires stopping DFB programs)"
 
 EXTROOT="`readlink -f "$EXTROOT"`"
 [ -f "$EXTROOT" ] || echo "Warning: extroot archive not found"
@@ -76,10 +78,9 @@ for i in /sys/block/sd?; do
 	id="$id:`cat $i/device/../../../../serial`"
 	id="$id:`cat $i/device/../../../../idVendor`"
 	id="$id:`cat $i/device/../../../../idProduct`"
-	[ "$SEL" = "$SELTYP:$SELDEV:$id" ] || continue
+	[ "$SEL" = "$SELTYP:$SELDEV:$id" ] || continue; dev="/dev/$dev$SELDEV"
 
-	dev="/dev/$dev$SELDEV"
-	echo; echo "Select: Format partition $dev as $typ"
+	echo; echo "Select: Format partition $dev as $SELTYP"
 	echo 'Press <enter> to continue - no format. Press "S" to stop'
 	NEW=''; read -p 'Select: format - "YES"? ' NEW || EXIT 14; [ "$NEW" = S ] && EXIT 1
 	[ -z "$NEW" ] && break; [ "$NEW" = YES ] || break
@@ -106,7 +107,7 @@ if [ -d $EXTDEST ]; then
 fi
 
 if [ -f "$EXTROOT" ]; then
-	echo; echo "Info: Extract $EXTROOT to $dev/${EXTDEST##*/} (1-2 mins)"
+	echo; echo "Info: Extract $EXTROOT to $dev/${EXTDEST##*/} (2 mins)"
 	typ=''
 	if [ -d $EXTDEST ]; then
 		echo 'Press <enter> to continue and extract. Press "S" to stop'
@@ -144,21 +145,26 @@ if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 	echo 'Press <enter> to continue and copy. Press "S" to stop'
 	typ=''; read -p 'Select: "NO"? ' typ || EXIT 41; [ "$typ" = S ] && EXIT 1
 	if [ "$typ" != NO ]; then
+		if grep " $D " /proc/mounts | grep '^/dev/sd'; then
+			killall stagecraft && sleep 1 && umount $D || EXIT 42 "umount $D"
+		fi
+
 		for i in `find $D \! -type d`; do
 			[ $i = $F ] && continue
 			[ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
-			cp -a $i $d$i && echo "cp -a $i $d$i" ||
-				echo "Error: cp -a $i $d$i"; #EXIT 42 "cp -a $i $d$i";
+			cp -a $i $d$i && echo "cp -a $d$i" || EXIT 43 "cp -a $d$i"
 		done
-	fi
 
-	echo; echo "Select: Modify $F and copy to $dev/${EXTDEST##*/} (DirectFB)"
-	echo 'Press <enter> to continue and copy. Press "S" to stop'
-	typ=''; read -p 'Select: "NO"? ' typ || EXIT 43; [ "$typ" = S ] && EXIT 1
-	if [ "$typ" != NO ]; then
-		i=$F; [ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
-		sed -i -e 's/no-cursor/cursor-updates\nno-linux-input-grab/' $i &&
-			cp -a $i $d$i || EXIT 44 "sed & cp: $i $d$i"
+		echo; echo "Select: Modify $F and copy to $dev/${EXTDEST##*/} (DirectFB)"
+		echo 'Press <enter> to continue and copy. Press "S" to stop'
+		typ=''; read -p 'Select: "NO"? ' typ || EXIT 44; [ "$typ" = S ] && EXIT 1
+		if [ "$typ" != NO ]; then
+			i=$F; [ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
+			sed -i -e 's/no-cursor/cursor-updates\nno-linux-input-grab/' $i &&
+				cp -a $i $d$i && echo "cp -a $d$i" || EXIT 45 "sed & cp: $d$i"
+		fi
+
+		umount -o bind $d$D $D && killall stagecraft
 	fi
 fi
 

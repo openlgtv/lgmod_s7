@@ -12,7 +12,7 @@ MODEL=`echo /mnt/lg/user/model.*`
 part="$1"
 if   [ "$1" = root ];   then shift; # part 1 - before chroot
 elif [ "$1" = chroot ]; then shift; # part 2 - in chroot - part 1 (from $infotemp) will be included
-elif [ "$1" = paste ];  then shift; # all info and upload to pastebin.ca
+elif [ "$1" = paste ];  then shift; # all info and upload to pastebin.com (pastebin.ca)
 else part=''; fi; # all info
 
 infotemp=/tmp/info-file
