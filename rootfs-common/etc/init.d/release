@@ -47,7 +47,7 @@ dfb() {
 
 RELCFG() {
 	if [ -d /mnt/lg/lginit ]; then # not S6 = S7
-		cfg=/mnt/lg/cmn_data/RELEASE.cfg; rdir=/mnt/lg/model; rcfg=$rdir/RELEASE.cfg
+		f=RELEASE.cfg; cfg=/mnt/lg/cmn_data/$f; rcfg=/mnt/lg/model/$f
 		[ -f "$cfg" ] || sed -e 's/^\(eDebugMode,\).*$/\1EVENT/' "$rcfg" > "$cfg"
 		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
 		else D=$(stat -c%D $cfg $rcfg); n=$'\n'
@@ -55,7 +55,7 @@ RELCFG() {
 	fi
 
 	# If exists - use file from /mnt/lg/cmn_data/ (check with 'stat' and mount-bind once)
-	f=libopenrelease.so; cfg=/mnt/lg/cmn_data/$f; rdir=/usr/lib; rcfg=$rdir/$f
+	f=libopenrelease.so; cfg=/mnt/lg/cmn_data/$f; rcfg=/usr/lib/$f
 	if [ -f "$cfg" ]; then
 		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
 		else grep -q " $rcfg" /proc/mounts || mount -o bind "$cfg" "$rcfg"; fi
@@ -63,7 +63,7 @@ RELCFG() {
 
 	# Note: we can't apply future changes to customized cfg file
 	# Note: RELEASE startup variants depends of this cfg file (webui)
-	f=openrelease.cfg; cfg=/mnt/lg/cmn_data/$f; rdir=/etc/openrelease; rcfg=$rdir/$f
+	f=openrelease.cfg; cfg=/mnt/lg/cmn_data/$f; rcfg=/etc/openrelease/$f
 	if [ -f "$cfg" ]; then
 		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
 		else D=$(stat -c%D $cfg $rcfg); n=$'\n'
