@@ -69,9 +69,9 @@ build noclean CFG inst='ext make ' "$@"; # always respect cmd line params
 
 # create modules.dep - TODO
 #if [ -f "$K_DIR/System.map" ]; then
-#	cd "$INST_DIR"; d=lib/modules; v=2.6.26; D=$d/$v
-#	rm $D/extroot; ln -s ../../../../extroot/$d $D/extroot
+#	cd "$INST_DIR"; d=lib/modules; v=2.6.26; D=$d/$v; E=$D/extroot$SUFFIX
+#	rm $E; ln -s ../../../../extroot/$d $E
 #	depmod -n -e -F "$K_DIR/System.map" -C <(echo search .) -b . $v > ../../depmod.out
-#	svn revert $D/extroot || { rm $D/extroot; ln -s /mnt/lg/user/extroot/$d $D/extroot; }
+#	svn revert $E || { rm $E; ln -s /mnt/lg/user/extroot/$d $E; }
 #	cat ../../depmod.out | grep '\.ko:' > $D/modules.dep
 #fi
