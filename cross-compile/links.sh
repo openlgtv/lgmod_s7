@@ -7,7 +7,7 @@ note dfb
 
 # download, extract
 get_jpeg() { build noclean CONF+=gcc nomake noinstall; }; # run ./configure once for jconfig.h
-get 'http://sourceforge.net/projects/libjpeg/libjpeg/6b/jpegsrc.v6b.tar.gz' dir=jpeg-6b run=get_jpeg
+get 'http://downloads.sourceforge.net/project/libjpeg/libjpeg/6b/jpegsrc.v6b.tar.gz' dir=jpeg-6b run=get_jpeg
 DIRJ="$(pwd)"
 get 'http://links.twibright.com/download/links-2.3.tar.gz'
 

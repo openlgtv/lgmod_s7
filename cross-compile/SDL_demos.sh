@@ -102,7 +102,7 @@ build CONF+='gcc dfb SDL' noinstall inst='ext dest usr/local/bin/ Fire Tunnel' "
 ); echo; echo; (
 
 # download, extract
-get 'http://sourceforge.net/projects/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
+get 'http://downloads.sourceforge.net/project/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
 DIRZ="$(pwd)"
 get_qr() { sed -i -e 's/\(register\)\( tmp \)/\1 int\2/' -e 's/\(static\)\( color \)/\1 int\2/' 3d.cpp;
 	sed -i -e 's/\(const\|static\)\( N_FIG=\| phase \| scale_timer \| color_offset \)/\1 int\2/' abstract.cpp;

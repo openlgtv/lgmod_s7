@@ -6,7 +6,7 @@
 [ "$PLATFORM" != S7 ] || note zlib
 
 # download, extract
-get 'http://sourceforge.net/projects/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
+get 'http://downloads.sourceforge.net/project/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
 DIRZ="$(pwd)"
 get_db() { sed -i -e 's!^\(#define \(ENABLE_X11FWD\|INETD_MODE\|DROPBEAR_TWOFISH\|DROPBEAR_MD5_HMAC\|DO_HOST_LOOKUP\|DO_MOTD\)\)!//\1!' options.h; }
 get 'http://matt.ucc.asn.au/dropbear/releases/dropbear-0.53.1.tar.gz' run=get_db

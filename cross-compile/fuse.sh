@@ -5,7 +5,7 @@
 . "${0%/*}/.functions.sh"; # first line (do not pass cmd line params)
 
 # download, extract
-get 'http://sourceforge.net/projects/fuse/files/fuse-2.X/2.8.6/fuse-2.8.6.tar.gz'
+get 'http://downloads.sourceforge.net/project/fuse/files/fuse-2.X/2.8.6/fuse-2.8.6.tar.gz'
 
 # config, build, install
 Configure() { ./configure "$@" --disable-example --disable-mtab; }

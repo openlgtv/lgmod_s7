@@ -63,6 +63,7 @@ INFO_ROOT() {
 }
 
 INFO_CHROOT_A() {
+	busybox=''; #/bin/busybox; # old
 	CMD 11 cat /proc/mtd
 
 	f=`grep -m1 mtdinfo /proc/mtd | cut -d: -f1`; c=`cat /proc/mtd | wc -l`

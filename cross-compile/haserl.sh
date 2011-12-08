@@ -5,7 +5,7 @@
 . "${0%/*}/.functions.sh"; # first line (do not pass cmd line params)
 
 # download, extract
-get 'http://sourceforge.net/projects/haserl/files/haserl-0.9.29.tar.gz'
+get 'http://downloads.sourceforge.net/project/haserl/files/haserl-0.9.29.tar.gz'
 
 # config, build, install
 Configure() { ./configure "$@" --disable-luashell --disable-bash-extensions; }

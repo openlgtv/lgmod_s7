@@ -11,8 +11,8 @@ echo 'Help: insmod: input-core.ko evdev.ko hid.ko usbhid.ko'
 echo 'Help: In orgm debug menu #14, select #2: "toggle VOSD", and set VOSD[4]=ON'
 
 # download, extract
-get 'http://sourceforge.net/projects/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
-get 'http://sourceforge.net/projects/libpng/libpng12/older-releases/1.2.29/libpng-1.2.29.tar.gz'
+get 'http://downloads.sourceforge.net/project/libpng/zlib/1.2.3/zlib-1.2.3.tar.gz'
+get 'http://downloads.sourceforge.net/project/libpng/libpng12/older-releases/1.2.29/libpng-1.2.29.tar.gz'
 get 'http://directfb.org/downloads/Core/DirectFB-1.2/DirectFB-1.2.7.tar.gz'
 
 # config, build, install

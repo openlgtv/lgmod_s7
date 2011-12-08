@@ -8,7 +8,7 @@
 get 'http://www.mediafire.com/file/wmnk2xz11ki/djmount-large5.zip'
 DIRP="$(pwd)"
 get_upnp() { ln -s build-aux config.aux; patch -p1 -i "$DIRP/libupnp.patch"; }
-get 'http://sourceforge.net/projects/pupnp/files/pupnp/libUPnP 1.6.6/libupnp-1.6.6.tar.bz2' run=get_upnp
+get 'http://downloads.sourceforge.net/project/pupnp/files/pupnp/libUPnP 1.6.6/libupnp-1.6.6.tar.bz2' run=get_upnp
 
 # config, build, install
 Configure() { ./configure "$@" --disable-debug --disable-samples; }
