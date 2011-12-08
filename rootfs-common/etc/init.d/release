@@ -58,7 +58,7 @@ RELCFG() {
 	f=libopenrelease.so; cfg=/mnt/lg/cmn_data/$f; rdir=/usr/lib; rcfg=$rdir/$f
 	if [ -f "$cfg" ]; then
 		if [ "$1" = boot ]; then mount -o bind "$cfg" "$rcfg"
-		else grep -q /proc/mounts " $rcfg" || mount -o bind "$cfg" "$rcfg"; fi
+		else grep -q " $rcfg" /proc/mounts || mount -o bind "$cfg" "$rcfg"; fi
 	fi
 
 	# Note: we can't apply future changes to customized cfg file
