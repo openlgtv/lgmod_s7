@@ -27,7 +27,7 @@ EXTMNT=/tmp/lgmod/extroot; EXTDEV=''; EXTYPE=''
 
 if [ ! -f $EXTCONF ]; then
 	echo "rcS-services: Warning: not found: $EXTCONF" > /dev/kmsg
-elif [ ! -L $EXTLINK ]; then
+elif [ ! -h $EXTLINK ]; then
 	echo "rcS-services: Warning: not a sym.link: $EXTLINK" > /dev/kmsg
 else
 	ID=`cat $EXTCONF`; EXTYPE="${ID%%:*}"; EXTDEV="${ID#*:}"; EXTDEV="${EXTDEV%%:*}"

@@ -18,7 +18,7 @@ if [ -f $EXTCONF ]; then
 	echo "Info: Current config: $ID"
 fi
 
-if [ -L $EXTLINK ]; then
+if [ -h $EXTLINK ]; then
 	extdest=`readlink -f $EXTLINK`
 	[ "$extdest" = $EXTDEST ] || echo "Note: extroot sym.link: $extdest"
 else [ -e $EXTLINK ] && EXIT 2 "extroot is not a sym.link: $EXTLINK"; fi
@@ -88,7 +88,7 @@ for i in /sys/block/sd?; do
 	grep "^$dev " /proc/mounts &&  { umount "$dev" || EXIT 15 "umount $dev"; }
 
 	typ=''; [ $SELTYP = ext3 ] && typ='-j'
-	mke2fs -v -L EXTROOT $typ "$dev" || EXIT 16 "mke2fs $typ $dev"
+	mke2fs -v -h EXTROOT $typ "$dev" || EXIT 16 "mke2fs $typ $dev"
 	break
 done
 [ "$SEL" != "$SELTYP:$SELDEV:$id" ] && EXIT 17 "Device not found: $SEL"

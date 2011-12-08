@@ -74,6 +74,7 @@ fi
 #start_kernel=1454
 
 # S7: specifics (short)
+# /proc/mtd - 26 partitions, 2x boot, kernel, lgapp, lgres
 # /mnt/lg/lginit is dir
 # /mnt/lg/user is dir
 # /mnt/game is sym.link
