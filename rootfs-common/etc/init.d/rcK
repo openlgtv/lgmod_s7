@@ -6,6 +6,12 @@
 # Source code released under GPL License
 # rcS for Saturn6/Saturn7 by mmm4m5m
 
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
+else
+	RELBIN='./RELEASE'; # pgrep
+fi
+
 # Note: 'netcast' removed from rootfs-S6
 for i in lgmod netcast mount release-mount; do
 	# TODO: use sym.links /etc/rc.d/[SK]*
@@ -17,7 +23,7 @@ sync
 if ! cat /proc/mounts | grep -q ' cramfs '; then
 	# LG inittab
 	/bin/umount -a -r
-#elif pgrep -f '^/mnt/lg/lgapp/RELEASE '; then
+#elif pgrep -f "$RELBIN"; then
 #	# LG inittab
 #	/bin/umount -a -r
 else

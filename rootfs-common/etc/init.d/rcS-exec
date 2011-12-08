@@ -13,6 +13,12 @@ RCS_HOTPLUG=1; # 1=enable
 RCS_DELAY=15; # seconds delay before services
 RUN=/mnt/lg/user/lgmod/init/rcS; BOOTMOD=/mnt/lg/user/lgmod/boot
 
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
+else
+	RELBIN='./RELEASE'; # pgrep
+fi
+
 export HOME=/mnt/lg/user/root
 . /etc/init.d/rcS-lginit-env; # LG: env
 
@@ -62,7 +68,7 @@ if [ -z "$RCS_NOREL" ]; then
 	[ "$err" = 222 ] && err=''; # =0 - for release configuration - custom script
 
 	if [ -z "$err" ]; then
-		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
+		sleep 5; r=$(pgrep -f "$RELBIN" | wc -l)
 		[ "$r" -lt 2 ] && err=1; fi
 
 	[ -n "$err" ] && {

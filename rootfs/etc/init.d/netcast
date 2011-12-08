@@ -2,6 +2,12 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
+else
+	RELBIN='./RELEASE'; # pgrep
+fi
+
 START() {
 	for i in 1 2 3 4; do
 		for j in 1 2; do
@@ -40,7 +46,7 @@ boot() {
 }
 
 start() {
-	r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
+	r=$(pgrep -f "$RELBIN" | wc -l)
 	[ "$r" -lt 2 ] && { echo 'netcast: Not started'; return 1; }
 	START "$@"
 }

@@ -1,158 +1,158 @@
-led-class.ko:
-crc-itu-t.ko:
+cdc_ether.ko:
 cdc_subset.ko:
-extroot/lzo_decompress.ko:
-extroot/tsl2550.ko: extroot/i2c-core.ko
-extroot/deflate.ko:
-extroot/cdrom.ko:
-extroot/configfs.ko:
-extroot/nls_cp950.ko:
-extroot/i2c-simtec.ko: extroot/i2c-algo-bit.ko extroot/i2c-core.ko
+crc-itu-t.ko:
+dm9601-lgmod.ko:
+evdev.ko: input-core.ko
+ext2.ko:
+ext3.ko: jbd.ko
+extroot/asix-lgmod.ko:
+extroot/asix.ko:
+extroot/atkbd.ko: input-core.ko extroot/serio.ko extroot/libps2.ko
 extroot/bcm203x.ko: firmware_class.ko
 extroot/bfusb.ko: firmware_class.ko extroot/bluetooth.ko
-extroot/asix-lgmod.ko:
-extroot/inet_diag.ko:
-extroot/mousedev.ko: input-core.ko
-extroot/isofs.ko:
-extroot/serio.ko:
-extroot/fuse.ko:
-extroot/i2c-parport-light.ko: extroot/i2c-algo-bit.ko extroot/i2c-core.ko
-extroot/dm9601.ko:
-extroot/nfs.ko: extroot/lockd.ko extroot/sunrpc.ko
-extroot/hci_uart.ko: extroot/bluetooth.ko
-extroot/cifs.ko:
-extroot/sr_mod.ko: extroot/cdrom.ko
-extroot/ubi.ko:
-extroot/crc7.ko:
-extroot/sha1_generic.ko:
-extroot/rfcomm.ko: extroot/l2cap.ko extroot/bluetooth.ko
-extroot/usbserial.ko:
-extroot/ppp_generic.ko: extroot/slhc.ko
-extroot/atkbd.ko: input-core.ko extroot/serio.ko extroot/libps2.ko
-extroot/libps2.ko:
-extroot/pcf8591.ko: extroot/i2c-core.ko
-extroot/lockd.ko: extroot/sunrpc.ko
-extroot/crc16.ko:
-extroot/pcf8574.ko: extroot/i2c-core.ko
-extroot/lzo.ko: extroot/lzo_decompress.ko extroot/lzo_compress.ko
-extroot/hci_usb.ko: extroot/bluetooth.ko
-extroot/i2c-stub.ko: extroot/i2c-core.ko
-extroot/i8042.ko: extroot/serio.ko
-extroot/asix.ko:
-extroot/mtdconcat.ko:
-extroot/sco.ko: extroot/bluetooth.ko
-extroot/rfkill-input.ko: input-core.ko extroot/rfkill.ko
-extroot/i2c-core.ko:
-extroot/i2c-tiny-usb.ko: extroot/i2c-core.ko
-extroot/ftdi_sio.ko: extroot/usbserial.ko
-extroot/nls_cp850.ko:
-extroot/sunrpc.ko:
-extroot/i2c-algo-bit.ko: extroot/i2c-core.ko
-extroot/bpa10x.ko: extroot/bluetooth.ko
-extroot/crc32c.ko: extroot/libcrc32c.ko
-extroot/rfkill.ko:
-extroot/psmouse.ko: input-core.ko extroot/libps2.ko extroot/serio.ko
 extroot/blowfish.ko:
-extroot/slhc.ko:
-extroot/i2c-ocores.ko: extroot/i2c-core.ko
-extroot/md4.ko:
-extroot/hci_vhci.ko: extroot/bluetooth.ko
-extroot/compat/wl12xx.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/compat.ko: led-class.ko
-extroot/compat/ath9k.ko: extroot/compat/mac80211.ko extroot/compat/ath9k_common.ko extroot/compat/ath9k_hw.ko extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/p54common.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/crc-ccitt.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/rtl8187.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/eeprom_93cx6.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/b43legacy.ko: extroot/compat/ssb.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/lib80211_crypt_wep.ko: extroot/compat/lib80211.ko
-extroot/compat/ath5k.ko: extroot/compat/ath.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/bluetooth.ko:
+extroot/bpa10x.ko: extroot/bluetooth.ko
+extroot/camellia.ko:
+extroot/cdrom.ko:
+extroot/cifs.ko:
+extroot/compat/at76c50x-usb.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/ath.ko: extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/wl1251.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/eeprom_93cx6.ko:
+extroot/compat/ath5k.ko: extroot/compat/ath.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/ath9k.ko: extroot/compat/mac80211.ko extroot/compat/ath9k_common.ko extroot/compat/ath9k_hw.ko extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/ath9k_common.ko: extroot/compat/ath9k_hw.ko extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/ath9k_htc.ko: extroot/compat/mac80211.ko extroot/compat/ath9k_common.ko extroot/compat/ath9k_hw.ko extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/ath9k_hw.ko: extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/mwifiex.ko: extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/lib80211.ko:
+extroot/compat/b43.ko: extroot/compat/ssb.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/b43legacy.ko: extroot/compat/ssb.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/cfg80211.ko: extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/compat.ko: led-class.ko
+extroot/compat/compat_firmware_class.ko: extroot/compat/compat.ko led-class.ko
+extroot/compat/eeprom_93cx6.ko:
+extroot/compat/lib80211.ko:
+extroot/compat/lib80211_crypt_ccmp.ko: extroot/compat/lib80211.ko
+extroot/compat/lib80211_crypt_tkip.ko: extroot/compat/lib80211.ko
+extroot/compat/lib80211_crypt_wep.ko: extroot/compat/lib80211.ko
+extroot/compat/libertas.ko: extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/mac80211.ko: extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/mac80211_hwsim.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/mwifiex.ko: extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/p54common.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/crc-ccitt.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/p54usb.ko: extroot/compat/p54common.ko extroot/crc-ccitt.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/rfkill_backport.ko: input-core.ko
-extroot/compat/ssb.ko:
-extroot/compat/ath9k_htc.ko: extroot/compat/mac80211.ko extroot/compat/ath9k_common.ko extroot/compat/ath9k_hw.ko extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/rtl8192cu.ko: extroot/compat/rtl8192c-common.ko extroot/compat/rtlwifi.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/usb8xxx.ko: extroot/libertas.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/ath9k_common.ko: extroot/compat/ath9k_hw.ko extroot/compat/ath.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/lib80211_crypt_ccmp.ko: extroot/compat/lib80211.ko
-extroot/compat/rt2800usb.ko: extroot/compat/rt2800lib.ko extroot/crc-ccitt.ko wireless/rt2x00usb.ko wireless/rt2x00lib.ko firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/b43.ko: extroot/compat/ssb.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/mac80211_hwsim.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/lib80211_crypt_tkip.ko: extroot/compat/lib80211.ko
-extroot/compat/rt2800lib.ko: extroot/crc-ccitt.ko wireless/rt2x00lib.ko firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/compat_firmware_class.ko: extroot/compat/compat.ko led-class.ko
-extroot/compat/mac80211.ko: extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/compat/at76c50x-usb.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rt2500usb.ko: extroot/compat/rt2x00usb.ko extroot/compat/rt2x00lib.ko extroot/compat/compat_firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rt2800lib.ko: extroot/compat/rt2x00lib.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko extroot/crc-ccitt.ko
+extroot/compat/rt2800usb.ko: extroot/compat/rt2800lib.ko extroot/crc-ccitt.ko extroot/compat/rt2x00usb.ko extroot/compat/rt2x00lib.ko extroot/compat/compat_firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rt2x00lib.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rt2x00usb.ko: extroot/compat/rt2x00lib.ko extroot/compat/compat_firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rt73usb.ko: crc-itu-t.ko extroot/compat/rt2x00usb.ko extroot/compat/rt2x00lib.ko extroot/compat/compat_firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rtl8187.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/eeprom_93cx6.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/rtl8192c-common.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/rtl8192cu.ko: extroot/compat/rtl8192c-common.ko extroot/compat/rtlwifi.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
 extroot/compat/rtlwifi.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-extroot/slip.ko:
-extroot/eeprom.ko: extroot/i2c-core.ko
-extroot/pl2303.ko: extroot/usbserial.ko
+extroot/compat/ssb.ko:
+extroot/compat/wl1251.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/compat/wl12xx.ko: extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko
+extroot/configfs.ko:
 extroot/configs.ko:
-extroot/nls_iso8859-15.ko:
-extroot/nls_cp949.ko:
-extroot/camellia.ko:
-extroot/rng-core.ko:
-extroot/exportfs.ko:
-extroot/pegasus-lgmod.ko:
-extroot/libcrc32c.ko:
-extroot/udf.ko: crc-itu-t.ko
-extroot/i2c-pca-platform.ko: extroot/i2c-algo-pca.ko extroot/i2c-core.ko
-extroot/rtl8150.ko:
-extroot/mcs7830-lgmod.ko:
-extroot/md5.ko:
-extroot/mcs7830.ko:
-extroot/lzo_compress.ko:
-extroot/hostap.ko:
-extroot/serport.ko: extroot/serio.ko
 extroot/crc-ccitt.ko:
-extroot/nls_cp936.ko:
-extroot/i2c-dev.ko: extroot/i2c-core.ko
-extroot/libertas.ko:
+extroot/crc16.ko:
+extroot/crc32c.ko: extroot/libcrc32c.ko
+extroot/crc7.ko:
+extroot/deflate.ko:
 extroot/des_generic.ko:
-extroot/pegasus.ko:
-extroot/zd1201.ko: firmware_class.ko
-extroot/sha256_generic.ko:
-extroot/evbug.ko: input-core.ko
-extroot/pcf8575.ko: extroot/i2c-core.ko
-extroot/jfs.ko:
-extroot/tcp_diag.ko: extroot/inet_diag.ko
-extroot/yaffs.ko:
-extroot/max6875.ko: extroot/i2c-core.ko
-extroot/i2c-algo-pca.ko: extroot/i2c-core.ko
-extroot/bluetooth.ko:
+extroot/dm9601.ko:
 extroot/ds1682.ko: extroot/i2c-core.ko
-extroot/l2cap.ko: extroot/bluetooth.ko
-extroot/nfsd.ko: extroot/lockd.ko extroot/sunrpc.ko extroot/exportfs.ko
 extroot/dummy.ko:
+extroot/eeprom.ko: extroot/i2c-core.ko
+extroot/evbug.ko: input-core.ko
+extroot/exportfs.ko:
+extroot/ftdi_sio.ko: extroot/usbserial.ko
+extroot/fuse.ko:
+extroot/hci_uart.ko: extroot/bluetooth.ko
+extroot/hci_usb.ko: extroot/bluetooth.ko
+extroot/hci_vhci.ko: extroot/bluetooth.ko
+extroot/hostap.ko:
+extroot/i2c-algo-bit.ko: extroot/i2c-core.ko
+extroot/i2c-algo-pca.ko: extroot/i2c-core.ko
+extroot/i2c-core.ko:
+extroot/i2c-dev.ko: extroot/i2c-core.ko
+extroot/i2c-ocores.ko: extroot/i2c-core.ko
+extroot/i2c-parport-light.ko: extroot/i2c-algo-bit.ko extroot/i2c-core.ko
+extroot/i2c-pca-platform.ko: extroot/i2c-algo-pca.ko extroot/i2c-core.ko
+extroot/i2c-simtec.ko: extroot/i2c-algo-bit.ko extroot/i2c-core.ko
+extroot/i2c-stub.ko: extroot/i2c-core.ko
 extroot/i2c-taos-evm.ko: extroot/i2c-core.ko extroot/serio.ko
-ext2.ko:
+extroot/i2c-tiny-usb.ko: extroot/i2c-core.ko
+extroot/i8042.ko: extroot/serio.ko
+extroot/inet_diag.ko:
+extroot/isofs.ko:
+extroot/jfs.ko:
+extroot/l2cap.ko: extroot/bluetooth.ko
+extroot/libcrc32c.ko:
+extroot/libps2.ko:
+extroot/lockd.ko: extroot/sunrpc.ko
+extroot/lzo.ko: extroot/lzo_decompress.ko extroot/lzo_compress.ko
+extroot/lzo_compress.ko:
+extroot/lzo_decompress.ko:
+extroot/max6875.ko: extroot/i2c-core.ko
+extroot/mcs7830-lgmod.ko:
+extroot/mcs7830.ko:
+extroot/md4.ko:
+extroot/md5.ko:
+extroot/mousedev.ko: input-core.ko
+extroot/mtdconcat.ko:
+extroot/nfs.ko: extroot/lockd.ko extroot/sunrpc.ko
+extroot/nfsd.ko: extroot/lockd.ko extroot/sunrpc.ko extroot/exportfs.ko
+extroot/nls_cp850.ko:
+extroot/nls_cp936.ko:
+extroot/nls_cp949.ko:
+extroot/nls_cp950.ko:
+extroot/nls_iso8859-15.ko:
+extroot/pcf8574.ko: extroot/i2c-core.ko
+extroot/pcf8575.ko: extroot/i2c-core.ko
+extroot/pcf8591.ko: extroot/i2c-core.ko
+extroot/pegasus-lgmod.ko:
+extroot/pegasus.ko:
+extroot/pl2303.ko: extroot/usbserial.ko
+extroot/ppp_generic.ko: extroot/slhc.ko
+extroot/psmouse.ko: input-core.ko extroot/libps2.ko extroot/serio.ko
+extroot/rfcomm.ko: extroot/l2cap.ko extroot/bluetooth.ko
+extroot/rfkill-input.ko: input-core.ko extroot/rfkill.ko
+extroot/rfkill.ko:
+extroot/rng-core.ko:
+extroot/rtl8150.ko:
+extroot/sco.ko: extroot/bluetooth.ko
+extroot/serio.ko:
+extroot/serport.ko: extroot/serio.ko
+extroot/sha1_generic.ko:
+extroot/sha256_generic.ko:
+extroot/slhc.ko:
+extroot/slip.ko:
+extroot/sr_mod.ko: extroot/cdrom.ko
+extroot/sunrpc.ko:
+extroot/tcp_diag.ko: extroot/inet_diag.ko
+extroot/tsl2550.ko: extroot/i2c-core.ko
+extroot/ubi.ko:
+extroot/udf.ko: crc-itu-t.ko
+extroot/usb8xxx.ko: extroot/compat/libertas.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat_firmware_class.ko extroot/compat/compat.ko led-class.ko firmware_class.ko
+extroot/usbserial.ko:
+extroot/yaffs.ko:
+extroot/zd1201.ko: firmware_class.ko
+firmware_class.ko:
 gl620a.ko:
+hid.ko: input-core.ko
 input-core.ko:
+jbd.ko:
+kaweth.ko:
+led-class.ko:
 mcs7830-asix.ko:
+mini_fo.ko:
+net1080.ko:
 plusb.ko:
-ext3.ko: jbd.ko
-dm9601-lgmod.ko:
+pty.ko:
 rndis_host.ko: cdc_ether.ko
 uinput.ko: input-core.ko
-net1080.ko:
-evdev.ko: input-core.ko
-wireless/zd1211rw.ko: firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-wireless/rt2500usb.ko: wireless/rt2x00usb.ko wireless/rt2x00lib.ko firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-wireless/rt73usb.ko: crc-itu-t.ko wireless/rt2x00usb.ko wireless/rt2x00lib.ko firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-wireless/rt2x00usb.ko: wireless/rt2x00lib.ko firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-wireless/rt2x00lib.ko: firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
-jbd.ko:
-zaurus.ko: cdc_ether.ko
-pty.ko:
-mini_fo.ko:
 usbhid.ko: hid.ko input-core.ko
-kaweth.ko:
-cdc_ether.ko:
-hid.ko: input-core.ko
-firmware_class.ko:
+wireless/zd1211rw.ko: firmware_class.ko extroot/compat/mac80211.ko extroot/compat/cfg80211.ko extroot/compat/rfkill_backport.ko input-core.ko extroot/compat/compat.ko led-class.ko
+zaurus.ko: cdc_ether.ko

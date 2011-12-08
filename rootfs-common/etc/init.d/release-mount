@@ -2,6 +2,12 @@
 # Source code released under GPL License
 # rcS for Saturn7 by mmm4m5m
 
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
+else
+	RELBIN='./RELEASE'; # pgrep
+fi
+
 mountall() {
 	D=$(stat -c%D /mnt/usb1)
 	for j in 1 2; do
@@ -41,13 +47,13 @@ boot() {
 }
 
 start() {
-	pgrep -f '^/mnt/lg/lgapp/RELEASE ' && { echo 'release-mount: Already started'; return 1; }
+	pgrep -f "$RELBIN" && { echo 'release-mount: Already started'; return 1; }
 	. /etc/init.d/rcS-usercall1 call_wait
 	START "$@"
 }
 
 stop() {
-	#pgrep -f '^/mnt/lg/lgapp/RELEASE ' && { echo 'release-mount: Already started'; return 1; }
+	#pgrep -f "$RELBIN" && { echo 'release-mount: Already started'; return 1; }
 	sync
 	ARG=''; [ "$2" != '-f' ] && [ "$2" != '-r' ] || ARG="$2"
 	D=$(stat -c%D /mnt/usb1)

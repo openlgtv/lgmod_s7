@@ -8,6 +8,12 @@ CRASHON=/mnt/lg/cmn_data/crash-on
 CRASHCNT=/mnt/lg/cmn_data/crash-index
 ACT="$1"; CRASHDOG="$2"
 
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
+else
+	RELBIN='./RELEASE'; # pgrep
+fi
+
 if [ "$ACT" = error ]; then
 	{ echo 'rcS-chashdog: ON (error)'; touch $CRASHON; sync; } > /dev/kmsg 2>&1
 
@@ -15,7 +21,7 @@ elif [ "$ACT" = watch ]; then
 	{
 	sleep 20; # to manually trigger 'crash limit MAX' - fast power off TV
 	for i in 1 2 3 4 5 6 7 8; do
-		sleep 5; r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
+		sleep 5; r=$(pgrep -f "$RELBIN" | wc -l)
 		[ "$r" -lt 2 ] || {
 			if [ -f $CRASHCNT.1 ]; then
 				echo 'rcS-crashdog: crash count=0'; rm -f $CRASHCNT.*; sync

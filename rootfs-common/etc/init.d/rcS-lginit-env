@@ -35,7 +35,7 @@ else
 	#hostname $host
 fi
 
-# environment kernel/init - before lginit
+# S7: environment kernel/init - before lginit
 #???export TERM=vt102
 #???export TERM=linux
 #export PATH=/sbin:/usr/sbin:/bin:/usr/bin
@@ -52,7 +52,7 @@ fi
 #export boot2ndver=0.01.16
 #export start_kernel=1453
 
-# kernel command line:
+# S7: kernel command line:
 #root=/dev/mtdblock3
 #lginit=/dev/mtdblock4
 #rootfstype=squashfs
@@ -72,3 +72,23 @@ fi
 #nosplash
 #lpj=167424
 #start_kernel=1454
+
+# S7: specifics (short)
+# /mnt/lg/lginit is dir
+# /mnt/lg/user is dir
+# /mnt/game is sym.link
+# 'ps ax|av' works
+
+# S6: specifics
+# /mnt/lg/lginit not found
+# /mnt/lg/cmn_data -> /mnt/lg/user/cmn_data
+# /mnt/lg/user size = 2.5MB
+# /mnt/lg/lgapp/RELEASE is sh script (bin/ lib/)
+# /mnt/lg/lgapp/bin/RELEASE.sym
+# 'ps w' works
+
+# BCM: specifics
+# /mnt/game is dir
+# /mnt/lg/user -> /mnt/user
+# /etc/var is file
+# 'ps w' works

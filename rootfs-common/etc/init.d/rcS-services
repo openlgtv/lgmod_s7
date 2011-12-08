@@ -2,9 +2,15 @@
 # Source code released under GPL License
 # rcS for Saturn6/Saturn7 by mmm4m5m, djpety
 
+if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
+else
+	RELBIN='./RELEASE'; # pgrep
+fi
+
 [ -n "$1" ] && { echo "rcS-services: $1" > /dev/kmsg; sleep "$1"; }
 
-r=$(pgrep -f '^/mnt/lg/lgapp/RELEASE ' | wc -l)
+r=$(pgrep -f "$RELBIN" | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
 
