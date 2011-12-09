@@ -43,7 +43,7 @@ START() {
 
 boot() {
 	{
-	[ -e $NETCONF -o -e $DHCPCFG ] && START "$@"
+	START "$@"
 	} > /dev/kmsg 2>&1
 }
 
