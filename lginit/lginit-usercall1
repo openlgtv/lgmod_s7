@@ -39,7 +39,8 @@ called() {
 call_wait() {
 	# check if USB init started, else init USB; then wait for USB
 	if ! called; then call; wait "$@"
-	else ready || wait "$@"; fi
+	#else ready || wait "$@"; fi; # ready but usb discovery is in progress
+	else wait "$@"; fi
 }
 
 wait_or_call() {
@@ -47,7 +48,8 @@ wait_or_call() {
 	time=${5:-10}; while [ $time -gt 0 ]; do
 		[ ! -f /proc/bus/usb/devices ] && [ ! -f /lgsw/usb.env ] || break
 		sleep ${6:-3}; time=$(( time-1 )); done
-	if [ $time != 0 ]; then ready || wait "$@"
+	#if [ $time != 0 ]; then ready || wait "$@"; # ready but usb discovery is in progress
+	if [ $time != 0 ]; then wait "$@"
 	else echo "$PREFIX Timeout($4 $5)"; call_and_wait "$@"; fi
 }
 

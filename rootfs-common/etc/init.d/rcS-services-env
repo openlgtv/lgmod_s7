@@ -8,9 +8,16 @@
 [ -f /etc/TZ ] && export TZ=`cat /etc/TZ`
 
 # services from extroot
-after=/lg/user/extroot; # Note: create a sym.link to USB extroot directory
-path=/bin:/sbin:/usr/bin:/usr/sbin; pathl=/usr/local/bin
-lib=/lib:/usr/lib; libl=/usr/local/lib:/mnt/addon/lib:/mnt/addon/stagecraft/lib
-export PATH="$path:$pathl:$after${path//:/:$after}"
-export LD_LIBRARY_PATH="$lib:$libl:$after${lib//:/:$after}"
+after=/mnt/lg/user/extroot; # Note: create a sym.link to USB extroot directory
+path='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
+lib='/lib:/usr/lib:/usr/local/lib'
+pathf='/mnt/lg/user/bin'; pathl=''; libf='/mnt/lg/user/lib'
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	pathf="$pathf:/mnt/lg/res/lgres:/mnt/lg/res/lgfont:"; #? pathl=':/mnt/lg/lgapp/bin'
+	libf="$pathf:/mnt/lg/res/lgres:/mnt/lg/res/lgfont:"; libl=':/mnt/lg/lgapp/lib'
+else
+	libl=':/mnt/addon/lib:/mnt/addon/stagecraft/lib'
+fi
+export PATH="$pathf$path$pathl:$after${path//:/:$after}"
+export LD_LIBRARY_PATH="$libf$lib$libl:$after${lib//:/:$after}"
 unset after path pathl lib libl

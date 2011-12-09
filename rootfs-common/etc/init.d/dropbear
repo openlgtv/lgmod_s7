@@ -8,13 +8,14 @@ START() {
 	echo "dropbear: $@"
 	[ ! -f /etc/dropbear/dropbear_rsa_host_key ] && [ ! -f /etc/dropbear/dropbear_dss_host_key ] && {
 		echo 'dropbear: RSA/DSS host keys not found. Please use: dropbearkey'
-		echo 'dropbear: help: dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key'
-		echo 'dropbear: help: dropbearkey -t rsa -f /etc/dropbear/dropbear_dss_host_key'
+		echo 'dropbear: help: dropbearkey -t rsa -f /mnt/lg/cmn_data/dropbear_rsa_host_key'
+		echo 'dropbear: help: dropbearkey -t rsa -f /mnt/lg/cmn_data/dropbear_dss_host_key'
 		echo 'dropbear: help: Add your pub key to /mnt/lg/user/root/.ssh/authorized_keys'
 		return 1; }
 	. /etc/init.d/rcS-devrw
 	[ -d /sys/module/pty ] || insmod /lib/modules/2.6.26/pty.ko
-	f=$CFG_DIR/ssh; [ -f $f ] && dropbear $(cat $f) || dropbear
+	pgrep syslogd && o='' || o='-E'
+	f=$CFG_DIR/ssh; [ -f $f ] && dropbear $o $(cat $f) || dropbear $o
 }
 
 boot() {

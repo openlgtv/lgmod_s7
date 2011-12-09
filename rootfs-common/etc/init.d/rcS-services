@@ -24,35 +24,31 @@ fi
 # find extroot device and mount ext2/3 partition
 EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
 EXTMNT=/tmp/lgmod/extroot; EXTDEV=''; EXTYPE=''
-
+{
 if [ ! -f $EXTCONF ]; then
-	echo "rcS-services: Warning: not found: $EXTCONF" > /dev/kmsg
+	echo "rcS-services: Warning: not found: $EXTCONF"
 elif [ ! -h $EXTLINK ]; then
-	echo "rcS-services: Warning: not a sym.link: $EXTLINK" > /dev/kmsg
+	echo "rcS-services: Warning: not a sym.link: $EXTLINK"
 else
 	ID=`cat $EXTCONF`; EXTYPE="${ID%%:*}"; EXTDEV="${ID#*:}"; EXTDEV="${EXTDEV%%:*}"
-	[ "$EXTYPE" = ext3 ] && modprobe jbd
-	modprobe "$EXTYPE" && mkdir -p $EXTMNT || { EXTYPE=''; EXTDEV=''; }
-	[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] ||
-		echo "rcS-services: Error: invalid config: $EXTCONF" > /dev/kmsg
+	[ "$EXTYPE" = ext3 ] && [ ! -d /sys/module/jbd ] && insmod /lib/modules/2.6.26/jbd.ko
+	[ -d "/sys/module/$EXTYPE" ] || insmod "/lib/modules/2.6.26/$EXTYPE.ko"
+	[ -d "/sys/module/$EXTYPE" ] && mkdir -p $EXTMNT || { EXTYPE=''; EXTDEV=''; }
+	[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] || echo "rcS-services: Error: invalid config: $EXTCONF"
 fi
-
-[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] && {
+if [ -n "$EXTDEV" ] && [ -n "$EXTYPE" ]; then
 	for i in /sys/block/sd?; do
 		dev=${i##*/}; [ -d $i ] && [ -d "$i/$dev$EXTDEV" ] || continue
-		id="`cat $i/device/vendor`"; id="`echo $id`"
-		id="$id:`cat $i/device/../../../../serial`"
-		id="$id:`cat $i/device/../../../../idVendor`"
-		id="$id:`cat $i/device/../../../../idProduct`"
-		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] || continue; dev="/dev/$dev$EXTDEV"
-
-		mount -o noatime -t "$EXTYPE" "$dev" $EXTMNT ||
-			echo "rcS-services: Error: extroot mount -t $EXTYPE $dev"
-		break
+		id="`cat $i/device/vendor`"; id="`echo $id`";  id="$id:`cat $i/device/../../../../serial`"
+		id="$id:`cat $i/device/../../../../idVendor`"; id="$id:`cat $i/device/../../../../idProduct`"
+		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] && break
 	done
-	[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] ||
-		echo "rcS-services: Error: extroot device not found: $ID"
-	} > /dev/kmsg 2>&1
+	if [ "$ID" = "$EXTYPE:$EXTDEV:$id" ]; then
+		mount -o noatime -t "$EXTYPE" "$/dev/$dev$EXTDEV" $EXTMNT ||
+			echo "rcS-services: Error: extroot mount -t $EXTYPE $/dev/$dev$EXTDEV"
+	else echo "rcS-services: Error: extroot device not found: $ID"; fi
+fi
+} > /dev/kmsg 2>&1
 
 . /etc/init.d/rcS-services-env
 

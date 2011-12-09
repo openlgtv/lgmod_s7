@@ -86,7 +86,7 @@ fi
 # /mnt/lg/user size = 2.5MB
 # /mnt/lg/lgapp/RELEASE is sh script (bin/ lib/)
 # /mnt/lg/lgapp/bin/RELEASE.sym
-# 'ps w' works
+# 'ps' works
 
 # BCM: specifics
 # /mnt/game is dir

@@ -66,20 +66,21 @@ SELTYP="${SEL%%:*}"; SELDEV="${SEL#*:}"; SELDEV="${SELDEV%%:*}"
 D=$(stat -c%D $EXTMNT ${EXTMNT%/*}); n=$'\n'
 [ "${D%%$n*}" = "${D#*$n}" ] || umount $EXTMNT || EXIT 12 "umount $EXTMNT"
 
-[ "$SELTYP" = ext3 ] && modprobe jbd
-modprobe "$SELTYP" || EXIT 13 "modprobe $SELTYP"
+[ "$SELTYP" = ext3 ] && [ ! -d /sys/module/jbd ] && insmod /lib/modules/2.6.26/jbd.ko
+[ -d "/sys/module/$SELTYP" ] || insmod "/lib/modules/2.6.26/$SELTYP.ko"
 
 
 # verify/find device, format and mount
 id=''; dev=''; NEW=''
 for i in /sys/block/sd?; do
 	dev=${i##*/}; [ -d $i ] && [ -d "$i/$dev$SELDEV" ] || continue
-	id="`cat $i/device/vendor`"; id="`echo $id`"
-	id="$id:`cat $i/device/../../../../serial`"
-	id="$id:`cat $i/device/../../../../idVendor`"
-	id="$id:`cat $i/device/../../../../idProduct`"
-	[ "$SEL" = "$SELTYP:$SELDEV:$id" ] || continue; dev="/dev/$dev$SELDEV"
+	id="`cat $i/device/vendor`"; id="`echo $id`";  id="$id:`cat $i/device/../../../../serial`"
+	id="$id:`cat $i/device/../../../../idVendor`"; id="$id:`cat $i/device/../../../../idProduct`"
+	[ "$SEL" = "$SELTYP:$SELDEV:$id" ] && break
+done
 
+if [ "$SEL" = "$SELTYP:$SELDEV:$id" ]; then
+	dev="/dev/$dev$SELDEV"
 	echo; echo "Select: Format partition $dev as $SELTYP"
 	echo 'Press <enter> to continue - no format. Press "S" to stop'
 	NEW=''; read -p 'Select: format - "YES"? ' NEW || EXIT 14; [ "$NEW" = S ] && EXIT 1
@@ -89,9 +90,7 @@ for i in /sys/block/sd?; do
 
 	typ=''; [ $SELTYP = ext3 ] && typ='-j'
 	mke2fs -v -h EXTROOT $typ "$dev" || EXIT 16 "mke2fs $typ $dev"
-	break
-done
-[ "$SEL" != "$SELTYP:$SELDEV:$id" ] && EXIT 17 "Device not found: $SEL"
+else EXIT 17 "Device not found: $SEL"; fi
 
 mount -o noatime -t "$SELTYP" "$dev" $EXTMNT || EXIT 18 "mount -t $SELTYP $dev"
 
@@ -124,9 +123,9 @@ fi
 # update config file and extroot sym.link
 echo
 
-if [ "`readlink -f $EXTLINK`" != $EXTDEST ]; then
+if [ ! -f /usr/bin/readlink ] || [ "`readlink -f $EXTLINK`" != $EXTDEST ]; then
 	rm -rf $EXTLINK && ln -s $EXTDEST $EXTLINK &&
-		echo 'Info: ln -s $EXTDEST $EXTLINK' ||
+		echo "Info: ln -s $EXTDEST $EXTLINK" ||
 		EXIT 31 "rm & ln: $EXTLINK ($EXTDEST)"
 fi
  

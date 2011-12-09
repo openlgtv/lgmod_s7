@@ -265,18 +265,19 @@ if [ -n "$install" ]; then
 		echo '		of your serial terminal program or get a screenshots)'
 		echo 'ADVANCED: Wiki tells how to manually erase & write TV partition'
 		echo '	You can try again the install command:'; echo "	cd $PWD; $0 $@"
+		pty=/lib/modules/2.6.26/pty.ko
 		if 	$busybox touch /dev/shm/chroot-test 2>/dev/null ||
 			$busybox touch /lgsw/chroot-test 2>/dev/null ||
 			$busybox touch /usr/local/etc/chroot-test 2>/dev/null; then
 			echo "NOTE: If you are not in chroot, you can use: $busybox"
 			if $busybox tty > /dev/null; then $busybox sh; else
-				bb=$($busybox realpath $busybox); pty="${bb%/bin/busybox}/lib/modules/pty.ko"
+				bb=$($busybox realpath $busybox); pty="${bb%/bin/busybox}$pty"
 				echo '#!'"$bb sh"$'\n'"exec $busybox sh" > /tmp/auth.sh; chmod +x /tmp/auth.sh
 				$busybox insmod "$pty" 2>/dev/null; $busybox telnetd -l /tmp/auth.sh -p 1023
 				echo "INFO: telnetd started at port 1023: $busybox"
 			fi
 		elif ! tty > /dev/null; then
-			insmod /lib/modules/pty.ko; telnetd -p 1023
+			insmod $pty; telnetd -p 1023
 			echo 'INFO: telnetd started at port 1023: chroot'
 		else sh; fi; exit $err
 	else

@@ -26,7 +26,11 @@ echo '</table>'
 <?
 echo -n '<pre>'
 if [ -h /bin/ps ]; then
-	ps w
+	if [ -d /mnt/user ]; then # not S6/S7 = BCM
+		ps w
+	else
+		ps
+	fi
 else
 	ps axl 2>&1
 	echo -n '</pre><br><pre>'

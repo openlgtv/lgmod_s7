@@ -23,15 +23,16 @@ wait() {
 	} > /dev/kmsg 2>&1
 }
 
-mods() { local modprobe mf m=$2; # TODO: rcS-functions
+mods() { local mf m=$2; # TODO: rcS-functions
 	if  [ $m = ext3 ];   then mods "$1 $m" jbd || return 1
 	elif [ $m = nfs ];   then mods "$1 $m" lockd || return 1
 	elif [ $m = lockd ]; then mods "$1 $m" sunrpc || return 1
 	fi
 	[ -d /sys/module/$m ] || {
 		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && insmod $mf && return 0
-		mf=/mnt/lg/user/extroot/$m.ko; [ -f $mf ] && insmod $mf && return 0
-		modprobe $m; }
+		modprobe $m && return 0; # modules.dep is invalid or not found?
+		mf=/lib/modules/2.6.26/$m.ko;  [ -f $mf ] && insmod $mf && return 0
+		mf=/lib/modules/extroot/$m.ko; [ -f $mf ] && insmod $mf && return 0; }
 }
 
 START() {

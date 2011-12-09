@@ -23,7 +23,11 @@ wgetfile="$infofile.wget"; # encoded/prepared for wget --post-data
 
 save=''; err=0
 
-DROP() { echo 3 > /proc/sys/vm/drop_caches; }
+DROP() {
+	if [ ! -d /mnt/user ]; then # S6/S7 = not BCM
+		echo 3 > /proc/sys/vm/drop_caches
+	fi
+}
 
 INFO() { { echo; echo; echo "$@"; } >> "$infofile"; save="$@"; }
 
@@ -88,7 +92,7 @@ INFO_CHROOT_A() {
 	CMD 11 cat /proc/cpuinfo
 	CMD 12 lsmod
 	CMD 11 cat /proc/version
-	INFO '$# cat /proc/cmdline'; tmp=`cat /proc/cmdline` 2>> "$infofile" || ERR 11; printf '%s\n' "$tmp" >> "$infofile"
+	INFO '$# cat /proc/cmdline'; tmp=`cat /proc/cmdline` 2>> "$infofile" || ERR 11; printf '%s\n' $tmp >> "$infofile"
 	CMD 12 hostname
 	CMD 11 cat /proc/filesystems
 	INFO '$# export'; tmp=`export` 2>> "$infofile" || ERR 10; echo "$tmp" | sort >> "$infofile"
@@ -137,17 +141,18 @@ INFO_CHROOT_B() {
 	else
 		[ "$f" = mtd1 ] || ERR 17 "Error: boot in $f: Not S7 TV?"
 	fi
-	if [ -e "/dev/$f" ]; then
+	if [ -c "/dev/$f" ]; then
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
 			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 >> "$infofile" || ERR 18
 	fi
 
 	F1="$f"; f=`grep -m2 boot /proc/mtd | cut -d: -f1 | tail -n+2`; F2="$f"
-	INFO '#$' "strings boot backup: /dev/$f"
 	if [ -d /mnt/user ]; then # not S6/S7 = BCM
-		[ -n "$f" ] || ERR 17 "Error: boot backup in $f: Not BCM TV?"
+		INFO '#$' "strings boot backup: /dev/$f"
+		[ -z "$f" ] || ERR 17 "Error: boot backup in $f: Not BCM TV?"
 	else
+		INFO '#$' "strings boot backup: /dev/$f"
 		[ "$f" = mtd5 ] || ERR 17 "Error: boot backup in $f: Not S7 TV?"
 	fi
 	if [ -c "/dev/$f" ]; then

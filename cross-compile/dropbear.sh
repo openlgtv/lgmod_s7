@@ -17,6 +17,7 @@ if [ "$PLATFORM" != S7 ]; then Configure() { ./configure "$@" --disable-zlib; }
 else Configure() { CFLAGS="$CFLAGS -I$DIRZ"; LIBS="$LIBS -L$ZLIB_DIR -lz" ./configure "$@"; }
 	#Make() { make MULTI=1 PROGRAMS="dbclient dropbear dropbearkey scp dropbearconvert"; }
 	#Install() { INST_dest "$1/usr/bin/" dropbearmulti; }
+	#root dest usr/bin/ scp dbclient dropbear dropbearkey dropbearconvert
 fi; build CONF+=size inst='root src_dst scp usr/bin/ dbclient usr/bin/ dropbear usr/bin/ dropbearkey usr/bin/ dropbearconvert usr/lib/dropbear/' "$@"; # always respect cmd line params
 
 # with current options

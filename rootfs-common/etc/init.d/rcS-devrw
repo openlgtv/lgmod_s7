@@ -4,23 +4,36 @@
 
 SRC=/tmp/lgmod/Root; TFS=/tmp/lgmod/tmpfs
 
-d=/dev
-if ! touch $d/test-rw > /dev/null 2>&1; then
-	mkdir -p "$TFS$d"
+dorw() {
+	touch $1/test-rw > /dev/null 2>&1 && return 0
+	local d=$1 e; [ -d "$TFS$d" ] || mkdir -p "$TFS$d"
 
 	[ -d /sys/module/mini_fo ] ||
 		insmod /lib/modules/2.6.26/mini_fo.ko
 	[ -d /sys/module/mini_fo ] &&
-		mount -t mini_fo -o base="$d",sto="$TFS$d" "mini$d" "$d" &&
-		{ return 0; exit 0; }
+		mount -t mini_fo -o base="$d",sto="$TFS$d" "mini$d" "$d" && return 0
 
-	mkdir -p $SRC &&
-		mount -o bind / $SRC &&
-		cp "$SRC$d" "$TFS$d/../" && mount -o bind "$TFS$d" "$d" &&
-		{ return 0; exit 0; }
+	e=1; [ ! -d $SRC ] && mkdir -p $SRC && mount -o bind / $SRC
+	if [ "$d" = /dev ]; then cp -r "$SRC$d" "$TFS/" || e=2
+	elif [ "$d" = /lib ]; then for i in "$d/"*; do
+		if [ -h "$i" ]; then cp -a "$SRC$i" "$TFS$d/" || e=2
+		else ln -s "$SRC$i" "$TFS$d/" || e=2; fi; done
+	else e=3; fi
+	[ $e = 1 ] && mount -o bind "$TFS$d" "$d" && return 0
 
-	echo 'rcS-devrw: Error: /dev is not readwrite'
-	return 1; exit 1
+	echo "rcS-devrw: Error($e): $1 is not readwrite"
+	return $e
+}
+
+
+e=0
+
+dorw /dev || e=$?
+
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	dorw /lib || e=$?
+	f=/mnt/lg/lgapp/lib/ld-uClibc.so.0
+	[ $e = 0 ] && [ -f $f ] && { ln -s $f /lib/ || e=10; }
 fi
 
-return 0; exit 0
+return $e; exit $e
