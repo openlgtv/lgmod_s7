@@ -14,7 +14,6 @@ if [ -n "$LGI_OVERLAY" ]; then
 	[ -d /sys/module/mini_fo ] || {
 		insmod /lib/modules/2.6.26/mini_fo.ko ||
 		modprobe mini_fo.ko ||
-		insmod /lib/modules/extroot/mini_fo.ko ||
 		insmod /lib/modules/mini_fo.ko; } > $OUT 2>&1
 	if mkdir -p "$CHR" "$STO" > $OUT 2>&1 &&
 		[ -d /sys/module/mini_fo ] &&

@@ -32,7 +32,7 @@ mods() { local mf m=$2; # TODO: rcS-functions
 		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && insmod $mf && return 0
 		modprobe $m && return 0; # modules.dep is invalid or not found?
 		mf=/lib/modules/2.6.26/$m.ko;  [ -f $mf ] && insmod $mf && return 0
-		mf=/lib/modules/extroot/$m.ko; [ -f $mf ] && insmod $mf && return 0; }
+		mf=/lib/modules/2.6.26/extroot/$m.ko; [ -f $mf ] && insmod $mf; }
 }
 
 START() {

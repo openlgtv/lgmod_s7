@@ -21,7 +21,7 @@ dorw() {
 	else e=3; fi
 	[ $e = 1 ] && mount -o bind "$TFS$d" "$d" && return 0
 
-	echo "rcS-devrw: Error($e): $1 is not readwrite"
+	echo "rcS-devrw: Error($e): $d is not readwrite"
 	return $e
 }
 
