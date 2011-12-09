@@ -25,10 +25,10 @@ fi
 EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
 EXTMNT=/tmp/lgmod/extroot; EXTDEV=''; EXTYPE=''
 {
-if [ ! -f $EXTCONF ]; then
+if [ ! -h $EXTLINK ]; then
+	echo "rcS-services: Note: not a sym.link: $EXTLINK"
+elif [ ! -f $EXTCONF ]; then
 	echo "rcS-services: Warning: not found: $EXTCONF"
-elif [ ! -h $EXTLINK ]; then
-	echo "rcS-services: Warning: not a sym.link: $EXTLINK"
 else
 	ID=`cat $EXTCONF`; EXTYPE="${ID%%:*}"; EXTDEV="${ID#*:}"; EXTDEV="${EXTDEV%%:*}"
 	[ "$EXTYPE" = ext3 ] && [ ! -d /sys/module/jbd ] && insmod /lib/modules/2.6.26/jbd.ko
