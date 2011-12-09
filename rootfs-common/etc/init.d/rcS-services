@@ -44,8 +44,8 @@ if [ -n "$EXTDEV" ] && [ -n "$EXTYPE" ]; then
 		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] && break
 	done
 	if [ "$ID" = "$EXTYPE:$EXTDEV:$id" ]; then
-		mount -o noatime -t "$EXTYPE" "$/dev/$dev$EXTDEV" $EXTMNT ||
-			echo "rcS-services: Error: extroot mount -t $EXTYPE $/dev/$dev$EXTDEV"
+		mount -o noatime -t "$EXTYPE" "/dev/$dev$EXTDEV" $EXTMNT ||
+			echo "rcS-services: Error: extroot mount -t $EXTYPE /dev/$dev$EXTDEV"
 	else echo "rcS-services: Error: extroot device not found: $ID"; fi
 fi
 } > /dev/kmsg 2>&1
