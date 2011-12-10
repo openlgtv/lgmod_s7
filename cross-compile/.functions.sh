@@ -148,8 +148,7 @@ CONF_DFB() {
 	#rm -f $DIRECTFBCONFIG
 }
 CONF_dfb() {
-	#? -I$CC_DFB/lib
-	DIRECTFB_CFLAGS="$DIRECTFB_CFLAGS -I$CC_DFB/include -D_REENTRANT" \
+	DIRECTFB_CFLAGS="$DIRECTFB_CFLAGS -I$CC_DFB/include -I$CC_DFB/lib -D_REENTRANT" \
 	DIRECTFB_LIBS="$DIRECTFB_LIBS -L$DFB_DIR -ldirectfb -lfusion -ldirect -lpthread -lz" \
 		CONFIGURE "$@"
 }

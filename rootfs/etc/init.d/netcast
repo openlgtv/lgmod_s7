@@ -1,6 +1,6 @@
 #!/bin/sh
 # Source code released under GPL License
-# rcS for Saturn7 by mmm4m5m
+# rcS for Saturn6/Saturn7 by mmm4m5m
 
 if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep

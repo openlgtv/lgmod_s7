@@ -7,6 +7,10 @@ EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
 EXTMNT=/tmp/lgmod/extroot; EXTDEST=$EXTMNT/extroot; EXTDEV=''; EXTYPE=''; ID=''
 
 EXIT() { sync; [ -n "$2" ] && echo "Error($1): $2"; exit "$1"; }
+ULOC() { local D=/usr/local; grep " $D " /proc/mounts | grep -q "^$1" || return 0
+	killall stagecraft && sleep 1; umount $D; }
+MLOC() { local D=/usr/local; mount -o bind $EXTDEST$D $D && killall stagecraft; }
+
 echo "NOTE: stagecraft will be auto-stopped (and auto-started)"
 echo "	(umount /usr/local and update requires stopping DFB programs)"
 
@@ -24,18 +28,10 @@ if [ -h $EXTLINK ]; then
 else [ -e $EXTLINK ] && EXIT 2 "extroot is not a sym.link: $EXTLINK"; fi
 
 
-# list devices and select
-EXTDEVS='/sys/block/sd?/sd??'
-[ "`echo $EXTDEVS`" = "$EXTDEVS" ] &&
-	EXIT 3 "Can not find USB flash drive(s): $EXTDEVS"
+. /etc/init.d/rcS-funcs; # print_devices, load_modules, device_by_id
 
-EXTDEVS=$(for i in $EXTDEVS; do
-	[ -d $i ] || continue; dev=${i##*/}
-	id="`cat $i/../device/vendor`"; id="`echo $id`"
-	id="$id:`cat $i/../device/../../../../serial`"
-	id="$id:`cat $i/../device/../../../../idVendor`"
-	id="$id:`cat $i/../device/../../../../idProduct`"
-	echo "$dev:$id"; done)
+# list devices and select
+EXTDEVS=`print_devices` || EXIT 3 "Can not find USB flash drive(s): /sys/block/sd*"
 
 echo; echo 'Select: Attached USB flash drives:'
 i=0
@@ -63,34 +59,27 @@ SELTYP="${SEL%%:*}"; SELDEV="${SEL#*:}"; SELDEV="${SELDEV%%:*}"
 # prepare mount point and modules
 [ -d $EXTMNT ] || mkdir -p $EXTMNT || EXIT 11 "mkdir: $EXTMNT"
 
+ULOC || EXIT 12 "umount $D"
+
 D=$(stat -c%D $EXTMNT ${EXTMNT%/*}); n=$'\n'
-[ "${D%%$n*}" = "${D#*$n}" ] || umount $EXTMNT || EXIT 12 "umount $EXTMNT"
+[ "${D%%$n*}" = "${D#*$n}" ] || umount $EXTMNT || EXIT 13 "umount $EXTMNT"
 
-[ "$SELTYP" = ext3 ] && [ ! -d /sys/module/jbd ] && insmod /lib/modules/2.6.26/jbd.ko
-[ -d "/sys/module/$SELTYP" ] || insmod "/lib/modules/2.6.26/$SELTYP.ko"
+load_modules "modprobe" "$SELTYP" || EXIT 14 "modprobe $SELTYP"
 
 
-# verify/find device, format and mount
-id=''; dev=''; NEW=''
-for i in /sys/block/sd?; do
-	dev=${i##*/}; [ -d $i ] && [ -d "$i/$dev$SELDEV" ] || continue
-	id="`cat $i/device/vendor`"; id="`echo $id`";  id="$id:`cat $i/device/../../../../serial`"
-	id="$id:`cat $i/device/../../../../idVendor`"; id="$id:`cat $i/device/../../../../idProduct`"
-	[ "$SEL" = "$SELTYP:$SELDEV:$id" ] && break
-done
-
-if [ "$SEL" = "$SELTYP:$SELDEV:$id" ]; then
+# verify: find device, format and mount
+dev=`device_by_id "$SEL" "$SELDEV" "$SELTYP"`
+if [ -n "$dev" ]; then
 	dev="/dev/$dev$SELDEV"
 	echo; echo "Select: Format partition $dev as $SELTYP"
 	echo 'Press <enter> to continue - no format. Press "S" to stop'
-	NEW=''; read -p 'Select: format - "YES"? ' NEW || EXIT 14; [ "$NEW" = S ] && EXIT 1
-	[ -z "$NEW" ] && break; [ "$NEW" = YES ] || break
-
-	grep "^$dev " /proc/mounts &&  { umount "$dev" || EXIT 15 "umount $dev"; }
-
-	typ=''; [ $SELTYP = ext3 ] && typ='-j'
-	mke2fs -v -h EXTROOT $typ "$dev" || EXIT 16 "mke2fs $typ $dev"
-else EXIT 17 "Device not found: $SEL"; fi
+	NEW=''; read -p 'Select: format - "YES"? ' NEW || EXIT 15; [ "$NEW" = S ] && EXIT 1
+	if [ "$NEW" = YES ]; then
+		grep "^$dev " /proc/mounts && { umount "$dev" || EXIT 16 "umount $dev"; }
+		typ=''; [ $SELTYP = ext3 ] && typ='-j'
+		mke2fs -v -h EXTROOT $typ "$dev" || EXIT 17 "mke2fs $typ $dev"
+	fi
+else EXIT 18 "Device not found: $SEL"; fi
 
 mount -o noatime -t "$SELTYP" "$dev" $EXTMNT || EXIT 18 "mount -t $SELTYP $dev"
 
@@ -139,32 +128,26 @@ else echo "DONE: Config file not changed: $EXTCONF"; fi
 # LG DirectFB to extroot/usr/local
 if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 	D=/usr/local; d=$EXTDEST; F=$D/etc/directfbrc
-
 	echo; echo "Select: Copy $D to $dev/${EXTDEST##*/} (DirectFB)"
 	echo 'Press <enter> to continue and copy. Press "S" to stop'
 	typ=''; read -p 'Select: "NO"? ' typ || EXIT 41; [ "$typ" = S ] && EXIT 1
 	if [ "$typ" != NO ]; then
-		if grep " $D " /proc/mounts | grep '^/dev/sd'; then
-			killall stagecraft && sleep 1 && umount $D || EXIT 42 "umount $D"
-		fi
-
 		for i in `find $D \! -type d`; do
 			[ $i = $F ] && continue
 			[ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
-			cp -a $i $d$i && echo "cp -a $d$i" || EXIT 43 "cp -a $d$i"
+			cp -a $i $d$i && echo "cp -a $d$i" || EXIT 42 "cp -a $d$i"
 		done
 
 		echo; echo "Select: Modify $F and copy to $dev/${EXTDEST##*/} (DirectFB)"
 		echo 'Press <enter> to continue and copy. Press "S" to stop'
-		typ=''; read -p 'Select: "NO"? ' typ || EXIT 44; [ "$typ" = S ] && EXIT 1
+		typ=''; read -p 'Select: "NO"? ' typ || EXIT 43; [ "$typ" = S ] && EXIT 1
 		if [ "$typ" != NO ]; then
 			i=$F; [ -e $d$i ] && mv $d$i $d$i~; mkdir -p $d${i%/*}
 			sed -i -e 's/no-cursor/cursor-updates\nno-linux-input-grab/' $i &&
-				cp -a $i $d$i && echo "cp -a $d$i" || EXIT 45 "sed & cp: $d$i"
+				cp -a $i $d$i && echo "cp -a $d$i" || EXIT 44 "sed & cp: $d$i"
 		fi
-
-		umount -o bind $d$D $D && killall stagecraft
 	fi
+	MLOC || EXIT 45 "mount $D"
 fi
 
 

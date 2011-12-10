@@ -7,36 +7,9 @@
 CFG_DIR="/mnt/lg/user/lgmod"
 FS_MNT=$CFG_DIR/ndrvtab
 
-wait() {
-	{
-	echo "mount: $1"
-	for k in 1 2 3 4 5 6 7; do
-		D=$(stat -c%D /mnt/usb1 /mnt/usb1/Drive1); n=$'\n'
-		[ "${D%%$n*}" = "${D#*$n}" ] || break; sleep 3; done
-	[ "${D%%$n*}" = "${D#*$n}" ] && { echo "mount: $1 - timeout"; return 1; }
-	last=$'\0'; done=0
-	while [ "$done" -lt 3 ]; do
-		[ "$last" = $'\0' ] && sleep 2; curr=$(stat -c%D /mnt/usb?/Drive?)
-		[ "$last" = "$curr" ] && done=$(( done+1 )) || { last="$curr"; done=0; }
-	done
-	echo "mount: $1 - done"
-	} > /dev/kmsg 2>&1
-}
-
-mods() { local mf m=$2; # TODO: rcS-functions
-	if  [ $m = ext3 ];   then mods "$1 $m" jbd || return 1
-	elif [ $m = nfs ];   then mods "$1 $m" lockd || return 1
-	elif [ $m = lockd ]; then mods "$1 $m" sunrpc || return 1
-	fi
-	[ -d /sys/module/$m ] || {
-		mf=/mnt/lg/user/modules/$m.ko; [ -f $mf ] && insmod $mf && return 0
-		modprobe $m && return 0; # modules.dep is invalid or not found?
-		mf=/lib/modules/2.6.26/$m.ko;  [ -f $mf ] && insmod $mf && return 0
-		mf=/lib/modules/2.6.26/extroot/$m.ko; [ -f $mf ] && insmod $mf; }
-}
-
 START() {
 	if [ -f $FS_MNT ]; then
+		. /etc/init.d/rcS-funcs; # load_modules
 		cat $FS_MNT | while read ndrv; do
 			automount="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			[ "$automount" = "1" ] || continue
@@ -51,7 +24,7 @@ START() {
 			[ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
 			[ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
 			echo "mount: $1 $mnt_opt $src $dst ..."
-			mods "mount: $1" "$fs_type" &&
+			load_modules "mount: $1" "$fs_type" &&
 				mount -t "$fs_type" -o "$mnt_opt" "$src" "$dst"
 		done
 	fi
@@ -92,11 +65,9 @@ restart() {
 }
 
 case "$1" in
-	wait)		wait "$@";;
-	mods)		mods "$@";;
 	boot)		boot "$@";;
 	start)		start "$@";;
 	stop)		stop "$@";;
 	restart)	restart "$@";;
-	*)			echo "Usage: $0 wait|mods|start|stop|restart [-f|-r]"; exit 1
+	*)			echo "Usage: $0 start|stop|restart [-f|-r]"; exit 1
 esac

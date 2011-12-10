@@ -13,6 +13,7 @@ fi
 r=$(pgrep -f "$RELBIN" | wc -l)
 [ "$r" -lt 2 ] && NOREL=1 || NOREL=''
 
+. /etc/init.d/rcS-funcs; # wait_drives, load_modules, device_by_id
 
 
 if [ -z "$NOREL" ]; then
@@ -21,32 +22,30 @@ else
 	. /etc/init.d/release-mount boot; # init USB (extroot)
 fi
 
-# find extroot device and mount ext2/3 partition
+{
+# extroot: find device and mount
 EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
 EXTMNT=/tmp/lgmod/extroot; EXTDEV=''; EXTYPE=''
-{
-if [ ! -h $EXTLINK ]; then
-	echo "rcS-services: Note: not a sym.link: $EXTLINK"
-elif [ ! -f $EXTCONF ]; then
-	echo "rcS-services: Warning: not found: $EXTCONF"
+if [ ! -h $EXTLINK ]; then echo "rcS-services: Note: not a sym.link: $EXTLINK"
+elif [ ! -f $EXTCONF ]; then echo "rcS-services: Warning: not found: $EXTCONF"
 else
 	ID=`cat $EXTCONF`; EXTYPE="${ID%%:*}"; EXTDEV="${ID#*:}"; EXTDEV="${EXTDEV%%:*}"
-	[ "$EXTYPE" = ext3 ] && [ ! -d /sys/module/jbd ] && insmod /lib/modules/2.6.26/jbd.ko
-	[ -d "/sys/module/$EXTYPE" ] || insmod "/lib/modules/2.6.26/$EXTYPE.ko"
-	[ -d "/sys/module/$EXTYPE" ] && mkdir -p $EXTMNT || { EXTYPE=''; EXTDEV=''; }
-	[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] || echo "rcS-services: Error: invalid config: $EXTCONF"
+	[ -n "$EXTDEV" ] && [ -n "$EXTYPE" ] &&
+		load_modules "rcS-services: extroot" "$EXTYPE" && mkdir -p $EXTMNT || EXTYPE=''
+	if [ -n "$EXTYPE" ]; then
+		dev=`device_by_id "$ID" "$EXTDEV" "$EXTYPE"`
+		if [ -z "$dev" ]; then echo "rcS-services: Error: extroot device not found: $ID"
+		else mount -o noatime -t "$EXTYPE" "/dev/$dev$EXTDEV" $EXTMNT; fi
+	else echo "rcS-services: Error: invalid config: $EXTCONF"; fi
 fi
-if [ -n "$EXTDEV" ] && [ -n "$EXTYPE" ]; then
-	for i in /sys/block/sd?; do
-		dev=${i##*/}; [ -d $i ] && [ -d "$i/$dev$EXTDEV" ] || continue
-		id="`cat $i/device/vendor`"; id="`echo $id`";  id="$id:`cat $i/device/../../../../serial`"
-		id="$id:`cat $i/device/../../../../idVendor`"; id="$id:`cat $i/device/../../../../idProduct`"
-		[ "$ID" = "$EXTYPE:$EXTDEV:$id" ] && break
-	done
-	if [ "$ID" = "$EXTYPE:$EXTDEV:$id" ]; then
-		mount -o noatime -t "$EXTYPE" "/dev/$dev$EXTDEV" $EXTMNT ||
-			echo "rcS-services: Error: extroot mount -t $EXTYPE /dev/$dev$EXTDEV"
-	else echo "rcS-services: Error: extroot device not found: $ID"; fi
+
+if [ ! -d /mnt/lg/lginit ]; then # S6
+	# prepare S6 /lib
+	f=/mnt/lg/lgapp/lib/ld-uClibc.so.0
+	. /etc/init.d/rcS-funcs; # mount_readwrite
+	mount_readwrite 'rcS-services' /lib &&
+		if [ -f $f ]; then ln -s $f /lib/
+		else echo "rcS-services: Note: not found: $f"; fi
 fi
 } > /dev/kmsg 2>&1
 
@@ -65,8 +64,7 @@ for i in telnetd ntpd dropbear; do
 done
 
 
-
-[ -z "$NOREL" ] && . /etc/init.d/mount wait; # wait for /mnt/usb?/Drive?
+[ -z "$NOREL" ] && wait_drives 'rcS-services' > /dev/kmsg 2>&1; # wait for /mnt/usb#/Drive#
 
 . /etc/init.d/mount boot
 [ -z "$NOREL" ] &&

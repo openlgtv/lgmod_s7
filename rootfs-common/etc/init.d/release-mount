@@ -1,6 +1,6 @@
 #!/bin/sh
 # Source code released under GPL License
-# rcS for Saturn7 by mmm4m5m
+# rcS for Saturn6/Saturn7 by mmm4m5m
 
 if [ -d /mnt/lg/lginit ]; then # not S6 = S7
 	RELBIN='^/mnt/lg/lgapp/RELEASE '; # pgrep
@@ -10,6 +10,7 @@ fi
 
 mountall() {
 	D=$(stat -c%D /mnt/usb1)
+	. /etc/init.d/rcS-funcs; # load_modules
 	for j in 1 2; do
 		[ $j = 1 ] && J=a; [ $j = 2 ] && J=b
 		for i in 1 2 3 4; do
@@ -18,8 +19,7 @@ mountall() {
 			echo "release-mount: $1 $ARG $arg ..."
 			mount -t vfat -o iocharset=utf8,shortname=mixed,$ARG $arg ||
 				mount -t ntfs -o $ARG $arg ||
-				{ /etc/init.d/mount mods "release-mount: $1" ext3 &&
-					mount -t ext3 -o $ARG $arg; } ||
+				{ load_modules "release-mount: $1" ext3 && mount -t ext3 -o $ARG $arg; } ||
 				mount -o $ARG $arg
 		done
 	done

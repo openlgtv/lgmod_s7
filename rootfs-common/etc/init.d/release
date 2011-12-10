@@ -22,17 +22,15 @@ else
 fi
 
 wait() {
-	{
 	[ -d /usr/local/etc ] && dfb || sleep 5
 	r=$(pgrep -f "$RELBIN" | wc -l)
 	[ "$r" -lt 2 ] && { echo "release: $1 - not started ($r)"; return 1; }
-	} > /dev/kmsg 2>&1
-	. /etc/init.d/mount wait && {
-		. /etc/init.d/mount start
-		if [ -d /mnt/lg/lginit ]; then # not S6 = S7
-			[ -f /etc/init.d/netcast ] && . /etc/init.d/netcast start
-		fi
-		} > /dev/kmsg 2>&1
+	. /etc/init.d/rcS-funcs; # wait_drives
+	wait_drives 'release'
+	. /etc/init.d/mount start
+	if [ -d /mnt/lg/lginit ]; then # not S6 = S7
+		[ -f /etc/init.d/netcast ] && . /etc/init.d/netcast start
+	fi
 }
 
 dfb() {
@@ -78,17 +76,16 @@ RELCFG() {
 }
 
 PREPARE() {
-	[ -d /sys/module/pty ] ||
-		if [ -n "$Rtmux" ]; then
-			insmod /lib/modules/2.6.26/pty.ko ||
-				{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
-		elif [ -n "$Ropen" ]; then
-			insmod /lib/modules/2.6.26/pty.ko ||
-				{ MODE=LG; Ropen=''; }; # another fg <MODE> without OPENRELEASE
-		fi
+	if [ -n "$Rtmux" ] || [ -n "$Ropen" ]; then
+		[ -d /sys/module/pty ] || insmod /lib/modules/2.6.26/pty.ko ||
+			{ MODE=LG; Rtmux=''; Ropen=''; }; # failsafe: fg <MODE> without tmux/OPENRELEASE
+	fi
 	if [ -n "$Rtmux" ]; then
-		. /etc/init.d/rcS-devrw ||
-			{ MODE=OPENREL-DAEMON; Rtmux=''; }; # another bg <MODE> without tmux
+		if [ -d /sys/module/pty ]; then
+			. /etc/init.d/rcS-funcs; # mount_readwrite
+			mount_readwrite "release: $1" /dev ||
+				{ MODE=OPENREL-DAEMON; Rtmux=''; Ropen=1; }; # another bg <MODE> without tmux
+		else MODE=LG; Rtmux=''; fi; # failsafe: fg <MODE> without tmux/OPENRELEASE
 	fi
 }
 
@@ -104,7 +101,7 @@ CRAMFS() {
 START() {
 	[ -n "$2" ] && MODE="$2"; [ -n "$3" ] && CRAMFS="$3"
 	. /etc/init.d/rcS-release test "$MODE"; # Ropen; Rtmux
-	RELCFG "$1"; PREPARE; CRAMFS "$1"
+	RELCFG "$1"; PREPARE "$1"; CRAMFS "$1"
 }
 
 CONFIG() {
@@ -127,7 +124,7 @@ start() {
 	/etc/init.d/mount stop
 	/etc/init.d/release-mount stop
 	CONFIG "$@"
-	/etc/init.d/release wait &
+	/etc/init.d/release wait > /dev/kmsg 2>&1 &
 	. /etc/init.d/rcS-release run "$MODE" || return $?; # LG: RELEASE
 }
 
