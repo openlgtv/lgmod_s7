@@ -33,6 +33,10 @@ else [ -e $EXTLINK ] && EXIT 2 "extroot is not a sym.link: $EXTLINK"; fi
 # list devices and select
 EXTDEVS=`print_devices` || EXIT 3 "Can not find USB flash drive(s): /sys/block/sd*"
 
+echo; echo 'Info: Mounted USB drives and partitions:'
+cat /proc/mounts | grep '^/dev/sd' &&
+	echo; echo 'Note: Maybe, you do not want to format FAT/NTFS partitions used by TV'
+
 echo; echo 'Select: Attached USB flash drives:'
 i=0
 for id in $EXTDEVS; do
