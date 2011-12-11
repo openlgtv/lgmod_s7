@@ -81,7 +81,7 @@ if [ -n "$dev" ]; then
 	if [ "$NEW" = YES ]; then
 		grep "^$dev " /proc/mounts && { umount "$dev" || EXIT 16 "umount $dev"; }
 		typ=''; [ $SELTYP = ext3 ] && typ='-j'
-		mke2fs -v -h EXTROOT $typ "$dev" || EXIT 17 "mke2fs $typ $dev"
+		mke2fs -v -L EXTROOT $typ "$dev" || EXIT 17 "mke2fs $typ $dev"
 	fi
 else EXIT 18 "Device not found: $SEL"; fi
 
