@@ -10,7 +10,7 @@ kill=1; backup_kill=''
 backup=1; update_backup=1
 install=''; update=''; lginitonly=''; dryrun=''; dryerr=''
 #[ -f /mnt/lg/lginit/lginit ] && [ -f /mnt/lg/lginit/lg-init ] && backup='' && update=1
-[ -f /etc/init.d/lgmod ] && backup=''
+[ -f /mnt/lg/lginit/lginit-exec ] && backup=''
 
 # command line
 for i in "$@"; do

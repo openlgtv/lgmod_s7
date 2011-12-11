@@ -7,7 +7,7 @@ EXTLINK=/mnt/lg/user/extroot; EXTCONF=/mnt/lg/user/lgmod/extroot
 EXTMNT=/tmp/lgmod/extroot; EXTDEST=$EXTMNT/extroot; EXTDEV=''; EXTYPE=''; ID=''
 
 EXIT() { sync; [ -n "$2" ] && echo "Error($1): $2"; exit "$1"; }
-ULOC() { local D=/usr/local; grep " $D " /proc/mounts | grep -q "^$1" || return 0
+ULOC() { local D=/usr/local; grep " $D " /proc/mounts | grep -q '^/dev/sd' || return 0
 	killall stagecraft && sleep 1; umount $D; }
 MLOC() { local D=/usr/local; mount -o bind $EXTDEST$D $D && killall stagecraft; }
 
