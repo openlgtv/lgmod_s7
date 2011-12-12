@@ -108,19 +108,24 @@ INFO_CHROOT_A() {
 INFO_CHROOT_B() {
 	INFO '#$ dump RELEASE version'; f=/mnt/lg/lgapp/bin/RELEASE; [ -f "$f" ] || f=/mnt/lg/lgapp/RELEASE
 	if [ -f "$f" ]; then
-		s=$(stat -c%s $f); b=$((s/18)); none=1
-		for i in 9 8 10; do
-			DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
-			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
-				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A5 swfarm >> "$infofile" && none=0 && break
-		done
-		[ $none = 1 ] && ERR 18 || none=1
-		for i in 15 14 16; do
-			DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
-			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
-				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A10 swfarm >> "$infofile" && none=0 && break
-		done
-		[ $none = 1 ] && ERR 18 'Error: not found'
+		info_REL=/scripts/info_RELEASE.sh; bbe=/usr/bin/bbe
+		if [ -x "$bbe" -a -x "$info_REL" ]; then
+			$info_REL $f >> "$infofile" || { ERR 18; break; }
+		else
+			s=$(stat -c%s $f); b=$((s/18)); none=1
+			for i in 9 8 10; do
+				DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
+				cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+					grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A5 swfarm >> "$infofile" && none=0 && break
+			done
+			[ $none = 1 ] && ERR 18 || none=1
+			for i in 15 14 16; do
+				DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
+				cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+					grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A10 swfarm >> "$infofile" && none=0 && break
+			done
+			[ $none = 1 ] && ERR 18 'Error: not found'
+		fi
 	else ERR 0 'Note: not found'; fi
 
 	INFO "INFO: `date`"
