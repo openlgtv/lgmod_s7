@@ -20,7 +20,7 @@ START() {
 			opt="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			uname="${ndrv%%#*}"; ndrv="${ndrv#*#}"
 			pass="${ndrv%%#*}"; #ndrv="${ndrv#*#}"
-			mnt_opt='';
+			mnt_opt='noatime';
 			[ "$uname" ] && mnt_opt="${mnt_opt},user=$uname,pass=$pass"
 			[ "$opt" ] && mnt_opt="${mnt_opt},${opt}"
 			echo "mount: $1 $mnt_opt $src $dst ..."
