@@ -35,7 +35,7 @@ EXTDEVS=`print_devices` || EXIT 3 "Can not find USB flash drive(s): /sys/block/s
 
 echo; echo 'Info: Mounted USB drives and partitions:'
 cat /proc/mounts | grep '^/dev/sd' &&
-	echo; echo 'Note: Maybe, you do not want to format FAT/NTFS partitions used by TV'
+	echo 'NOTE: Maybe, you do not want to format FAT/NTFS partitions used by TV'
 
 echo; echo 'Select: Attached USB flash drives:'
 i=0

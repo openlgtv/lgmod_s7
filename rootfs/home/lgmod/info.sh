@@ -5,14 +5,15 @@
 # modify with care - script is used by install.sh
 
 VER=10011; # version of info file (file syntax)
-wget=/mnt/lg/user/extroot/usr/bin/wget
+busybox=''; #/bin/busybox; # old
 MODEL=`echo /mnt/lg/user/model.*`
 [ -f "$MODEL" ] && MODEL="${MODEL#*model.}" || MODEL=''
 
 part="$1"
-if   [ "$1" = root ];   then shift; # part 1 - before chroot
-elif [ "$1" = chroot ]; then shift; # part 2 - in chroot - part 1 (from $infotemp) will be included
-elif [ "$1" = paste ];  then shift; # all info and upload to pastebin.com (pastebin.ca)
+if   [ "$1" = root ];    then shift; # part 1 - before chroot
+elif [ "$1" = chroot ];  then shift; # part 2 - in chroot - part 1 (from $infotemp) will be included
+elif [ "$1" = paste ];   then shift; # all info and upload to pastebin.com (pastebin.ca)
+elif [ "$1" = mtdinfo ]; then shift; # mtdinfo only - optional: $1=bin_file $2=number_of_partitions
 else part=''; fi; # all info
 
 infotemp=/tmp/info-file
@@ -24,7 +25,9 @@ wgetfile="$infofile.wget"; # encoded/prepared for wget --post-data
 save=''; err=0
 
 DROP() {
-	if [ ! -d /mnt/user ]; then # S6/S7 = not BCM
+	if [ -d /mnt/user ]; then # not S6/S7 = BCM
+		return 1
+	else
 		echo 3 > /proc/sys/vm/drop_caches
 	fi
 }
@@ -41,6 +44,37 @@ ERR() {
 	[ -n "$save" ] && echo "$save" && save=''
 	[ -z "$m" ] && m="Error: exitcode=$e"
 	echo "$m" >> "$infofile"; echo "$m"
+}
+
+
+
+Err() { local e=$? m="$2"; [ $1 -gt $err ] && err=$1; [ -z "$m" ] && m="$1"; echo "Error($e): $m" >&2; return $e; }
+
+mtdinfo() {
+	local err=0 info ver f="$1" c="$2"
+	if [ -z "$f" ]; then
+		f="/dev/`grep -m1 mtdinfo /proc/mtd | cut -d: -f1`"
+		if [ -d /mnt/user ]; then # not S6/S7 = BCM
+			[ "$f" = /dev/mtd1 ] || Err 9 "mtdinfo in $f: Not BCM TV?"
+		else
+			[ "$f" = /dev/mtd2 ] || Err 9 "mtdinfo in $f: Not S7 TV?"
+		fi
+	fi
+	[ -e "$f" ] || Err 8 "file not found: $f"
+	if [ -z "$c" ]; then
+		c=`cat /proc/mtd | wc -l`
+		if [ -d /mnt/user ]; then # not S6/S7 = BCM
+			:; # TODO
+		else
+			[ $c = 26 ] || Err 7 "$c partitions: Not S7 TV?"
+		fi
+	fi
+	info=`$busybox hexdump $f -vs4 -n8 -e'"%x"'` || Err 6 "read from $f"
+	ver=${info:0:7}; echo "Current  EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
+	ver=${info:7:7}; echo "Previous EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
+	info=`$busybox hexdump $f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
+	echo "0:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n || Err 5 "invalid data"
+	return $err
 }
 
 
@@ -67,23 +101,11 @@ INFO_ROOT() {
 }
 
 INFO_CHROOT_A() {
-	busybox=''; #/bin/busybox; # old
+	DROP && sleep 1
 	CMD 11 cat /proc/mtd
+	CMD 13 mtdinfo
 
-	f=`grep -m1 mtdinfo /proc/mtd | cut -d: -f1`; c=`cat /proc/mtd | wc -l`
-	INFO '#$' "dump mtdinfo: /dev/$f"
-	if [ -d /mnt/user ]; then # not S6/S7 = BCM
-		[ "$f" = mtd1 ] || ERR 17 "Error: mtdinfo in $f: Not BCM TV?"
-	else
-		[ "$f" = mtd2 ] || ERR 17 "Error: mtdinfo in $f: Not S7 TV?"
-		[ $c = 26 ] || ERR 17 "Error: $c partitions: Not S7 TV?"
-	fi
-	if [ -e "/dev/$f" ]; then
-		mtdinfo=`$busybox hexdump /dev/$f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
-		{ echo "0:$mtdinfo" | head -n1; echo "$mtdinfo" | tail -n+2 | grep '' -n; } >> "$infofile" || ERR 13
-	fi
-
-	DROP; INFO '#$ dump the magic: /dev/mtd#'
+	INFO '#$ dump the magic: /dev/mtd#'
 	for i in `cat /proc/mtd | grep '^mtd' | sed -e 's/:.*//' -e 's/^/\/dev\//'`; do
 		{ echo -n "$i: "; $busybox hexdump $i -vn32 -e'32 "%4_c" "\n"'; } >> "$infofile" 2>&1 || ERR 13; done
 
@@ -106,26 +128,25 @@ INFO_CHROOT_A() {
 }
 
 INFO_CHROOT_B() {
-	INFO '#$ dump RELEASE version'; f=/mnt/lg/lgapp/bin/RELEASE; [ -f "$f" ] || f=/mnt/lg/lgapp/RELEASE
-	if [ -f "$f" ]; then
-		info_REL=/scripts/info_RELEASE.sh; bbe=/usr/bin/bbe
-		if [ -x "$bbe" -a -x "$info_REL" ]; then
-			$info_REL $f >> "$infofile" || { ERR 18; break; }
-		else
-			s=$(stat -c%s $f); b=$((s/18)); none=1
-			for i in 9 8 10; do
-				DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
-				cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
-					grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A5 swfarm >> "$infofile" && none=0 && break
-			done
-			[ $none = 1 ] && ERR 18 || none=1
-			for i in 15 14 16; do
-				DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
-				cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
-					grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A10 swfarm >> "$infofile" && none=0 && break
-			done
-			[ $none = 1 ] && ERR 18 'Error: not found'
-		fi
+	f=/mnt/lg/lgapp/bin/RELEASE; [ -f "$f" ] || f=/mnt/lg/lgapp/RELEASE
+	info_REL=/scripts/info_RELEASE.sh; [ -f "$f" ] || f=/home/lgmod/info_RELEASE.sh
+	if [ -f "$f" ] && [ -x /usr/bin/bbe -a -x "$info_REL" ]; then
+		CMD 18 $info_REL $f
+	elif [ -f "$f" ]; then
+		INFO '#$ dump RELEASE version'
+		s=$(stat -c%s $f); b=$((s/18)); none=1
+		for i in 9 8 10; do
+			DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
+			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A5 swfarm >> "$infofile" && none=0 && break
+		done
+		[ $none = 1 ] && ERR 18 || none=1
+		for i in 15 14 16; do
+			DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
+			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A10 swfarm >> "$infofile" && none=0 && break
+		done
+		rm -f /tmp/info-dump; [ $none = 1 ] && ERR 18 'Error: not found'
 	else ERR 0 'Note: not found'; fi
 
 	INFO "INFO: `date`"
@@ -174,9 +195,12 @@ INFO_CHROOT_B() {
 
 
 
+[ "$part" = mtdinfo ] && { mtdinfo "$@"; exit $?; }
+
+
 INFO_CHROOT() {
 	INFO_CHROOT_A
-	[ -f /tmp/install-info ] && CMD 11 cat "$infotemp"
+	[ -f $infotemp ] && CMD 11 cat $infotemp
 	INFO_CHROOT_B
 }
 
@@ -201,7 +225,7 @@ INFO "INFO: `date`"; DROP; sync
 
 
 if [ "$part" = paste ]; then
-	[ ! -f $wget ] && echo "NOTE: $wget not found (extroot?)" && exit 1
+	which wget >/dev/null || { echo "NOTE: wget not found (extroot?)" && exit 1; }
 	name="$MODEL"; [ -z "$name" ] && name=`hostname`; [ -z "$name" ] && name='NA'
 
 	#URL='http://pastebin.ca/quiet-paste.php?api=GO2sUUgKHm5v4WAAXooevnRBoI0bdGhc'; # type=23 - bash (?)
@@ -211,8 +235,8 @@ if [ "$part" = paste ]; then
 	echo -n "paste_name=$name&paste_format=1&paste_expire_date=1M&paste_private=1&paste_code=" > "$wgetfile" || exit
 
 	cat "$infofile" | sed -e 's|%|%25|g' -e 's|&|%26|g' -e 's|+|%2b|g' -e 's| |+|g' >> "$wgetfile" &&
-		echo $wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL" &&
-		$wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL" &&
+		echo wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL" &&
+		wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-file="$wgetfile" "$URL" &&
 		echo 'NOTE: To share your info file, please find the link below:'
-	cat /tmp/info-file.pbin; echo
+	cat /tmp/info-file.pbin | head; echo
 fi
