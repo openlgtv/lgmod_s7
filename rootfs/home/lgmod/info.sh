@@ -66,7 +66,7 @@ mtdinfo() {
 		if [ -d /mnt/user ]; then # not S6/S7 = BCM
 			:; # TODO
 		else
-			[ $c = 26 ] || Err 7 "$c partitions: Not S7 TV?"
+			[ $c = 26 ] || [ $c = 24 ] || Err 7 "$c partitions: Not S7 TV?"
 		fi
 	fi
 	info=`$busybox hexdump $f -vs4 -n8 -e'"%x"'` || Err 6 "read from $f"
@@ -235,8 +235,8 @@ if [ "$part" = paste ]; then
 	echo -n "paste_name=$name&paste_format=text&paste_expire_date=1M&paste_private=1&paste_code=" > "$wgetfile" || exit
 
 	cat "$infofile" | sed -e 's|%|%25|g' -e 's|&|%26|g' -e 's|+|%2b|g' -e 's| |+|g' >> "$wgetfile" &&
-		echo wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-data=\"\`cat $wgetfile\`\" "'$URL'" &&
-		wget -O /tmp/info-file.pbin --tries=2 --timeout=30 --post-data="`cat $wgetfile`" "$URL" &&
+		echo wget -O /tmp/info-file.pbin --timeout=30 --post-data=\"\`cat $wgetfile\`\" "'$URL'" &&
+		wget -O /tmp/info-file.pbin --timeout=30 --post-data="`cat $wgetfile`" "$URL" &&
 		echo 'NOTE: To share your info file, please find the link below:'
 	cat /tmp/info-file.pbin | head; echo
 fi

@@ -37,8 +37,10 @@ date=$(date '+%Y%m%d-%H%M%S')
 infofile="backup-$date-info.txt"
 bkpdir="backup-$date"
 rootfs=$(echo lgmod_S7_*.sqfs)
-lginitA=mtd4_lginitA.sqfs; lginitB=mtd4_lginitB.sqfs
-lginitAmd5=1e6ee0f4d9d08f920c406c2173f855a3; lginitBmd5=bb43933fb79dd2077151df09ab67f893
+lginitA=mtd4_lginitA.sqfs; lginitB=mtd4_lginitB.sqfs; lginitC=mtd4_lginitC.sqfs
+lginitAmd5='1e6ee0f4d9d08f920c406c2173f855a3'; # common S7
+lginitBmd5='bb43933fb79dd2077151df09ab67f893'; # FW 4.01.xx, 4.60.xx
+lginitCmd5='146533ffe3cbd4c1804e58f5c0104852'; # US models
 required_free_ram=10000
 KILL='addon_mgr stagecraft udhcpc ntpd tcpsvd djmount'
 	# LG: addon_mgr stagecraft
@@ -86,9 +88,9 @@ if [ -n "$install" ]; then
 	[ -f "$rootfs" ] || { err=25; echo "Error($err): File not found: $rootfs"; }
 	flash_eraseall --version | sed -e '2,$d' ||
 		{ err=26; echo "ERROR($err): 'flash_erasesall' something??!"; }
-	I=$(cat /proc/mtd | sed -e 's/:.*"\(.*\)"/\1/' -e 's/^mtd//' | grep -v ' \|0bbminfo\|5boot\|6crc32info\|8logo\|15kernel\|16lgapp\|20kernel\|22lgres' | sort -n) ||
+	I=$(cat /proc/mtd | sed -e 's/:.*"\(.*\)"/\1/' -e 's/^mtd//' | grep -v ' \|0bbminfo\|5boot\|6crc32info\|8logo\|15kernel\|16lgapp\|20kernel\|22lgres\|23cert\|24authcxt' | sort -n) ||
 		{ err=27; echo "ERROR($err): /proc/mtd (install)"; }
-	[ "$(echo ${I//mtd})" = '1boot 2info 3rootfs 4lginit 7model 9cmndata 10nvram 11user 12ezcal 13estream 14opsrclib 17lgres 18lgfont 19addon 21lgapp 23cert 24authcxt' ] ||
+	[ "$(echo ${I//mtd})" = '1boot 2info 3rootfs 4lginit 7model 9cmndata 10nvram 11user 12ezcal 13estream 14opsrclib 17lgres 18lgfont 19addon 21lgapp' ] ||
 		{ err=27; echo "ERROR($err): TV partitions mismath"; }
 fi
 if [ -z "$update" ] && [ -z "$lginit" ]; then :; #[ -n "$install" ] &&
@@ -97,15 +99,19 @@ if [ -z "$update" ] && [ -z "$lginit" ]; then :; #[ -n "$install" ] &&
 		[ -f $f ] && lginitmd5=`md5sum $f`; lginitmd5="${lginitmd5%% *}"; fi
 	if   [ "$lginitmd5" = "$lginitAmd5" ]; then lginit="$lginitA"
 	elif [ "$lginitmd5" = "$lginitBmd5" ]; then lginit="$lginitB"
+	elif [ "$lginitmd5" = "$lginitCmd5" ]; then lginit="$lginitC"
 	else [ -n "$install" ] && err=28; echo "ERROR($err): md5 mismatch: $f"; fi
-	[ $err = 0 ] && echo && echo "NOTE: LGINIT=$lginit !"
+	if [ $err = 0 ]; then
+		echo && echo "NOTE: LGINIT=$lginit !"
+		[ -f "$lginit" ] || { err=28; echo "Error($err): File not found: $lginit"; }
+	fi
 fi
 [ $err != 0 ] && exit $err
 if [ -n "$install" ]; then
-	md5chk=$(cat "$rootfs.md5") && md5cur=$(md5sum "$rootfs") &&
+	[ -f "$rootfs.md5" ] && md5chk=$(cat "$rootfs.md5") && md5cur=$(md5sum "$rootfs") &&
 		[ "${md5chk%% *}" = "${md5cur%% *}" ] ||
 		{ err=29; echo "ERROR($err): md5 mismatch: $rootfs"; }
-	md5chk=$(cat "$lginit.md5") && md5cur=$(md5sum "$lginit") &&
+	[ -f "$lginit.md5" ] && md5chk=$(cat "$lginit.md5") && md5cur=$(md5sum "$lginit") &&
 		[ "${md5chk%% *}" = "${md5cur%% *}" ] ||
 		{ err=29; echo "ERROR($err): md5 mismatch: $lginit"; }
 fi
