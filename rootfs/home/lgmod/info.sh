@@ -86,7 +86,7 @@ INFO_ROOT() {
 	INFO '$# dmesg'; dmesg | grep ACTIVE >> "$infofile"; dmesg >> "$infofile" 2>&1 || ERR 15
 
 	for i in /var/www/cgi-bin/version /proc/version_for_lg /etc/version_for_lg /mnt/lg/model/* \
-		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/*; do
+		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* /etc/ver /etc/ver2 /etc/version; do
 		[ -f "$i" ] || continue
 		echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 		CMD 16 cat $i
@@ -94,10 +94,10 @@ INFO_ROOT() {
 	echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 
 	INFO '#$ list some files'
-	CMD 0 ls -lR /etc /mnt/lg/lginit /mnt/lg/bt /mnt/lg/user /mnt/lg/cmn_data /mnt/lg/model \
-			/mnt/lg/lgapp /mnt/lg/res/lgres /mnt/lg/res/lgfont /usr/local \
-			/mnt/addon/bin /mnt/addon/lib /mnt/addon/stagecraft
-	CMD 0 ls -l /mnt/addon /mnt/lg/ciplus /mnt/lg/res/estreamer
+	CMD 0 ls -lR /etc /mnt/lg/lginit/ /mnt/lg/bt/ /mnt/lg/user/ /mnt/lg/cmn_data/ /mnt/lg/model/ \
+			/mnt/lg/lgapp/ /mnt/lg/res/lgres/ /mnt/lg/res/lgfont/ /usr/local/ \
+			/mnt/addon/bin/ /mnt/addon/lib/ /mnt/addon/stagecraft/ /home/
+	CMD 0 ls -l /mnt/addon/ /mnt/lg/ciplus/ /mnt/lg/res/estreamer/
 }
 
 INFO_CHROOT_A() {
@@ -119,7 +119,7 @@ INFO_CHROOT_A() {
 	CMD 11 cat /proc/filesystems
 	INFO '$# export'; tmp=`export` 2>> "$infofile" || ERR 10; echo "$tmp" | sort >> "$infofile"
 	INFO '$# printenv'; tmp=`printenv` 2>> "$infofile" || ERR 12; echo "$tmp" | sort >> "$infofile"
-	if [ -h `which ps` ]; then CMD 12 ps w; else CMD 12 ps axl; CMD 12 ps axv; fi
+	if [ -h `which ps` ]; then CMD 12 ps www; else CMD 12 ps axl; CMD 12 ps axv; fi
 	CMD 11 cat /proc/mounts
 	INFO '$# fdisk -l'
 	tmp=`fdisk -l $(cat /proc/mtd | tail -n+2 | sed -e 's/:.*//' -e 's/^mtd/\/dev\/mtdblock/')` 2>> "$infofile" || ERR 14
@@ -175,7 +175,6 @@ INFO_CHROOT_B() {
 
 	F1="$f"; f=`grep -m2 boot /proc/mtd | cut -d: -f1 | tail -n+2`; F2="$f"
 	if [ -d /mnt/user ]; then # not S6/S7 = BCM
-		INFO '#$' "strings boot backup: /dev/$f"
 		[ -z "$f" ] || ERR 17 "Error: boot backup in $f: Not BCM TV?"
 	else
 		INFO '#$' "strings boot backup: /dev/$f"
