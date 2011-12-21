@@ -86,7 +86,8 @@ INFO_ROOT() {
 	INFO '$# dmesg'; dmesg | grep ACTIVE >> "$infofile"; dmesg >> "$infofile" 2>&1 || ERR 15
 
 	for i in /var/www/cgi-bin/version /proc/version_for_lg /etc/version_for_lg /mnt/lg/model/* \
-		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* /etc/ver /etc/ver2 /etc/version; do
+		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* /etc/ver /etc/ver2 /etc/version \
+		/proc/meminfo /proc/interrupts /proc/iomem /proc/bbminfo; do
 		[ -f "$i" ] || continue
 		echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 		CMD 16 cat $i
