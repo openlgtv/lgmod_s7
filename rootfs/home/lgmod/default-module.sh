@@ -6,6 +6,9 @@ f=usbnet;  [ -d /sys/module/$f ] || modprobe $f; # Core network modules
 modprobe mcs7830-asix;  # MCS7830 network chipset module
 modprobe dm9601-lgmod;  # DM9601 network chipset module
 
+# NOTE: if modprobe fail (wrong modules.dep file) - use file name: insmod wireless/NAME.ko
+# NOTE: or absolute path and file name: insmod /PATH/NAME.ko
+
 # Ralink based wireless support (Rt2x00, Rt2500, Rt73)
 modprobe rt2x00usb
 #modprobe rt2500usb # It crashed with 148f:2573 !

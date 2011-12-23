@@ -5,51 +5,51 @@ content-type: text/html
 
 <?
 if [ "$FORM_save" = "Save config" ]; then
-  if [ "$FORM_dhcp" = "1" ]; then
-    echo -n > /mnt/lg/user/lgmod/dhcp
-  else
-    rm /mnt/lg/user/lgmod/dhcp 
-    echo -n "$FORM_ip $FORM_mask $FORM_gw" > /mnt/lg/user/lgmod/network
-  fi 
+	if [ "$FORM_dhcp" = "1" ]; then
+		echo -n > /mnt/lg/user/lgmod/dhcp
+	else
+		[ -f /mnt/lg/user/lgmod/dhcp ] && rm /mnt/lg/user/lgmod/dhcp
+		echo -n "$FORM_ip $FORM_mask $FORM_gw" > /mnt/lg/user/lgmod/network
+	fi 
 	if [ "$FORM_ssh" = "1" ]; then
 		f=/mnt/lg/user/lgmod/ssh
 		if [ "$FORM_ssh_pass" = "1" ]; then echo -n > $f
 		else [ -s $f ] || echo -n '-s' > $f; fi; # preserve command line parameters
 	else
-		rm /mnt/lg/user/lgmod/ssh
+		[ -f /mnt/lg/user/lgmod/ssh ] && rm /mnt/lg/user/lgmod/ssh
 	fi 
-  if [ "$FORM_tel" = "1" ]; then
-    echo -n > /mnt/lg/user/lgmod/telnet
-  else
-    rm /mnt/lg/user/lgmod/telnet
-  fi 
-  if [ "$FORM_ftp" = "1" ]; then
-    if [ $FORM_pFtp ]; then
-      echo -n $FORM_pFtp > /mnt/lg/user/lgmod/ftp
-    else
-      echo -n "/" > /mnt/lg/user/lgmod/ftp
-    fi
-  else
-    rm /mnt/lg/user/lgmod/ftp
-  fi 
-  if [ "$FORM_pnp" = "1" ]; then
-    if [ $FORM_cmntp ]; then
-      echo -n $FORM_cmntp > /mnt/lg/user/lgmod/upnp
-    else
-      echo -n "/mnt/usb1/Drive1/upnp" > /mnt/lg/user/lgmod/upnp
-    fi
-    [ ! -e `cat /mnt/lg/user/lgmod/upnp` ] && mkdir `cat /mnt/lg/user/lgmod/upnp`
-  else
-    rm /mnt/lg/user/lgmod/upnp
-  fi
-  if [ "$FORM_ntp" = "1" ]; then
-      echo -n $FORM_nip > /mnt/lg/user/lgmod/ntp
-      echo $FORM_tz > /mnt/lg/user/lgmod/TZ
-  else
-    rm /mnt/lg/user/lgmod/ntp
-  fi 
-  echo "nameserver $FORM_dns" > /mnt/lg/user/lgmod/resolv.conf
-  sync
+	if [ "$FORM_tel" = "1" ]; then
+		echo -n > /mnt/lg/user/lgmod/telnet
+	else
+		[ -f /mnt/lg/user/lgmod/telnet ] && rm /mnt/lg/user/lgmod/telnet
+	fi 
+	if [ "$FORM_ftp" = "1" ]; then
+		if [ $FORM_pFtp ]; then
+			echo -n $FORM_pFtp > /mnt/lg/user/lgmod/ftp
+		else
+			echo -n "/" > /mnt/lg/user/lgmod/ftp
+		fi
+	else
+		[ -f /mnt/lg/user/lgmod/ftp ] && rm /mnt/lg/user/lgmod/ftp
+	fi 
+	if [ "$FORM_pnp" = "1" ]; then
+		if [ $FORM_cmntp ]; then
+			echo -n $FORM_cmntp > /mnt/lg/user/lgmod/upnp
+		else
+			echo -n "/mnt/usb1/Drive1/upnp" > /mnt/lg/user/lgmod/upnp
+		fi
+		[ ! -e `cat /mnt/lg/user/lgmod/upnp` ] && mkdir `cat /mnt/lg/user/lgmod/upnp`
+	else
+		[ -f /mnt/lg/user/lgmod/upnp ] && rm /mnt/lg/user/lgmod/upnp
+	fi
+	if [ "$FORM_ntp" = "1" ]; then
+		echo -n $FORM_nip > /mnt/lg/user/lgmod/ntp
+		echo $FORM_tz > /mnt/lg/user/lgmod/TZ
+	else
+		[ -f /mnt/lg/user/lgmod/ntp ] && rm /mnt/lg/user/lgmod/ntp
+	fi 
+	echo "nameserver $FORM_dns" > /mnt/lg/user/lgmod/resolv.conf
+	sync
 fi 2>&1
 ?>
 

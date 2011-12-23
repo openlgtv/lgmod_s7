@@ -49,7 +49,9 @@ elif [ "$FORM_action" = "Mount" ]; then
 	[ "$uname" ] && mnt_opt="$mnt_opt,user=$uname,pass=$pass"
 	[ "$opt" ] && mnt_opt="$mnt_opt,$opt"
 
-	mount -t $fs_type -o "$mnt_opt" "$src" "$dst"
+	. /etc/init.d/rcS-funcs; # load_modules
+	load_modules "mount: $1" "$fs_type" &&
+		mount -t "$fs_type" -o "$mnt_opt" "$src" "$dst"
 elif [ "$FORM_action" = "Unmount" ]; then
 	ndrv=`awk '{ if (NR=='$FORM_didx') { print $0 } }' $FS_MNT`
 	automount="${ndrv%%#*}"; ndrv="${ndrv#*#}"
