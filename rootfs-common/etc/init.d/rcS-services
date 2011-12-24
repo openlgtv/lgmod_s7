@@ -10,8 +10,7 @@ fi
 
 [ -n "$1" ] && { echo "rcS-services: $1" > /dev/kmsg; sleep "$1"; }
 
-r=$(pgrep -f "$RELBIN" | wc -l)
-[ "$r" -lt 2 ] && NOREL=1 || NOREL=''
+pgrep -f "$RELBIN" >/dev/null && NOREL='' || NOREL=1
 
 . /etc/init.d/rcS-funcs; # wait_drives, load_modules, device_by_id
 

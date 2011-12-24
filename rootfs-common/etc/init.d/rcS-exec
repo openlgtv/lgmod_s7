@@ -68,8 +68,7 @@ if [ -z "$RCS_NOREL" ]; then
 	[ "$err" = 222 ] && err=''; # =0 - for release configuration - custom script
 
 	if [ -z "$err" ]; then
-		sleep 5; r=$(pgrep -f "$RELBIN" | wc -l)
-		[ "$r" -lt 2 ] && err=1; fi
+		sleep 5; pgrep -f "$RELBIN" >/dev/null || err=1; fi
 
 	[ -n "$err" ] && {
 		echo "rcS-exec: Error $err ($Mode)" > /dev/kmsg

@@ -42,7 +42,7 @@ CMD() {
 ERR() {
 	local e=$? m="$2"; [ $1 -gt $err ] && err=$1
 	[ -n "$save" ] && echo "$save" && save=''
-	[ -z "$m" ] && m="Error: exitcode=$e"
+	[ -z "$m" ] && m="Error($1): exitcode=$e"
 	echo "$m" >> "$infofile"; echo "$m"
 }
 
@@ -66,7 +66,7 @@ mtdinfo() {
 		if [ -d /mnt/user ]; then # not S6/S7 = BCM
 			:; # TODO
 		else
-			[ $c = 26 ] || [ $c = 24 ] || Err 7 "$c partitions: Not S7 TV?"
+			[ $c = 26 ] || [ $c = 24 ] || Err 7 "$c-1 partitions: Not S7 TV?"
 		fi
 	fi
 	info=`$busybox hexdump $f -vs4 -n8 -e'"%x"'` || Err 6 "read from $f"
@@ -136,13 +136,13 @@ INFO_CHROOT_B() {
 	elif [ -f "$f" ]; then
 		INFO '#$ dump RELEASE version'
 		s=$(stat -c%s $f); b=$((s/18)); none=1
-		for i in 9 8 10; do
+		for i in 9 10 11 12; do
 			DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
 			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A5 swfarm >> "$infofile" && none=0 && break
 		done
 		[ $none = 1 ] && ERR 18 || none=1
-		for i in 15 14 16; do
+		for i in 15 16 14; do
 			DROP; dd bs=$b skip=$i count=1 if=$f > /tmp/info-dump 2>> "$infofile" || { ERR 18; break; }
 			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A10 swfarm >> "$infofile" && none=0 && break

@@ -74,11 +74,14 @@ fi
 #start_kernel=1454
 
 # S7: specifics (short)
-# /proc/mtd - 26 partitions (24 for US models), 2x boot, kernel, lgapp, lgres
+# /proc/mtd - 25 partitions: 2x boot, kernel, lgapp, lgres
 # /mnt/lg/lginit is dir
 # /mnt/lg/user is dir
 # /mnt/game is sym.link
-# 'ps ax|av' works
+# 'ps ax|av' works ('ps' show 2 or 3 RELEASE processes)
+# S7 US: specifics (short)
+# /proc/mtd - 23 partitions: missing cert (mtd23), authcxt (mtd24)
+# 'ps' show 1 RELEASE (it was used in: rcS-exec, rcS-crashdog, release, rcS-services)
 
 # S6: specifics
 # /mnt/lg/lginit not found

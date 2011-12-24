@@ -23,8 +23,7 @@ fi
 
 wait() {
 	[ -d /usr/local/etc ] && dfb || sleep 5
-	r=$(pgrep -f "$RELBIN" | wc -l)
-	[ "$r" -lt 2 ] && { echo "release: $1 - not started ($r)"; return 1; }
+	pgrep -f "$RELBIN" >/dev/null || { echo "release: $1 - not started"; return 1; }
 	. /etc/init.d/rcS-funcs; # wait_drives
 	wait_drives 'release'
 	. /etc/init.d/mount start
