@@ -44,11 +44,15 @@ mtdinfo() {
 			[ $c = 26 ] || [ $c = 24 ] || Err 7 "$c-1 partitions: Not S7 TV?"
 		fi
 	fi
+
 	info=`$busybox hexdump $f -vs4 -n8 -e'"%x"'` || Err 6 "read from $f"
 	ver=${info:0:7}; echo "Current  EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
 	ver=${info:7:7}; echo "Previous EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
+
 	info=`$busybox hexdump $f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
 	echo "0:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n || Err 5 "invalid data"
+
+	dd bs=$(( 240 + 84*($c-1) )) skip=1 if=$f | strings || Err 6 "invalid strings"
 	return $err
 }
 
