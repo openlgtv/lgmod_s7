@@ -100,10 +100,10 @@ INFO_ROOT() {
 			/mnt/addon/bin /mnt/addon/lib /mnt/addon/stagecraft /home \
 			/mnt/game /mnt/cache /mnt/idfile \
 			/mnt/nsu /mnt/lg/lglib /mnt/tplist /mnt/pqldb /mnt/lg/widevine; do
-		[ -f "$i" ] && [ -d "$i" ] || continue
+		[ -f "$i" ] || [ -d "$i" ] || continue
 		[ -d "$i/" ] && i="$i/"; CMD 16 ls -lR $i; done
 	for i in /mnt/addon/ /mnt/lg/ciplus/ /mnt/lg/res/estreamer/ /tmp/; do
-		[ -f "$i" ] && [ -d "$i" ] || continue
+		[ -f "$i" ] || [ -d "$i" ] || continue
 		[ -d "$i/" ] && i="$i/"; CMD 16 ls -l $i; done
 }
 
