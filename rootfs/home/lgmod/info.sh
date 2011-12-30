@@ -142,7 +142,7 @@ INFO_CHROOT_HEADER() {
 
 	# uncategorized info (most important info is above)
 	for i in /proc/version_for_lg /proc/meminfo /proc/iomem /proc/interrupts /proc/bbminfo /proc/bus/usb/devices \
-		/proc/hwinfo; do
+		/proc/modules /proc/hwinfo; do
 		[ -f "$i" ] || continue; CMD 11 cat $i; done
 
 	INFO '$# dmesg'
@@ -195,7 +195,7 @@ INFO_CHROOT_FOOTER() {
 	if [ -c "/dev/$f" ]; then
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
-			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 >> "$infofile" || ERR=18
+			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 >> "$infofile" || ERR 18
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
 			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 >> "$infofile" || ERR 18
@@ -211,7 +211,7 @@ INFO_CHROOT_FOOTER() {
 	if [ -c "/dev/$f" ]; then
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
-			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 >> "$infofile" || ERR=18
+			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 >> "$infofile" || ERR 18
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
 			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 >> "$infofile" || ERR 18
@@ -221,6 +221,15 @@ INFO_CHROOT_FOOTER() {
 		DROP; INFO '$#' "diff /dev/$F1 /dev/$F2"
 		diff /dev/$F1 /dev/$F2 >> "$infofile" 2>&1 || ERR 0
 	fi
+
+	crc32info="`grep '"crc32info"' /proc/mtd | cut -d: -f1`"
+	[ -n "$crc32info" ] && INFO '#$' "hexdump -n256 /dev/$crc32info (crc32info)" && hexdump -n256 /dev/$crc32info >> "$infofile" || ERR 18
+	env_nvm="`grep '"env_nvm"' /proc/mtd | cut -d: -f1`"
+	[ -n "$env_nvm" ] && INFO '#$' "strings /dev/$env_nvm (env_nvm)" && strings "/dev/$env_nvm" >> "$infofile" || ERR 18
+	hist="`grep '"hist"' /proc/mtd | cut -d: -f1`"
+	[ -n "$hist" ] && INFO '#$' "strings /dev/$hist (hist)" && strings "/dev/$hist" >> "$infofile" || ERR 18
+	cfginfo="`grep '"cfginfo"' /proc/mtd | cut -d: -f1`"
+	[ -n "$cfginfo" ] && INFO '#$' "strings /dev/$cfginfo (cfginfo)" && strings "/dev/$cfginfo" >> "$infofile" || ERR 18
 }
 
 
