@@ -85,20 +85,24 @@ INFO_ROOT() {
 	CMD 10 help
 	INFO '$# dmesg'; dmesg | grep ACTIVE >> "$infofile"; dmesg >> "$infofile" 2>&1 || ERR 15
 
-	for i in /var/www/cgi-bin/version /proc/version_for_lg /etc/version_for_lg /mnt/lg/model/* \
-		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* /etc/ver /etc/ver2 /etc/version \
-		/proc/meminfo /proc/interrupts /proc/iomem /proc/bbminfo; do
+	for i in /var/www/cgi-bin/version /etc/version_for_lg /mnt/lg/model/* \
+		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* \
+		/tmp/openrelease.log /var/log/OPENRELEASE.log /tmp/openrelease.out \
+		/etc/ver /etc/ver2 /etc/version /var/log/OpenLGTV_BCM.log; do
 		[ -f "$i" ] || continue
 		echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 		CMD 16 cat $i
 	done
 	echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 
-	INFO '#$ list some files'
-	CMD 0 ls -lR /etc /mnt/lg/lginit/ /mnt/lg/bt/ /mnt/lg/user/ /mnt/lg/cmn_data/ /mnt/lg/model/ \
-			/mnt/lg/lgapp/ /mnt/lg/res/lgres/ /mnt/lg/res/lgfont/ /usr/local/ \
-			/mnt/addon/bin/ /mnt/addon/lib/ /mnt/addon/stagecraft/ /home/
-	CMD 0 ls -l /mnt/addon/ /mnt/lg/ciplus/ /mnt/lg/res/estreamer/
+	for i in /etc /mnt/lg/lginit /mnt/lg/bt /mnt/lg/user /mnt/lg/cmn_data /mnt/lg/model \
+			/mnt/lg/lgapp /mnt/lg/res/lgres /mnt/lg/res/lgfont /usr/local \
+			/mnt/addon/bin /mnt/addon/lib /mnt/addon/stagecraft /home \
+			/mnt/game /mnt/cache /mnt/idfile \
+			/mnt/nsu /mnt/lg/lglib /mnt/tplist /mnt/pqldb /mnt/lg/widevine; do
+		[ -f "$i" ] && [ -d "$i" ] || continue; CMD 16 ls -lR $i/; done
+	for i in /mnt/addon/ /mnt/lg/ciplus/ /mnt/lg/res/estreamer/ /tmp/; do
+		[ -f "$i" ] && [ -d "$i" ] || continue; CMD 16 ls -l $i/; done
 }
 
 INFO_CHROOT_A() {
@@ -125,7 +129,10 @@ INFO_CHROOT_A() {
 	INFO '$# fdisk -l'
 	tmp=`fdisk -l $(cat /proc/mtd | tail -n+2 | sed -e 's/:.*//' -e 's/^mtd/\/dev\/mtdblock/')` 2>> "$infofile" || ERR 14
 	echo "$tmp" | grep ':' >> "$infofile"
-	CMD 11 cat /proc/bus/usb/devices
+
+	for i in /proc/version_for_lg /proc/meminfo /proc/iomem /proc/interrupts /proc/bbminfo /proc/bus/usb/devices \
+		/proc/hwinfo; do
+		[ -f "$i" ] || continue; CMD 11 cat $i; done
 }
 
 INFO_CHROOT_B() {
