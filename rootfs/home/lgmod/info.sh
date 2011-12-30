@@ -4,7 +4,7 @@
 
 # modify with care - script is used by install.sh
 
-VER=10011; # version of info file (file syntax)
+VER='v11'; # version of info file (file syntax)
 busybox=''; #/bin/busybox; # old
 MODEL=`echo /mnt/lg/user/model.*`
 [ -f "$MODEL" ] && MODEL="${MODEL#*model.}" || MODEL=''
@@ -12,9 +12,9 @@ MODEL=`echo /mnt/lg/user/model.*`
 part="$1"
 if   [ "$1" = root ];    then shift; # part 1 - before chroot
 elif [ "$1" = chroot ];  then shift; # part 2 - in chroot - part 1 (from $infotemp) will be included
-elif [ "$1" = paste ];   then shift; # all info and upload to pastebin.com (pastebin.ca)
+elif [ "$1" = paste ];   then shift; # all info (parts 1+2) - upload to pastebin.com (pastebin.ca)
 elif [ "$1" = mtdinfo ]; then shift; # mtdinfo only - optional: $1=bin_file $2=number_of_partitions
-else part=''; fi; # all info
+else part=''; fi; # all info (parts 1+2)
 
 infotemp=/tmp/info-file
 infofile="$1"; [ -z "$1" ] && infofile="$infotemp"
@@ -22,32 +22,7 @@ wgetfile="$infofile.wget"; # encoded/prepared for wget --post-data
 
 
 
-save=''; err=0
-
-DROP() {
-	if [ -d /mnt/user ]; then # not S6/S7 = BCM
-		return 1
-	else
-		echo 3 > /proc/sys/vm/drop_caches
-	fi
-}
-
-INFO() { { echo; echo; echo "$@"; } >> "$infofile"; save="$@"; }
-
-CMD() {
-	local e="$1"; shift; INFO '$#' "$@"
-	$@ >> "$infofile" 2>&1 || ERR "$e"
-}
-
-ERR() {
-	local e=$? m="$2"; [ $1 -gt $err ] && err=$1
-	[ -n "$save" ] && echo "$save" && save=''
-	[ -z "$m" ] && m="Error($1): exitcode=$e"
-	echo "$m" >> "$infofile"; echo "$m"
-}
-
-
-
+# stand alone commands (could be in separate file)
 Err() { local e=$? m="$2"; [ $1 -gt $err ] && err=$1; [ -z "$m" ] && m="$1"; echo "Error($e): $m" >&2; return $e; }
 
 mtdinfo() {
@@ -79,7 +54,33 @@ mtdinfo() {
 
 
 
+save=''; # Note: last 'INFO' is saved and used if 'ERR'
+INFO() { { echo; echo; echo "$@"; } >> "$infofile"; save="$@"; }
+ERR() {
+	local e=$? m="$2"; [ $1 -gt $err ] && err=$1
+	[ -n "$save" ] && echo "$save" && save=''
+	[ -z "$m" ] && m="Error($1): exitcode=$e"
+	echo "$m" >> "$infofile"; echo "$m"
+}
+
+err=0
+DROP() {
+	if [ -d /mnt/user ]; then # not S6/S7 = BCM
+		return 1
+	else
+		echo 3 > /proc/sys/vm/drop_caches
+	fi
+}
+CMD() {
+	local e="$1"; shift; INFO '$#' "$@"
+	$@ >> "$infofile" 2>&1 || ERR "$e"
+}
+
+
+
+# info file parts
 INFO_ROOT() {
+	# part 1 (outside install.sh chroot) - stock busybox and all mount points as is (if RELEASE works)
 	INFO '$# df -h'; tmp=`df -h` 2>> "$infofile" || ERR 12; echo "$tmp" | grep -v '^/dev/sd' >> "$infofile"
 	CMD 12 busybox
 	CMD 10 help
@@ -106,7 +107,11 @@ INFO_ROOT() {
 		[ -d "$i/" ] && i="$i/"; CMD 16 ls -l $i; done
 }
 
-INFO_CHROOT_A() {
+INFO_CHROOT_HEADER() {
+	# part 2 (inside install.sh chroot) - header (after INFO_ROOT)
+	dmesg > $infotemp.dmesg; # get dmesg in advance in case small buffer
+
+	# important info - before dmesg, dump files/directories, INFO_ROOT
 	DROP && sleep 1
 	CMD 11 cat /proc/mtd
 	CMD 13 mtdinfo
@@ -131,15 +136,19 @@ INFO_CHROOT_A() {
 	tmp=`fdisk -l $(cat /proc/mtd | tail -n+2 | sed -e 's/:.*//' -e 's/^mtd/\/dev\/mtdblock/')` 2>> "$infofile" || ERR 14
 	echo "$tmp" | grep ':' >> "$infofile"
 
+	# uncategorized info (most important info is above)
 	for i in /proc/version_for_lg /proc/meminfo /proc/iomem /proc/interrupts /proc/bbminfo /proc/bus/usb/devices \
 		/proc/hwinfo; do
 		[ -f "$i" ] || continue; CMD 11 cat $i; done
 
-	INFO '$# dmesg'; dmesg | grep ACTIVE >> "$infofile"; dmesg >> "$infofile" 2>&1 || ERR 15
+	INFO '$# dmesg'
+	cat $infotemp.dmesg | grep ACTIVE >> "$infofile"; # in S7 this shows 'TV statup time' (picture on the screen)
+	cat $infotemp.dmesg >> "$infofile" 2>&1 || ERR 15
 	echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 }
 
-INFO_CHROOT_B() {
+INFO_CHROOT_FOOTER() {
+	# part 2 (inside install.sh chroot) - footer (after INFO_ROOT)
 	f=/mnt/lg/lgapp/bin/RELEASE; [ -f "$f" ] || f=/mnt/lg/lgapp/RELEASE
 	info_REL=/scripts/info_RELEASE.sh; [ -f "$f" ] || f=/home/lgmod/info_RELEASE.sh
 	if [ -f "$f" ] && [ -x /usr/bin/bbe -a -x "$info_REL" ]; then
@@ -212,22 +221,23 @@ INFO_CHROOT_B() {
 
 
 
-[ "$part" = mtdinfo ] && { mtdinfo "$@"; exit $?; }
-
-
+# info file variants - without chroot or with chroot (called twice from install.sh)=
 INFO_CHROOT() {
-	INFO_CHROOT_A
+	INFO_CHROOT_HEADER
 	[ -f $infotemp ] && CMD 11 cat $infotemp
-	INFO_CHROOT_B
+	INFO_CHROOT_FOOTER
 }
 
 INFO_ALL() {
-	INFO_CHROOT_A
+	INFO_CHROOT_HEADER
 	INFO_ROOT
-	INFO_CHROOT_B
+	INFO_CHROOT_FOOTER
 }
 
 
+
+# process command line parameters
+[ "$part" = mtdinfo ] && { mtdinfo "$@"; exit $?; }
 [ "$part" != root ] && echo "NOTE: Create info file (1 min, $infofile) ..."
 
 echo "$VER $MODEL: $@" > "$infofile" || { echo "Error: Info file failed: $infofile"; exit 19; }
