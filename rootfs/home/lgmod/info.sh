@@ -83,7 +83,6 @@ INFO_ROOT() {
 	INFO '$# df -h'; tmp=`df -h` 2>> "$infofile" || ERR 12; echo "$tmp" | grep -v '^/dev/sd' >> "$infofile"
 	CMD 12 busybox
 	CMD 10 help
-	INFO '$# dmesg'; dmesg | grep ACTIVE >> "$infofile"; dmesg >> "$infofile" 2>&1 || ERR 15
 
 	for i in /var/www/cgi-bin/version /etc/version_for_lg /mnt/lg/model/* \
 		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* \
@@ -135,6 +134,9 @@ INFO_CHROOT_A() {
 	for i in /proc/version_for_lg /proc/meminfo /proc/iomem /proc/interrupts /proc/bbminfo /proc/bus/usb/devices \
 		/proc/hwinfo; do
 		[ -f "$i" ] || continue; CMD 11 cat $i; done
+
+	INFO '$# dmesg'; dmesg | grep ACTIVE >> "$infofile"; dmesg >> "$infofile" 2>&1 || ERR 15
+	echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 }
 
 INFO_CHROOT_B() {
