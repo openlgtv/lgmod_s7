@@ -162,13 +162,16 @@ INFO_CHROOT_B() {
 	INFO "INFO: `date`"
 
 	f=`grep -m1 boot /proc/mtd | cut -d: -f1`
-	INFO '#$' "strings boot: /dev/$f"
+	INFO '#$' "strings boot(version) : /dev/$f"
 	if [ -d /mnt/user ]; then # not S6/S7 = BCM
 		[ "$f" = mtd0 ] || ERR 17 "Error: boot in $f: Not BCM TV?"
 	else
 		[ "$f" = mtd1 ] || ERR 17 "Error: boot in $f: Not S7 TV?"
 	fi
 	if [ -c "/dev/$f" ]; then
+		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
+			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 >> "$infofile" || ERR=18
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
 			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 >> "$infofile" || ERR 18
@@ -178,10 +181,13 @@ INFO_CHROOT_B() {
 	if [ -d /mnt/user ]; then # not S6/S7 = BCM
 		[ -z "$f" ] || ERR 17 "Error: boot backup in $f: Not BCM TV?"
 	else
-		INFO '#$' "strings boot backup: /dev/$f"
+		INFO '#$' "strings(version) boot backup: /dev/$f"
 		[ "$f" = mtd5 ] || ERR 17 "Error: boot backup in $f: Not S7 TV?"
 	fi
 	if [ -c "/dev/$f" ]; then
+		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
+			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| head -n5 >> "$infofile" || ERR=18
 		DROP; s=7;w=5;m=3;cat /dev/$f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
 			sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' -e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' \
 			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 >> "$infofile" || ERR 18

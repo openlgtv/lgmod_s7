@@ -37,10 +37,11 @@ date=$(date '+%Y%m%d-%H%M%S')
 infofile="backup-$date-info.txt"
 bkpdir="backup-$date"
 rootfs=$(echo lgmod_S7_*.sqfs)
-lginitA=mtd4_lginitA.sqfs; lginitB=mtd4_lginitB.sqfs; lginitC=mtd4_lginitC.sqfs
+lginitA=mtd4_lginitA.sqfs; lginitB=mtd4_lginitB.sqfs; lginitC=mtd4_lginitC.sqfs; lginitD=mtd4_lginitD.sqfs
 lginitAmd5='1e6ee0f4d9d08f920c406c2173f855a3'; # common S7
 lginitBmd5='bb43933fb79dd2077151df09ab67f893'; # FW 4.01.xx, 4.60.xx
 lginitCmd5='146533ffe3cbd4c1804e58f5c0104852'; # US models
+lginitDmd5='c1c28439be79d4d94220592b6d4c8fa9'; # 37LV3500-ZG with FW 3.01.06/3.01.10 is different (?)
 required_free_ram=10000
 KILL='addon_mgr stagecraft udhcpc ntpd tcpsvd djmount'
 	# LG: addon_mgr stagecraft
@@ -100,6 +101,7 @@ if [ -z "$update" ] && [ -z "$lginit" ]; then :; #[ -n "$install" ] &&
 	if   [ "$lginitmd5" = "$lginitAmd5" ]; then lginit="$lginitA"
 	elif [ "$lginitmd5" = "$lginitBmd5" ]; then lginit="$lginitB"
 	elif [ "$lginitmd5" = "$lginitCmd5" ]; then lginit="$lginitC"
+	elif [ "$lginitmd5" = "$lginitDmd5" ]; then lginit="$lginitD"
 	else [ -n "$install" ] && err=28; echo "ERROR($err): md5 mismatch: $f"; fi
 	if [ $err = 0 ]; then
 		echo && echo "NOTE: LGINIT=$lginit !"
