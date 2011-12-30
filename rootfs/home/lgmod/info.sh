@@ -223,7 +223,7 @@ INFO_CHROOT_FOOTER() {
 	fi
 
 	crc32info="`grep '"crc32info"' /proc/mtd | cut -d: -f1`"
-	[ -n "$crc32info" ] && INFO '#$' "hexdump -n256 /dev/$crc32info (crc32info)" && hexdump -n256 /dev/$crc32info >> "$infofile" || ERR 18
+	[ -n "$crc32info" ] && INFO '#$' "hexdump -n256 -e '1/8  \"%02.2_ax:  \"' -e '16/1 \"%02X \"' -e '\"\n\"' /dev/$crc32info (crc32info)" && hexdump -n256 -e '1/8  "%02.2_ax:  "' -e '16/1 "%02X "' -e '"\n"' /dev/$crc32info >> "$infofile" || ERR 18
 	env_nvm="`grep '"env_nvm"' /proc/mtd | cut -d: -f1`"
 	[ -n "$env_nvm" ] && INFO '#$' "strings /dev/$env_nvm (env_nvm)" && strings "/dev/$env_nvm" >> "$infofile" || ERR 18
 	hist="`grep '"hist"' /proc/mtd | cut -d: -f1`"
