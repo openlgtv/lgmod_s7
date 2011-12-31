@@ -27,8 +27,8 @@ if [ -f "$BOOTMOD" ]; then
 	[ -n "$LGI_OVERLAY_ONCE$LGINIT_ONCE" ] && sync > $OUT 2>&1
 fi
 
-[ "$LGI_MENU" = 1 ] || {
-	echo 'lginit: Menu ("X" to disable menu): Press any key for shell ...'
+[ "$LGI_MENU" = 1 ] && {
+	echo 'lginit: Menu - Press any key for shell ("X" to disable menu) ...'
 	if read -n1 -t1 r; then
 		[ "$r" = X ] && { mkdir -p "$MNT/lgmod"; echo 'LGI_MENU=0' >> "$BOOTMOD"; sync; }
 		sh; fi; }
