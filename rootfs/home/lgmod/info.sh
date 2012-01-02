@@ -37,7 +37,7 @@ mtdinfo() {
 	fi
 	[ -e "$f" ] || Err 8 "file not found: $f"
 	if [ -z "$c" ]; then
-		c=`cat /proc/mtd | wc -l`
+		c=`grep -v '"total"' /proc/mtd | wc -l`
 		if [ -d /mnt/user ]; then # not S6/S7 = BCM
 			:; # TODO
 		else
@@ -52,7 +52,8 @@ mtdinfo() {
 	info=`$busybox hexdump $f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
 	echo "0:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n || Err 5 "invalid data"
 
-	dd bs=$(( 240 + 84*($c-1) )) skip=1 if=$f | strings || Err 6 "invalid strings"
+	echo; echo "MTDINFO additional strings:"
+	dd bs=$(( 240 + 84*($c-1) )) skip=1 if=$f 2>/dev/null | strings || Err 6 "invalid strings"
 	return $err
 }
 
@@ -92,8 +93,11 @@ INFO_ROOT() {
 	for i in /var/www/cgi-bin/version /etc/version_for_lg /mnt/lg/model/* \
 		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* \
 		/tmp/openrelease.log /var/log/OPENRELEASE.log /tmp/openrelease.out \
-		/etc/ver /etc/ver2 /etc/version /var/log/OpenLGTV_BCM.log; do
+		/etc/ver /etc/version /etc/ver2 /mnt/user/etc/ver2 /var/log/OpenLGTV_BCM.log; do
 		[ -f "$i" ] || continue
+		# don't log /tmp/openrelease.out if there's /var/log/OpenLGTV_BCM.log to limit log size
+		# pastebin.com has 512KB upload size limit for anonymous uploads
+		[ "$i" = "/tmp/openrelease.out" -a -f "/var/log/OpenLGTV_BCM.log" ] && continue
 		echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 		CMD 16 cat $i
 	done
