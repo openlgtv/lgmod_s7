@@ -28,7 +28,7 @@ Err() { local e=$? m="$2"; [ $1 -gt $err ] && err=$1; [ -z "$m" ] && m="$1"; ech
 mtdinfo() {
 	local err=0 info ver f="$1" c="$2"
 	if [ -z "$f" ]; then
-		f="/dev/`grep -m1 mtdinfo /proc/mtd | cut -d: -f1`"
+		f=/dev/`grep -m1 '"mtdinfo"' /proc/mtd | cut -d: -f1`
 		if [ -d /mnt/user ]; then # not S6/S7 = BCM
 			[ "$f" = /dev/mtd1 ] || Err 9 "mtdinfo in $f: Not BCM TV?"
 		else
@@ -57,7 +57,7 @@ mtdinfo() {
 	echo "0:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n || Err 5 "invalid data"
 
 	echo; echo "MTDINFO additional strings:"
-	dd bs=$(( 240 + 84*($c-1) )) skip=1 if=$f 2>/dev/null | strings || Err 6 "invalid strings"
+	dd bs=$(( 240 + 84*c )) skip=1 if=$f 2>/dev/null | strings || Err 6 "invalid strings"
 	return $err
 }
 
@@ -96,15 +96,14 @@ INFO_ROOT() {
 
 	for i in /var/www/cgi-bin/version /etc/version_for_lg /mnt/lg/model/* \
 		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* \
-		/tmp/openrelease.log /var/log/OPENRELEASE.log /tmp/openrelease.out \
-		/etc/ver /etc/version /etc/ver2 /mnt/user/etc/ver2 /var/log/OpenLGTV_BCM.log; do
+		/tmp/openrelease.log /var/log/OPENRELEASE.log \
+		/etc/ver /etc/version /etc/ver2 /mnt/user/etc/ver2; do
 		[ -f "$i" ] || continue
-		# don't log /tmp/openrelease.out if there's /var/log/OpenLGTV_BCM.log to limit log size
-		# pastebin.com has 512KB upload size limit for anonymous uploads
-		[ "$i" = "/tmp/openrelease.out" -a -f "/var/log/OpenLGTV_BCM.log" ] && continue
 		echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 		CMD 16 cat $i
 	done
+	echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
+	i=/var/log/OpenLGTV_BCM.log; [ -f $i ] || i=/tmp/openrelease.out; [ -f $i ] && CMD 16 cat $i
 	echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
 
 	for i in /etc /mnt/lg/lginit /mnt/lg/bt /mnt/lg/user /mnt/lg/cmn_data /mnt/lg/model \
@@ -193,7 +192,7 @@ INFO_CHROOT_FOOTER() {
 
 	INFO "INFO: `date`"
 
-	f=`grep -m1 boot /proc/mtd | cut -d: -f1`
+	f=`grep -m1 '"boot"' /proc/mtd | cut -d: -f1`
 	INFO '#$' "strings boot(version) : /dev/$f"
 	if [ -d /mnt/user ]; then # not S6/S7 = BCM
 		[ "$f" = mtd0 ] || ERR 17 "Error: boot in $f: Not BCM TV?"
@@ -209,7 +208,7 @@ INFO_CHROOT_FOOTER() {
 			-e's/  \+/ /g' -e'/.\{'$s'\}/!d'| tail -n35 >> "$infofile" || ERR 18
 	fi
 
-	F1="$f"; f=`grep -m2 boot /proc/mtd | cut -d: -f1 | tail -n+2`; F2="$f"
+	F1="$f"; f=`grep -m2 '"boot"' /proc/mtd | cut -d: -f1 | tail -n+2`; F2="$f"
 	if [ -d /mnt/user ]; then # not S6/S7 = BCM
 		[ -z "$f" ] || ERR 17 "Error: boot backup in $f: Not BCM TV?"
 	else
@@ -230,14 +229,13 @@ INFO_CHROOT_FOOTER() {
 		diff /dev/$F1 /dev/$F2 >> "$infofile" 2>&1 || ERR 0
 	fi
 
-	crc32info="`grep '"crc32info"' /proc/mtd | cut -d: -f1`"
-	[ -n "$crc32info" ] && INFO '#$' "hexdump -n256 -e '1/8  \"%02.2_ax:  \"' -e '16/1 \"%02X \"' -e '\"\n\"' /dev/$crc32info (crc32info)" && hexdump -n256 -e '1/8  "%02.2_ax:  "' -e '16/1 "%02X "' -e '"\n"' /dev/$crc32info >> "$infofile" || ERR 18
-	env_nvm="`grep '"env_nvm"' /proc/mtd | cut -d: -f1`"
-	[ -n "$env_nvm" ] && INFO '#$' "strings /dev/$env_nvm (env_nvm)" && strings "/dev/$env_nvm" >> "$infofile" || ERR 18
-	hist="`grep '"hist"' /proc/mtd | cut -d: -f1`"
-	[ -n "$hist" ] && INFO '#$' "strings /dev/$hist (hist)" && strings "/dev/$hist" >> "$infofile" || ERR 18
-	cfginfo="`grep '"cfginfo"' /proc/mtd | cut -d: -f1`"
-	[ -n "$cfginfo" ] && INFO '#$' "strings /dev/$cfginfo (cfginfo)" && strings "/dev/$cfginfo" >> "$infofile" || ERR 18
+	F=crc32info; f=`grep "\"$F\"" /proc/mtd | cut -d: -f1`
+	if [ -n "$f" ]; then
+		INFO '#$' "hexdump -n256 /dev/$f ($F)"
+		hexdump -n256 -e '1/8  "%02.2_ax:  "' -e '16/1 "%02X "' -e '"\n"' /dev/$f >> "$infofile" || ERR 31; fi
+	for F in env_nvm hist cfginfo; do
+		f=`grep "\"$F\"" /proc/mtd | cut -d: -f1`; [ -n "$f" ] || continue
+		INFO '#$' "strings /dev/$f ($F)"; strings /dev/$f >> "$infofile" || ERR 32; done
 }
 
 
