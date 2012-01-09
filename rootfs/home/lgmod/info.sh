@@ -14,6 +14,7 @@ if   [ "$1" = root ];    then shift; # part 1 - before chroot
 elif [ "$1" = chroot ];  then shift; # part 2 - in chroot - part 1 (from $infotemp) will be included
 elif [ "$1" = paste ];   then shift; # all info (parts 1+2) - upload to pastebin.com (pastebin.ca)
 elif [ "$1" = mtdinfo ]; then shift; # mtdinfo only - optional: $1=bin_file $2=number_of_partitions
+elif [ "$1" = dumprel ]; then shift; # dumprel only - optional: $1=release_file
 else part=''; fi; # all info (parts 1+2)
 
 infotemp=/tmp/info-file
@@ -23,6 +24,14 @@ wgetfile="$infofile.wget"; # encoded/prepared for wget --post-data
 
 
 # stand alone commands (could be in separate file)
+DROP() {
+	if [ -d /mnt/user ]; then # not S6/S7 = BCM
+		return 1
+	else
+		echo 3 > /proc/sys/vm/drop_caches
+	fi
+}
+
 Err() { local e=$? m="$2"; [ $1 -gt $err ] && err=$1; [ -z "$m" ] && m="$1"; echo "Error($e): $m" >&2; return $e; }
 
 mtdinfo() {
@@ -35,9 +44,8 @@ mtdinfo() {
 			[ "$f" = /dev/mtd2 ] || Err 9 "mtdinfo in $f: Not S7 TV?"
 		fi
 	fi
-	[ -e "$f" ] || Err 8 "file not found: $f"
 	if [ -z "$c" ]; then
-		c=`grep -v '"total"' /proc/mtd | wc -l`
+		c=`grep -v 'erasesize\|total' /proc/mtd | wc -l`
 		if [ -d /mnt/user ]; then # not S6/S7 = BCM
 			:; # TODO
 		else
@@ -45,19 +53,53 @@ mtdinfo() {
 		fi
 	fi
 
-	info=`$busybox hexdump $f -vs4 -n8 -e'"%x"'` || Err 6 "read from $f"
+	[ -e "$f" ] || { Err 8 "file not found: $f"; return $?; }
+	info=`$busybox hexdump $f -vs4 -n8 -e'"%x"'` || { Err 6 "read from $f"; return $?; }
+
 	# shell substring makes problem with running script on old busybox (stock BCM 2010 and 2011 rootfs)
 	#ver=${info:0:7}; echo "Current  EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
 	#ver=${info:7:7}; echo "Previous EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
-	cur_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,1,1),substr($0,2,2),substr($0,4,2),substr($0,6,2)}'`
-	old_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,8,1),substr($0,9,2),substr($0,11,2),substr($0,13,2)}'`
+	cur_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,1,1),substr($0,2,2),substr($0,4,2),substr($0,6,2)}'` || Err 5 "invalid data"
+	old_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,8,1),substr($0,9,2),substr($0,11,2),substr($0,13,2)}'` || Err 4 "invalid data"
 	echo "Current  EPK version: $cur_epk"
 	echo "Previous EPK version: $old_epk"
+
 	info=`$busybox hexdump $f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
-	echo "0:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n || Err 5 "invalid data"
+	echo "00:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n | sed -e 's/[0-9]:/0\0/'
 
 	echo; echo "MTDINFO additional strings:"
-	dd bs=$(( 240 + 84*c )) skip=1 if=$f 2>/dev/null | strings || Err 6 "invalid strings"
+	dd bs=$(( 240 + 84*c )) skip=1 if=$f 2>/dev/null | strings || Err 3 "invalid strings"
+	return $err
+}
+
+dumprel() {
+	local err=0 info_REL s b i none f="$1"
+	if [ -z "$f" ]; then
+		f=/mnt/lg/lgapp/bin/RELEASE
+		[ -f "$f" ] || f=/mnt/lg/lgapp/RELEASE
+	fi
+	[ -e "$f" ] || { Err 8 "file not found: $f"; return $?; }
+	info_REL=/scripts/info_RELEASE.sh
+	[ -f "$info_REL" ] || info_REL=/home/lgmod/info_RELEASE.sh
+
+	if [ -x /usr/bin/bbe -a -x "$info_REL" ]; then
+		# TODO - include info_REL script here
+		$info_REL "$f"
+	else
+		s=$(stat -c%s "$f"); b=$((s/18)); none=1
+		for i in 9 10 11 12; do
+			DROP; dd bs=$b skip=$i count=1 if="$f" || { Err 18; break; }
+			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A5 swfarm && none=0 && break
+		done
+		[ $none = 1 ] && Err 18; none=1
+		for i in 15 16 14; do
+			DROP; dd bs=$b skip=$i count=1 if="$f" || { Err 18; break; }
+			cat /tmp/info-dump | tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'| \
+				grep '....'|grep -v '.\{30\}'|grep -m1 -B1 -A10 swfarm && none=0 && break
+		done
+		rm -f /tmp/info-dump; [ $none = 1 ] && Err 18 'info not found'
+	fi
 	return $err
 }
 
@@ -73,13 +115,6 @@ ERR() {
 }
 
 err=0
-DROP() {
-	if [ -d /mnt/user ]; then # not S6/S7 = BCM
-		return 1
-	else
-		echo 3 > /proc/sys/vm/drop_caches
-	fi
-}
 CMD() {
 	local e="$1"; shift; INFO '$#' "$@"
 	$@ >> "$infofile" 2>&1 || ERR "$e"
@@ -161,7 +196,7 @@ INFO_CHROOT_HEADER() {
 INFO_CHROOT_FOOTER() {
 	# part 2 (inside install.sh chroot) - footer (after INFO_ROOT)
 	f=/mnt/lg/lgapp/bin/RELEASE; [ -f "$f" ] || f=/mnt/lg/lgapp/RELEASE
-	info_REL=/scripts/info_RELEASE.sh; [ -f "$f" ] || f=/home/lgmod/info_RELEASE.sh
+	info_REL=/scripts/info_RELEASE.sh; [ -f "$info_REL" ] || info_REL=/home/lgmod/info_RELEASE.sh
 	if [ -f "$f" ] && [ -x /usr/bin/bbe -a -x "$info_REL" ]; then
 		CMD 18 $info_REL $f
 	elif [ -f "$f" ]; then
@@ -189,6 +224,7 @@ INFO_CHROOT_FOOTER() {
 		w=5;m=3;cat $f |tr [:space:] ' '|tr -c ' [:alnum:][:punct:]' '\n'|sed -e'/[a-zA-Z]\{'$m'\}\|[0-9]\{'$m'\}/!d' \
 			-e'/[-_=/\.:0-9a-zA-Z]\{'$w'\}/!d' -e's/  \+/ /g'| head -n70 >> "$infofile" || ERR 18
 	else ERR 0 'Note: not found'; fi
+	# TODO - replace above lines with: CMD 18 dumprel $f
 
 	INFO "INFO: `date`"
 
@@ -257,6 +293,7 @@ INFO_ALL() {
 
 # process command line parameters
 [ "$part" = mtdinfo ] && { mtdinfo "$@"; exit $?; }
+[ "$part" = dumprel ] && { dumprel "$@"; exit $?; }
 [ "$part" != root ] && echo "NOTE: Create info file (1 min, $infofile) ..."
 
 echo "$VER $MODEL: $@" > "$infofile" || { echo "Error: Info file failed: $infofile"; exit 19; }
