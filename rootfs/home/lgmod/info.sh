@@ -49,8 +49,8 @@ mtdinfo() {
 	# shell substring makes problem with running script on old busybox (stock BCM 2010 and 2011 rootfs)
 	#ver=${info:0:7}; echo "Current  EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
 	#ver=${info:7:7}; echo "Previous EPK version: ${ver:0:1}.${ver:1:2}.${ver:3:2}.${ver:5:2}"
-	cur_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,1,2),substr($0,3,2),substr($0,5,2),substr($0,7,2)}'`
-	old_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,9,2),substr($0,11,2),substr($0,13,2),substr($0,15,2)}'`
+	cur_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,1,1),substr($0,2,2),substr($0,4,2),substr($0,6,2)}'`
+	old_epk=`echo $info | awk '{printf "%s.%s.%s.%s",substr($0,8,1),substr($0,9,2),substr($0,11,2),substr($0,13,2)}'`
 	echo "Current  EPK version: $cur_epk"
 	echo "Previous EPK version: $old_epk"
 	info=`$busybox hexdump $f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
