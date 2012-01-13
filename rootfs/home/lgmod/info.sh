@@ -25,12 +25,11 @@ wgetfile="$infofile.wget"; # encoded/prepared for wget --post-data
 
 # stand alone commands (could be in separate file)
 DROP() {
-	# dropping caches needs to be tested on BCM
-	#if [ -d /mnt/user ]; then # not S6/S7 = BCM
-	#	return 1
-	#else
+	if [ "`uname -r | awk '{print substr($1,5,2)}'`" -gt 28 ]; then # not S6/S7/SmartTV = BCM - drop_caches is broken on newer kernels
+		return 1
+	else
 		echo 3 > /proc/sys/vm/drop_caches
-	#fi
+	fi
 }
 
 Err() { local e=$? m="$2"; [ $1 -gt $err ] && err=$1; [ -z "$m" ] && m="$1"; echo "Error($e): $m" >&2; return $e; }
