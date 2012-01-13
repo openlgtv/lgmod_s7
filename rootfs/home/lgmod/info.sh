@@ -25,11 +25,12 @@ wgetfile="$infofile.wget"; # encoded/prepared for wget --post-data
 
 # stand alone commands (could be in separate file)
 DROP() {
-	if [ -d /mnt/user ]; then # not S6/S7 = BCM
-		return 1
-	else
+	# dropping caches needs to be tested on BCM
+	#if [ -d /mnt/user ]; then # not S6/S7 = BCM
+	#	return 1
+	#else
 		echo 3 > /proc/sys/vm/drop_caches
-	fi
+	#fi
 }
 
 Err() { local e=$? m="$2"; [ $1 -gt $err ] && err=$1; [ -z "$m" ] && m="$1"; echo "Error($e): $m" >&2; return $e; }
@@ -65,7 +66,7 @@ mtdinfo() {
 	echo "Previous EPK version: $old_epk"
 
 	info=`$busybox hexdump $f -vs240 -e'32 "%_p" " %08x ""%08x " 32 "%_p" " %8d"" %8x " /1 "Uu:%x" /1 " %x " /1 "CIMF:%x" /1 " %x" "\n"' | head -n$c`
-	echo "00:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n | sed -e 's/[0-9]:/0\0/'
+	echo "00:$info" | head -n1; echo "$info" | tail -n+2 | grep '' -n | sed -e 's/^[0-9]:/0\0/'
 
 	echo; echo "MTDINFO additional strings:"
 	dd bs=$(( 240 + 84*c )) skip=1 if=$f 2>/dev/null | strings || Err 3 "invalid strings"
