@@ -132,6 +132,9 @@ INFO_ROOT() {
 	for i in /var/www/cgi-bin/version /etc/version_for_lg /mnt/lg/model/* \
 		/mnt/lg/user/lgmod/boot /mnt/lg/user/lgmod/init/* \
 		/tmp/openrelease.log /var/log/OPENRELEASE.log \
+		/mnt/lg/cmn_data/openrelease.cfg /mnt/lg/cmn_data/openrelease_keymap.cfg \
+		/mnt/user/etc/openrelease/openrelease.cfg /mnt/user/etc/openrelease/openrelease_keymap.cfg \
+		/mnt/user/cfg/settings /mnt/user/etc/opkg/opkg.conf \
 		/etc/ver /etc/version /etc/ver2 /mnt/user/etc/ver2; do
 		[ -f "$i" ] || continue
 		echo '>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>' >> "$infofile"
@@ -143,12 +146,22 @@ INFO_ROOT() {
 
 	for i in /etc /mnt/lg/lginit /mnt/lg/bt /mnt/lg/user /mnt/lg/cmn_data /mnt/lg/model \
 			/mnt/lg/lgapp /mnt/lg/res/lgres /mnt/lg/res/lgfont /usr/local \
-			/mnt/addon/bin /mnt/addon/lib /mnt/addon/stagecraft /home \
+			/mnt/addon/bin /mnt/addon/lib /mnt/addon/stagecraft /mnt/addon/netflix /mnt/addon/vcs \
+			/mnt/addon/vudu /mnt/addon/ywe /mnt/addon/browser /mnt/addon/krbrowser /mnt/browser /home \
 			/mnt/game /mnt/cache /mnt/idfile \
-			/mnt/nsu /mnt/lg/lglib /mnt/tplist /mnt/pqldb /mnt/lg/widevine; do
+			/mnt/nsu /mnt/lg/lglib /mnt/tplist /mnt/pqldb /mnt/lg/widevine \
+			/mnt/usb1/Drive1/OpenLGTV_BCM \
+			/mnt/usb1/Drive2/OpenLGTV_BCM \
+			/mnt/usb1/Drive3/OpenLGTV_BCM \
+			/mnt/usb1/Drive4/OpenLGTV_BCM \
+			/mnt/usb2/Drive1/OpenLGTV_BCM \
+			/mnt/usb2/Drive2/OpenLGTV_BCM \
+			/mnt/usb2/Drive3/OpenLGTV_BCM \
+			/mnt/usb2/Drive4/OpenLGTV_BCM \
+			/tmp/extroot; do
 		[ -f "$i" ] || [ -d "$i" ] || continue
 		[ -d "$i/" ] && i="$i/"; CMD 16 ls -lR $i; done
-	for i in /mnt/addon/ /mnt/lg/ciplus/ /mnt/lg/res/estreamer/ /tmp/; do
+	for i in /mnt/addon/ /mnt/addon/contents/ /mnt/lg/ciplus/ /mnt/lg/res/estreamer/ /tmp/; do
 		[ -f "$i" ] || [ -d "$i" ] || continue
 		[ -d "$i/" ] && i="$i/"; CMD 16 ls -l $i; done
 }
