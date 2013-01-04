@@ -7,7 +7,9 @@
 VER='v11'; # version of info file (file syntax)
 busybox=''; #/bin/busybox; # old
 MODEL=`echo /mnt/lg/user/model.*`
+MODEL_BCM=/mnt/user/etc/model
 [ -f "$MODEL" ] && MODEL="${MODEL#*model.}" || MODEL=''
+[ -z "$MODEL" -a -f "$MODEL_BCM" ] && MODEL="`cat "$MODEL_BCM"`"
 
 part="$1"
 if   [ "$1" = root ];    then shift; # part 1 - before chroot
@@ -197,7 +199,11 @@ INFO_CHROOT_HEADER() {
 
 	# uncategorized info (most important info is above)
 	for i in /proc/version_for_lg /proc/meminfo /proc/iomem /proc/interrupts /proc/bbminfo /proc/bus/usb/devices \
-		/proc/modules /proc/hwinfo; do
+		/proc/modules /proc/hwinfo /proc/stat /proc/partitions /proc/devices /proc/sys/kernel/panic \
+		/proc/bcmdriver/version /proc/bcmdriver/meminfo /sys/devices/platform/brcmstb/cfe_boardname \
+		/sys/class/mtd/mtd0/type /sys/class/mtd/mtd0/flags /sys/class/mtd/mtd0/size /sys/class/mtd/mtd0/erasesize \
+		/sys/class/mtd/mtd0/writesize /sys/class/mtd/mtd0/oobsize /sys/class/mtd/mtd0/numeraseregions \
+		/sys/class/mtd/mtd0/subpagesize /sys/class/mtd/mtd0/name ; do
 		[ -f "$i" ] || continue; CMD 11 cat $i; done
 
 	INFO '$# dmesg'
